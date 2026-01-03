@@ -22,7 +22,7 @@ export const HiraganaBoard = ({
                 return (
                   <div
                     key={`${rowIndex}-${colIndex}`}
-                    className="w-10 h-10 sm:w-12 sm:h-12"
+                    className="w-8 h-8 sm:w-10 sm:h-10"
                   />
                 );
               }
@@ -36,7 +36,7 @@ export const HiraganaBoard = ({
                   onClick={() => onSelectCharacter(char)}
                   disabled={isDisabled}
                   className={`
-                    w-10 h-10 sm:w-12 sm:h-12 rounded-lg font-bold text-lg sm:text-xl
+                    w-8 h-8 sm:w-10 sm:h-10 rounded-lg font-bold text-base sm:text-lg
                     transition-all duration-150
                     ${isUsed
                       ? 'bg-gray-600/50 text-gray-500 cursor-not-allowed'
