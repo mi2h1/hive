@@ -156,16 +156,56 @@ const RoomCard = ({ room, onDelete }: { room: AdminRoom; onDelete: () => void })
         {/* プレイヤー一覧（展開時） */}
         {expanded && (
           <div className="mt-3 pt-3 border-t border-slate-700">
-            <div className="space-y-1">
-              {room.players.map((player, i) => (
-                <div key={player.id} className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-500 w-4">{i + 1}.</span>
-                  <span className="text-slate-300">{player.name}</span>
-                  {player.id === room.hostId && (
-                    <span className="text-xs text-yellow-500">(ホスト)</span>
-                  )}
-                </div>
-              ))}
+            <div className="space-y-2">
+              {(room.gameType === 'moji-hunt' || room.gameType === 'moji-hunt-dev') && room.details.mojiHuntPlayers ? (
+                // もじはんと: ワードと公開状況を表示
+                room.details.mojiHuntPlayers.map((player, i) => (
+                  <div key={player.id} className="text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 w-4">{i + 1}.</span>
+                      <span className={`${player.isEliminated ? 'text-red-400 line-through' : 'text-slate-300'}`}>
+                        {player.name}
+                      </span>
+                      {room.players[i]?.id === room.hostId && (
+                        <span className="text-xs text-yellow-500">(ホスト)</span>
+                      )}
+                      {player.isEliminated && (
+                        <span className="text-xs text-red-500">脱落</span>
+                      )}
+                      {!player.isReady && !player.isEliminated && room.phase === 'word_input' && (
+                        <span className="text-xs text-gray-500">入力中...</span>
+                      )}
+                    </div>
+                    {player.normalizedWord && (
+                      <div className="ml-6 mt-1 font-mono text-base">
+                        {player.normalizedWord.split('').map((char, idx) => (
+                          <span
+                            key={idx}
+                            className={`inline-block w-6 h-6 text-center border rounded mr-0.5 ${
+                              player.revealedPositions[idx]
+                                ? 'bg-red-500/30 border-red-500 text-red-300'
+                                : 'bg-slate-700 border-slate-600 text-white'
+                            }`}
+                          >
+                            {char}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                // AOA等: シンプルな表示
+                room.players.map((player, i) => (
+                  <div key={player.id} className="flex items-center gap-2 text-sm">
+                    <span className="text-slate-500 w-4">{i + 1}.</span>
+                    <span className="text-slate-300">{player.name}</span>
+                    {player.id === room.hostId && (
+                      <span className="text-xs text-yellow-500">(ホスト)</span>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

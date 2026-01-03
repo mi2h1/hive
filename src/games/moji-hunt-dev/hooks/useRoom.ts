@@ -128,12 +128,15 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
       const players = normalizeArray<Player>(room.gameState?.players);
       const currentHostId = room.hostId;
 
-      // オフラインのプレイヤーを特定
-      const offlinePlayers = players.filter(p => !onlinePlayerIds.includes(p.id));
+      // テストプレイヤーかどうかを判定（test-で始まるID）
+      const isTestPlayer = (id: string) => id.startsWith('test-');
+
+      // オフラインのプレイヤーを特定（テストプレイヤーは除外）
+      const offlinePlayers = players.filter(p => !isTestPlayer(p.id) && !onlinePlayerIds.includes(p.id));
 
       if (offlinePlayers.length > 0) {
-        // オフラインプレイヤーを削除
-        const remainingPlayers = players.filter(p => onlinePlayerIds.includes(p.id));
+        // オフラインプレイヤーを削除（テストプレイヤーは残す）
+        const remainingPlayers = players.filter(p => isTestPlayer(p.id) || onlinePlayerIds.includes(p.id));
 
         if (remainingPlayers.length === 0) {
           // 全員いなくなったら部屋を削除
@@ -144,14 +147,18 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
             'gameState/players': remainingPlayers,
           };
 
-          // ホストがオフラインになった場合は引き継ぎ
-          if (!onlinePlayerIds.includes(currentHostId)) {
-            const newHostId = remainingPlayers[0].id;
-            updates['hostId'] = newHostId;
+          // ホストがオフラインになった場合は引き継ぎ（テストプレイヤーは除外）
+          if (!isTestPlayer(currentHostId) && !onlinePlayerIds.includes(currentHostId)) {
+            // テストプレイヤーでない最初のプレイヤーを新しいホストに
+            const realPlayers = remainingPlayers.filter(p => !isTestPlayer(p.id));
+            if (realPlayers.length > 0) {
+              const newHostId = realPlayers[0].id;
+              updates['hostId'] = newHostId;
 
-            // 自分が新しいホストになった場合、onDisconnectで部屋削除を設定
-            if (newHostId === playerId) {
-              await onDisconnect(roomRef).remove();
+              // 自分が新しいホストになった場合、onDisconnectで部屋削除を設定
+              if (newHostId === playerId) {
+                await onDisconnect(roomRef).remove();
+              }
             }
           }
 

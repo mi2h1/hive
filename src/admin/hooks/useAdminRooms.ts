@@ -16,6 +16,9 @@ interface MojiHuntPlayer {
   isEliminated?: boolean;
   isReady?: boolean;
   wordLength?: number;
+  normalizedWord?: string;
+  revealedPositions?: boolean[];
+  revealedCharacters?: string[];
 }
 
 // AOAの部屋データ型
@@ -46,6 +49,16 @@ interface MojiHuntRoom {
   };
 }
 
+export interface AdminMojiHuntPlayerDetail {
+  id: string;
+  name: string;
+  isEliminated: boolean;
+  isReady: boolean;
+  normalizedWord: string;
+  revealedPositions: boolean[];
+  revealedCharacters: string[];
+}
+
 export interface AdminRoom {
   gameType: 'aoa' | 'moji-hunt' | 'moji-hunt-dev';
   code: string;
@@ -63,6 +76,7 @@ export interface AdminRoom {
     currentTopic?: string;
     currentTurnPlayerName?: string;
     eliminatedCount?: number;
+    mojiHuntPlayers?: AdminMojiHuntPlayerDetail[];
   };
 }
 
@@ -136,6 +150,17 @@ export const useAdminRooms = () => {
         const currentTurnPlayer = players.find(p => p.id === r.gameState?.currentTurnPlayerId);
         const eliminatedCount = players.filter(p => p.isEliminated).length;
 
+        // プレイヤー詳細情報
+        const mojiHuntPlayers: AdminMojiHuntPlayerDetail[] = players.map(p => ({
+          id: p.id,
+          name: p.name,
+          isEliminated: p.isEliminated || false,
+          isReady: p.isReady || false,
+          normalizedWord: p.normalizedWord || '',
+          revealedPositions: Array.isArray(p.revealedPositions) ? p.revealedPositions : [],
+          revealedCharacters: Array.isArray(p.revealedCharacters) ? p.revealedCharacters : [],
+        }));
+
         return {
           gameType: 'moji-hunt' as const,
           code,
@@ -148,6 +173,7 @@ export const useAdminRooms = () => {
             currentTopic: r.gameState?.currentTopic,
             currentTurnPlayerName: currentTurnPlayer?.name,
             eliminatedCount,
+            mojiHuntPlayers,
           },
         };
       });
@@ -173,6 +199,17 @@ export const useAdminRooms = () => {
         const currentTurnPlayer = players.find(p => p.id === r.gameState?.currentTurnPlayerId);
         const eliminatedCount = players.filter(p => p.isEliminated).length;
 
+        // プレイヤー詳細情報
+        const mojiHuntPlayers: AdminMojiHuntPlayerDetail[] = players.map(p => ({
+          id: p.id,
+          name: p.name,
+          isEliminated: p.isEliminated || false,
+          isReady: p.isReady || false,
+          normalizedWord: p.normalizedWord || '',
+          revealedPositions: Array.isArray(p.revealedPositions) ? p.revealedPositions : [],
+          revealedCharacters: Array.isArray(p.revealedCharacters) ? p.revealedCharacters : [],
+        }));
+
         return {
           gameType: 'moji-hunt-dev' as const,
           code,
@@ -185,6 +222,7 @@ export const useAdminRooms = () => {
             currentTopic: r.gameState?.currentTopic,
             currentTurnPlayerName: currentTurnPlayer?.name,
             eliminatedCount,
+            mojiHuntPlayers,
           },
         };
       });
