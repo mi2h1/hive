@@ -55,11 +55,15 @@ export const Card = ({
 
   // カード裏面（自分のカード = 見えない）
   if (hidden || !card) {
+    const backImagePath = import.meta.env.BASE_URL + 'images/cards/card_jackal_back.png';
     return (
-      <div
-        className={`${baseClasses} bg-gradient-to-br from-indigo-600 to-purple-700 border-2 border-indigo-400 flex items-center justify-center`}
-      >
-        <div className="text-white/30 text-2xl font-bold">?</div>
+      <div className={baseClasses}>
+        <img
+          src={backImagePath}
+          alt="カード裏面"
+          className="w-full h-full object-cover"
+          draggable={false}
+        />
       </div>
     );
   }
