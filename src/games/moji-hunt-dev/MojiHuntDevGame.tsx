@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, FlaskConical } from 'lucide-react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
@@ -6,6 +6,7 @@ import { Lobby } from './components/Lobby';
 import { WordInputPhase } from './components/WordInputPhase';
 import { GamePlayPhase } from './components/GamePlayPhase';
 import { ResultScreen } from './components/ResultScreen';
+import { GameStartTransition } from './components/GameStartTransition';
 import type { LocalPlayerState } from './types/game';
 import { DEFAULT_SETTINGS, getRandomTopic } from './types/game';
 
@@ -43,10 +44,23 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
   // デバッグ用: 全プレイヤーの言葉を保持
   const [debugLocalStates, setDebugLocalStates] = useState<Record<string, LocalPlayerState>>({});
 
+  // ゲーム開始時のトランジション表示
+  const [showTransition, setShowTransition] = useState(false);
+  const prevPhaseRef = useRef<string | null>(null);
+
   const gameState = roomData?.gameState;
   const players = gameState?.players ?? [];
   const settings = gameState?.settings ?? DEFAULT_SETTINGS;
   const phase = gameState?.phase ?? 'waiting';
+
+  // フェーズ変更を監視してトランジションを表示
+  useEffect(() => {
+    // waiting → word_input の遷移時にトランジションを表示
+    if (prevPhaseRef.current === 'waiting' && phase === 'word_input') {
+      setShowTransition(true);
+    }
+    prevPhaseRef.current = phase;
+  }, [phase]);
 
   // ゲーム開始処理
   const handleStartGame = () => {
@@ -163,6 +177,14 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-900 to-orange-900 p-4">
+      {/* ゲーム開始トランジション */}
+      {showTransition && gameState?.currentTopic && (
+        <GameStartTransition
+          topic={gameState.currentTopic}
+          onComplete={() => setShowTransition(false)}
+        />
+      )}
+
       <div className="max-w-6xl mx-auto">
         {/* ヘッダー */}
         <header className="flex items-center gap-4 mb-6">

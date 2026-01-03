@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+/* フェードインアニメーション */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
 /* 宝石分配アニメーション */
 @keyframes gemFly {
   0% {
