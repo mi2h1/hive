@@ -37,16 +37,18 @@ export const ResultScreen = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <div className="bg-slate-800 rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-6">
         {/* 勝者表示 */}
-        <div className="bg-gradient-to-br from-yellow-500/30 to-orange-500/30 rounded-xl p-6 text-center">
-          <Trophy className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
-          <h2 className="text-2xl font-bold text-white mb-1">
-            {isWinner ? 'あなたの勝ち！' : `${winner?.name} の勝ち！`}
-          </h2>
-          {winner && (
-            <p className="text-white/80 text-sm">
-              最後まで言葉を守り抜きました
-            </p>
-          )}
+        <div className="bg-gradient-to-br from-yellow-500/30 to-orange-500/30 rounded-xl p-4 flex items-center gap-4">
+          <Trophy className="w-12 h-12 text-yellow-400 flex-shrink-0" />
+          <div>
+            <h2 className="text-xl font-bold text-white">
+              {isWinner ? 'あなたの勝ち！' : `${winner?.name} の勝ち！`}
+            </h2>
+            {winner && (
+              <p className="text-white/80 text-sm">
+                最後まで言葉を守り抜きました
+              </p>
+            )}
+          </div>
         </div>
 
         {/* 全員の言葉 */}
