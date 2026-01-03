@@ -1,6 +1,9 @@
 import { Skull, Target } from 'lucide-react';
 import type { Player, LocalPlayerState } from '../types/game';
 
+// 他プレイヤーに見せる固定文字数（文字数を隠すため）
+const DISPLAY_LENGTH = 7;
+
 interface PlayerWordDisplayProps {
   player: Player;
   localState?: LocalPlayerState; // 自分の場合のみ
@@ -17,17 +20,32 @@ export const PlayerWordDisplay = ({
   const { name, wordLength, revealedPositions, revealedCharacters, isEliminated } = player;
 
   // 表示する文字を生成
-  const displayChars: string[] = [];
-  for (let i = 0; i < wordLength; i++) {
-    if (isMe && localState) {
-      // 自分の場合は全文字表示
-      displayChars.push(localState.normalizedWord[i]);
-    } else if (revealedPositions[i] && revealedCharacters[i]) {
-      // 公開された文字
-      displayChars.push(revealedCharacters[i]);
-    } else {
-      // 未公開
-      displayChars.push('?');
+  type DisplayChar = { char: string; type: 'revealed' | 'hidden' | 'dummy' | 'self' | 'self-revealed' };
+  const displayChars: DisplayChar[] = [];
+
+  if (isMe && localState) {
+    // 自分の場合は実際の文字数を表示
+    for (let i = 0; i < localState.normalizedWord.length; i++) {
+      const isRevealed = revealedPositions[i];
+      displayChars.push({
+        char: localState.normalizedWord[i],
+        type: isRevealed ? 'self-revealed' : 'self',
+      });
+    }
+  } else {
+    // 他プレイヤーの場合は常に7文字表示
+    for (let i = 0; i < DISPLAY_LENGTH; i++) {
+      if (i < wordLength) {
+        // 実際の言葉の範囲内
+        if (revealedPositions[i] && revealedCharacters[i]) {
+          displayChars.push({ char: revealedCharacters[i], type: 'revealed' });
+        } else {
+          displayChars.push({ char: '?', type: 'hidden' });
+        }
+      } else {
+        // ダミー文字（実際の言葉より後ろ）
+        displayChars.push({ char: '-', type: 'dummy' });
+      }
     }
   }
 
@@ -63,25 +81,28 @@ export const PlayerWordDisplay = ({
       </div>
 
       {/* 文字表示 */}
-      <div className="flex gap-1 flex-wrap">
-        {displayChars.map((char, i) => {
-          // 実際に公開（ヒット）された文字かどうか
-          const isRevealed = revealedPositions[i];
+      <div className="flex gap-1">
+        {displayChars.map((item, i) => {
+          // タイプに応じたスタイル
+          let bgClass = 'bg-white/20 text-white';
+          if (isEliminated) {
+            bgClass = 'bg-gray-600/50 text-gray-400';
+          } else if (item.type === 'revealed' || item.type === 'self-revealed') {
+            bgClass = 'bg-red-500/50 text-white';
+          } else if (item.type === 'dummy') {
+            bgClass = 'bg-white/5 text-white/30';
+          }
+
           return (
             <div
               key={i}
               className={`
-                w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center
-                rounded font-bold text-lg
-                ${isEliminated
-                  ? 'bg-gray-600/50 text-gray-400'
-                  : isRevealed
-                    ? 'bg-red-500/50 text-white'
-                    : 'bg-white/20 text-white'
-                }
+                w-8 h-8 flex items-center justify-center
+                rounded font-bold text-base
+                ${bgClass}
               `}
             >
-              {char}
+              {item.char}
             </div>
           );
         })}

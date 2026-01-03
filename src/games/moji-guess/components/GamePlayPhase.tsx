@@ -265,8 +265,8 @@ export const GamePlayPhase = ({
 
       {/* 2カラムレイアウト */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* 左カラム: プレイヤー状況 */}
-        <div className="space-y-3 order-2 lg:order-1 lg:flex-1 lg:min-w-0">
+        {/* 左カラム: プレイヤー状況（7文字分の幅に固定） */}
+        <div className="space-y-3 order-2 lg:order-1 lg:w-80 lg:shrink-0">
           <h3 className="text-white/80 font-bold">プレイヤー状況</h3>
           <div className="grid gap-3">
             {players.map((player) => (
