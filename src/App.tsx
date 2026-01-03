@@ -4,9 +4,10 @@ import { usePlayer } from './shared/hooks/usePlayer';
 import { AoaGame } from './games/aoa/AoaGame';
 import { MojiHuntGame } from './games/moji-hunt/MojiHuntGame';
 import { MojiHuntDevGame } from './games/moji-hunt-dev/MojiHuntDevGame';
+import { JackalGame } from './games/jackal/JackalGame';
 import { AdminPage } from './admin/AdminPage';
 
-type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'admin';
+type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'admin';
 
 // クエリパラメータを保持（?v=xxx などのキャッシュバスター用）
 const getQueryString = (excludeKeys: string[] = []) => {
@@ -29,6 +30,7 @@ const getGameFromPath = (): GameType => {
     if (redirectPath === 'aoa') return 'aoa';
     if (redirectPath === 'moji-hunt') return 'moji-hunt';
     if (redirectPath === 'moji-hunt-dev') return 'moji-hunt-dev';
+    if (redirectPath === 'jackal') return 'jackal';
     if (redirectPath === 'admin') return 'admin';
   }
 
@@ -37,6 +39,7 @@ const getGameFromPath = (): GameType => {
   if (path === 'aoa') return 'aoa';
   if (path === 'moji-hunt') return 'moji-hunt';
   if (path === 'moji-hunt-dev') return 'moji-hunt-dev';
+  if (path === 'jackal') return 'jackal';
   if (path === 'admin') return 'admin';
   return 'none';
 };
@@ -146,6 +149,9 @@ function App() {
   if (selectedGame === 'moji-hunt-dev') {
     return <MojiHuntDevGame onBack={() => selectGame('none')} />;
   }
+  if (selectedGame === 'jackal') {
+    return <JackalGame onBack={() => selectGame('none')} />;
+  }
 
   // ゲーム選択画面
   return (
@@ -214,6 +220,28 @@ function App() {
                   onClick={() => selectGame('moji-hunt')}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-500
                     hover:from-pink-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
+                >
+                  遊ぶ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ジャッカル */}
+          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-indigo-500 transition-all">
+            <div className="h-40 bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+              <h3 className="text-4xl font-bold text-white">JACKAL</h3>
+            </div>
+            <div className="p-4">
+              <h2 className="text-lg font-bold text-white mb-2">ジャッカル</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                自分のカードだけ見えない！ブラフと推理で相手を出し抜け。
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => selectGame('jackal')}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500
+                    hover:from-indigo-600 hover:to-purple-600 rounded-lg text-white font-bold transition-all"
                 >
                   遊ぶ
                 </button>
