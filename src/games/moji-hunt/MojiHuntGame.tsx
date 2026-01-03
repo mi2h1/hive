@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ArrowLeft, FlaskConical } from 'lucide-react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
@@ -14,6 +14,12 @@ interface MojiHuntGameProps {
 }
 
 export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
+  // ブラウザタブのタイトルを設定
+  useEffect(() => {
+    document.title = 'もじはんと';
+    return () => { document.title = 'Game Board'; };
+  }, []);
+
   // デバッグモード検出（URLパラメータ ?debug=true）
   const debugMode = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
