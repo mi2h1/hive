@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ref, onValue, off } from 'firebase/database';
+import { useState, useEffect, useCallback } from 'react';
+import { ref, onValue, off, remove } from 'firebase/database';
 import { db } from '../../lib/firebase';
 
 // プレイヤー型
@@ -153,5 +153,39 @@ export const useAdminRooms = () => {
     };
   }, []);
 
-  return { rooms, isLoading };
+  // 特定の部屋を削除
+  const deleteRoom = useCallback(async (gameType: 'aoa' | 'moji-hunt', code: string) => {
+    const path = gameType === 'aoa' ? `rooms/${code}` : `moji-hunt-rooms/${code}`;
+    await remove(ref(db, path));
+  }, []);
+
+  // 古い部屋を一括削除（1時間以上前）
+  const cleanupOldRooms = useCallback(async () => {
+    const now = Date.now();
+    const maxAge = 60 * 60 * 1000; // 1時間
+
+    const deletePromises: Promise<void>[] = [];
+    for (const room of rooms) {
+      if (now - room.createdAt > maxAge) {
+        const path = room.gameType === 'aoa' ? `rooms/${room.code}` : `moji-hunt-rooms/${room.code}`;
+        deletePromises.push(remove(ref(db, path)));
+      }
+    }
+
+    await Promise.all(deletePromises);
+    return deletePromises.length;
+  }, [rooms]);
+
+  // 全部屋を削除
+  const deleteAllRooms = useCallback(async () => {
+    const deletePromises: Promise<void>[] = [];
+    for (const room of rooms) {
+      const path = room.gameType === 'aoa' ? `rooms/${room.code}` : `moji-hunt-rooms/${room.code}`;
+      deletePromises.push(remove(ref(db, path)));
+    }
+    await Promise.all(deletePromises);
+    return deletePromises.length;
+  }, [rooms]);
+
+  return { rooms, isLoading, deleteRoom, cleanupOldRooms, deleteAllRooms };
 };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Users, Clock, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Users, Clock, RefreshCw, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useAdminRooms } from './hooks/useAdminRooms';
 import type { AdminRoom } from './hooks/useAdminRooms';
 
@@ -55,7 +55,7 @@ const getPhaseColor = (phase: string) => {
   }
 };
 
-const RoomCard = ({ room }: { room: AdminRoom }) => {
+const RoomCard = ({ room, onDelete }: { room: AdminRoom; onDelete: () => void }) => {
   const [expanded, setExpanded] = useState(false);
 
   const gameLabel = room.gameType === 'aoa' ? 'アトランティスの深淵' : 'もじはんと';
@@ -66,7 +66,16 @@ const RoomCard = ({ room }: { room: AdminRoom }) => {
       {/* ヘッダー */}
       <div className={`bg-gradient-to-r ${gameColor} px-4 py-2 flex items-center justify-between`}>
         <span className="text-white font-bold text-sm">{gameLabel}</span>
-        <span className="text-white/80 text-sm font-mono">{room.code}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-white/80 text-sm font-mono">{room.code}</span>
+          <button
+            onClick={onDelete}
+            className="p-1 text-white/60 hover:text-red-300 hover:bg-white/10 rounded transition-colors"
+            title="この部屋を削除"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* メイン情報 */}
@@ -147,10 +156,30 @@ const RoomCard = ({ room }: { room: AdminRoom }) => {
 };
 
 export const AdminPage = ({ onBack }: AdminPageProps) => {
-  const { rooms, isLoading } = useAdminRooms();
+  const { rooms, isLoading, deleteRoom, cleanupOldRooms, deleteAllRooms } = useAdminRooms();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const aoaRooms = rooms.filter(r => r.gameType === 'aoa');
   const mojiHuntRooms = rooms.filter(r => r.gameType === 'moji-hunt');
+
+  // 1時間以上前の部屋数
+  const oldRoomsCount = rooms.filter(r => Date.now() - r.createdAt > 60 * 60 * 1000).length;
+
+  const handleCleanup = async () => {
+    if (oldRoomsCount === 0) return;
+    setIsDeleting(true);
+    const count = await cleanupOldRooms();
+    setIsDeleting(false);
+    console.log(`Deleted ${count} old rooms`);
+  };
+
+  const handleDeleteAll = async () => {
+    if (rooms.length === 0) return;
+    if (!confirm(`本当に全${rooms.length}部屋を削除しますか？`)) return;
+    setIsDeleting(true);
+    await deleteAllRooms();
+    setIsDeleting(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-4">
@@ -167,9 +196,31 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             <h1 className="text-xl font-bold text-white">Admin Dashboard</h1>
             <p className="text-slate-500 text-sm">リアルタイムで部屋を監視</p>
           </div>
-          {isLoading && (
-            <RefreshCw className="w-5 h-5 text-slate-500 animate-spin" />
-          )}
+          <div className="flex items-center gap-2">
+            {oldRoomsCount > 0 && (
+              <button
+                onClick={handleCleanup}
+                disabled={isDeleting}
+                className="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 disabled:bg-slate-600 rounded-lg text-white text-sm font-bold transition-colors flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                古い部屋を削除 ({oldRoomsCount})
+              </button>
+            )}
+            {rooms.length > 0 && (
+              <button
+                onClick={handleDeleteAll}
+                disabled={isDeleting}
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-slate-600 rounded-lg text-white text-sm font-bold transition-colors flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                全削除
+              </button>
+            )}
+            {(isLoading || isDeleting) && (
+              <RefreshCw className="w-5 h-5 text-slate-500 animate-spin" />
+            )}
+          </div>
         </header>
 
         {/* サマリー */}
@@ -196,7 +247,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {rooms.map(room => (
-              <RoomCard key={`${room.gameType}-${room.code}`} room={room} />
+              <RoomCard
+                key={`${room.gameType}-${room.code}`}
+                room={room}
+                onDelete={() => deleteRoom(room.gameType, room.code)}
+              />
             ))}
           </div>
         )}
