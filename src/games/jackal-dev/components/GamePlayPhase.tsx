@@ -20,7 +20,7 @@ export const GamePlayPhase = ({
   onCallJackal,
   onLeaveRoom,
 }: GamePlayPhaseProps) => {
-  const [selectedValue, setSelectedValue] = useState<number | null>(null);
+  const [inputValue, setInputValue] = useState<string>('');
 
   // デバッグモード用: どのプレイヤーを操作しているか
   const [debugControlledPlayerId, setDebugControlledPlayerId] = useState<string | null>(null);
@@ -46,20 +46,14 @@ export const GamePlayPhase = ({
   // アクティブなプレイヤー（脱落していない）
   const activePlayers = players.filter(p => !p.isEliminated);
 
-  // 宣言可能な数字の範囲を計算
+  // 宣言可能な最小値
   const minDeclareValue = (currentDeclaredValue ?? 0) + 1;
-  const maxDeclareValue = 100; // 合理的な上限
-
-  // 宣言数字の選択肢を生成
-  const declareOptions = [];
-  for (let i = minDeclareValue; i <= Math.min(minDeclareValue + 19, maxDeclareValue); i++) {
-    declareOptions.push(i);
-  }
 
   const handleDeclare = () => {
-    if (selectedValue !== null && selectedValue >= minDeclareValue) {
-      onDeclare(selectedValue, controlledPlayerId);
-      setSelectedValue(null);
+    const value = parseInt(inputValue, 10);
+    if (!isNaN(value) && value >= minDeclareValue) {
+      onDeclare(value, controlledPlayerId);
+      setInputValue('');
     }
   };
 
@@ -67,33 +61,47 @@ export const GamePlayPhase = ({
     onCallJackal(controlledPlayerId);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleDeclare();
+    }
+  };
+
   // プレイヤーのカードを取得
   const getPlayerCard = (player: Player): CardType | undefined => {
     return dealtCards[player.id];
   };
 
+  const inputValueNum = parseInt(inputValue, 10);
+  const isValidInput = !isNaN(inputValueNum) && inputValueNum >= minDeclareValue;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* ヘッダー */}
-        <div className="text-center mb-4">
+        <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-white">ラウンド {round}</h1>
-          {debugMode && (
-            <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded inline-flex items-center gap-1 mt-1">
-              <FlaskConical className="w-3 h-3" />
-              デバッグモード
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {debugMode && (
+              <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded inline-flex items-center gap-1">
+                <FlaskConical className="w-3 h-3" />
+                DEV
+              </span>
+            )}
+            <button
+              onClick={onLeaveRoom}
+              className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm transition-colors"
+            >
+              退出
+            </button>
+          </div>
         </div>
 
         {/* デバッグ用: プレイヤー切り替え */}
         {debugMode && (
-          <div className="bg-orange-900/30 border border-orange-600/50 rounded-xl p-4 mb-4">
-            <h3 className="text-white font-bold mb-3 flex items-center gap-2">
-              <FlaskConical className="w-4 h-4 text-orange-400" />
-              デバッグ: プレイヤー操作
-            </h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="bg-orange-900/30 border border-orange-600/50 rounded-xl p-3 mb-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-orange-400 text-sm font-bold">操作:</span>
               {activePlayers.map((player) => {
                 const isControlled = debugControlledPlayerId
                   ? player.id === debugControlledPlayerId
@@ -105,7 +113,7 @@ export const GamePlayPhase = ({
                     key={player.id}
                     onClick={() => setDebugControlledPlayerId(player.id === playerId ? null : player.id)}
                     className={`
-                      px-3 py-2 rounded-lg text-sm font-bold transition-all
+                      px-2 py-1 rounded text-xs font-bold transition-all
                       ${isControlled
                         ? 'bg-orange-600 text-white'
                         : 'bg-white/10 text-white/80 hover:bg-white/20'
@@ -120,41 +128,91 @@ export const GamePlayPhase = ({
                 );
               })}
             </div>
-            <p className="text-orange-300/70 text-xs mt-2">
-              ★=現在のターン / 操作したいプレイヤーをクリック
-            </p>
           </div>
         )}
 
-        {/* 現在の宣言値 */}
-        <div className="bg-slate-800/80 rounded-xl p-4 mb-4 text-center">
-          <div className="text-slate-400 text-sm mb-1">
-            {lastDeclarer ? `${lastDeclarer.name}の宣言` : '最初の宣言'}
-          </div>
-          <div className="text-4xl font-bold text-white">
-            {currentDeclaredValue !== null ? currentDeclaredValue : '—'}
-          </div>
-        </div>
+        {/* 上段: インフォボード(70%) + 宣言エリア(30%) */}
+        <div className="flex gap-4 mb-4">
+          {/* 左: インフォボード */}
+          <div className="w-[70%] bg-slate-800/80 rounded-xl p-4">
+            {/* 現在の宣言値 */}
+            <div className="text-center mb-4">
+              <div className="text-slate-400 text-sm mb-1">
+                {lastDeclarer ? `${lastDeclarer.name}の宣言` : '最初の宣言を待っています'}
+              </div>
+              <div className="text-5xl font-bold text-white">
+                {currentDeclaredValue !== null ? currentDeclaredValue : '—'}
+              </div>
+            </div>
 
-        {/* ターン表示 */}
-        <div className="bg-slate-800/60 rounded-lg p-3 mb-4 text-center">
-          {phase === 'declaring' && (
-            <span className="text-white">
-              {isMyTurn ? (
-                <span className="text-yellow-400 font-bold">あなたの番です</span>
-              ) : (
-                <span>{currentPlayer?.name}の番...</span>
+            {/* ターン表示 */}
+            <div className="text-center py-2 rounded-lg bg-slate-700/50">
+              {phase === 'declaring' && (
+                <span className="text-white">
+                  {isMyTurn ? (
+                    <span className="text-yellow-400 font-bold text-lg">あなたの番です</span>
+                  ) : (
+                    <span>{currentPlayer?.name}の番...</span>
+                  )}
+                </span>
               )}
-            </span>
-          )}
-          {phase === 'round_start' && (
-            <span className="text-white">ラウンド開始！</span>
-          )}
+              {phase === 'round_start' && (
+                <span className="text-white">ラウンド開始！</span>
+              )}
+            </div>
+          </div>
+
+          {/* 右: 宣言エリア */}
+          <div className="w-[30%] bg-slate-800/80 rounded-xl p-4 flex flex-col">
+            {phase === 'declaring' && isMyTurn ? (
+              <>
+                {/* 数字入力 */}
+                <div className="flex-1">
+                  <div className="text-slate-400 text-xs mb-2">
+                    {currentDeclaredValue !== null
+                      ? `${minDeclareValue}以上を宣言`
+                      : '数字を宣言'}
+                  </div>
+                  <input
+                    type="number"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={String(minDeclareValue)}
+                    min={minDeclareValue}
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xl text-center font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    onClick={handleDeclare}
+                    disabled={!isValidInput}
+                    className="w-full mt-2 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 rounded-lg text-white font-bold transition-all text-sm"
+                  >
+                    宣言
+                  </button>
+                </div>
+
+                {/* ジャッカル宣言 */}
+                {currentDeclaredValue !== null && (
+                  <div className="mt-3 pt-3 border-t border-slate-600">
+                    <button
+                      onClick={handleCallJackal}
+                      className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
+                    >
+                      ジャッカル！
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-slate-500 text-sm text-center">
+                {isMyTurn ? 'ラウンド開始中...' : `${currentPlayer?.name}の\nターンです`}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* 全プレイヤーのカード表示（ターン順で左から並べる） */}
-        <div className="bg-slate-800/50 rounded-xl p-4 mb-4">
-          <h3 className="text-slate-400 text-sm mb-3 text-center">プレイヤーカード</h3>
+        {/* 下段: プレイヤーカード（全幅） */}
+        <div className="bg-slate-800/50 rounded-xl p-4">
           <div className="flex flex-wrap justify-center gap-4">
             {turnOrder
               .map(pid => activePlayers.find(p => p.id === pid))
@@ -194,101 +252,19 @@ export const GamePlayPhase = ({
           </div>
         </div>
 
-        {/* アクション領域 */}
-        {phase === 'declaring' && isMyTurn && (
-          <div className="bg-slate-800/80 rounded-xl p-4 mb-4">
-            <h3 className="text-white font-bold text-center mb-3">アクション</h3>
-
-            {/* 数字宣言 */}
-            <div className="mb-4">
-              <div className="text-slate-400 text-sm mb-2">
-                {currentDeclaredValue !== null
-                  ? `${currentDeclaredValue}より大きい数字を宣言`
-                  : '最初の数字を宣言'}
-              </div>
-              <div className="flex flex-wrap gap-2 mb-3 max-h-32 overflow-y-auto">
-                {declareOptions.map((value) => (
-                  <button
-                    key={value}
-                    onClick={() => setSelectedValue(value)}
-                    className={`w-10 h-10 rounded-lg font-bold transition-all ${
-                      selectedValue === value
-                        ? 'bg-indigo-500 text-white ring-2 ring-indigo-300'
-                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                    }`}
-                  >
-                    {value}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={handleDeclare}
-                disabled={selectedValue === null}
-                className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 disabled:from-gray-500 disabled:to-gray-600 rounded-lg text-white font-bold transition-all"
-              >
-                {selectedValue !== null ? `${selectedValue} を宣言` : '数字を選択してください'}
-              </button>
-            </div>
-
-            {/* ジャッカル宣言 */}
-            {currentDeclaredValue !== null && (
-              <div className="border-t border-slate-600 pt-4">
-                <button
-                  onClick={handleCallJackal}
-                  className="w-full py-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg text-white font-bold text-lg transition-all"
-                >
-                  ジャッカル！
-                </button>
-                <p className="text-slate-500 text-xs text-center mt-2">
-                  {currentDeclaredValue}が合計を超えていると思ったら
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 待機中メッセージ */}
-        {phase === 'declaring' && !isMyTurn && (
-          <div className="bg-slate-800/60 rounded-xl p-6 mb-4 text-center">
-            <div className="text-slate-400">
-              {currentPlayer?.name}のターンです...
-            </div>
-          </div>
-        )}
-
         {/* デバッグ情報 */}
         {debugMode && (
-          <div className="bg-slate-700/50 rounded-lg p-4 text-left text-sm mb-4">
-            <h3 className="text-orange-400 font-bold mb-2">デバッグ情報</h3>
-            <div className="text-slate-300 space-y-1 text-xs">
-              <div>フェーズ: {phase}</div>
-              <div>山札残り: {gameState.deck.length}枚</div>
-              <div>ターン順: {turnOrder.map((id, i) => {
-                const p = players.find(p => p.id === id);
-                return `${i+1}.${p?.name}`;
-              }).join(' → ')}</div>
-              <div className="mt-2 font-bold text-yellow-400">全カード（デバッグ用）:</div>
-              {Object.entries(dealtCards).map(([pid, card]) => {
+          <div className="bg-slate-700/50 rounded-lg p-3 text-left text-xs mt-4">
+            <div className="text-slate-300 space-y-1">
+              <span className="text-orange-400 font-bold">DEBUG: </span>
+              <span>山札: {gameState.deck.length}枚 | </span>
+              <span>カード: {Object.entries(dealtCards).map(([pid, card]) => {
                 const p = players.find(p => p.id === pid);
-                return (
-                  <div key={pid} className={pid === playerId ? 'text-yellow-300' : ''}>
-                    {p?.name}: {card.label} {pid === playerId && '(自分)'}
-                  </div>
-                );
-              })}
+                return `${p?.name}:${card.label}`;
+              }).join(', ')}</span>
             </div>
           </div>
         )}
-
-        {/* 退出ボタン */}
-        <div className="text-center">
-          <button
-            onClick={onLeaveRoom}
-            className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
-          >
-            退出
-          </button>
-        </div>
       </div>
     </div>
   );
