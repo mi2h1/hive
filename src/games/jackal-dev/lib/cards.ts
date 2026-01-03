@@ -124,10 +124,9 @@ export const calculateTotal = (
   let hasDouble = false;
   let hasMaxZero = false;
   let hasShuffleZero = false;
-  let hasMystery = false;
   let mysteryResolvedCard: Card | null = null;
 
-  // Step 1: 各カードの値を取得（?は後で処理するので0として扱う）
+  // Step 1: ?カードを最初に処理（山札から引いたカードの値に置き換え）
   for (const [playerId, card] of Object.entries(dealtCards)) {
     let resolvedValue = 0;
 
@@ -148,17 +147,23 @@ export const calculateTotal = (
         resolvedValue = 0;
         break;
       case 'mystery':
-        hasMystery = true;
-        resolvedValue = 0; // ?は最後に処理
+        // ?カードは山札から引いたカードの値に置き換わる
+        if (mysteryDrawnCard) {
+          mysteryResolvedCard = mysteryDrawnCard;
+          if (mysteryDrawnCard.type === 'number' || mysteryDrawnCard.type === 'shuffle_zero') {
+            resolvedValue = mysteryDrawnCard.value ?? 0;
+          }
+          // 特殊カードが出た場合は0として扱う
+        }
         break;
     }
 
     cardValues.push({ playerId, card, resolvedValue });
   }
 
-  // Step 2: MAX→0 の処理（?を除く数字カードの中で最大値を0に）
+  // Step 2: MAX→0 の処理（数字カード + ?の値 の中で最大値を0に）
   const numericCards = cardValues.filter(cv =>
-    cv.card.type === 'number' || cv.card.type === 'shuffle_zero'
+    cv.card.type === 'number' || cv.card.type === 'shuffle_zero' || cv.card.type === 'mystery'
   );
   let maxValue = numericCards.length > 0
     ? Math.max(...numericCards.map(cv => cv.resolvedValue))
@@ -174,37 +179,12 @@ export const calculateTotal = (
     maxValue = 0;
   }
 
-  // Step 3: ?を除く数字カードを合計
-  let totalValue = cardValues.reduce((sum, cv) => {
-    if (cv.card.type !== 'mystery') {
-      return sum + cv.resolvedValue;
-    }
-    return sum;
-  }, 0);
+  // Step 3: 特殊カード以外（数字 + shuffle_zero + ?の解決値）を合計
+  let totalValue = cardValues.reduce((sum, cv) => sum + cv.resolvedValue, 0);
 
   // Step 4: ×2 を適用
   if (hasDouble) {
     totalValue *= 2;
-  }
-
-  // Step 5: ?カードの処理（最後に追加、×2の影響を受けない）
-  if (hasMystery && mysteryDrawnCard) {
-    mysteryResolvedCard = mysteryDrawnCard;
-    let mysteryValue = 0;
-
-    if (mysteryDrawnCard.type === 'number' || mysteryDrawnCard.type === 'shuffle_zero') {
-      mysteryValue = mysteryDrawnCard.value ?? 0;
-    }
-    // 特殊カードが出た場合は0として扱う
-
-    // ?カードのresolvedValueを更新
-    const mysteryCardValue = cardValues.find(cv => cv.card.type === 'mystery');
-    if (mysteryCardValue) {
-      mysteryCardValue.resolvedValue = mysteryValue;
-    }
-
-    // 合計に追加（×2の後なので2倍されない）
-    totalValue += mysteryValue;
   }
 
   return {
