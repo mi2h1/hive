@@ -3,7 +3,7 @@ import { Card, DeckBack } from './Card';
 
 // 罠カード画像パス
 const getTrapImagePath = (trapType: TrapType): string => {
-  return `/aoa/images/cards/card_trap_${trapType}.png`;
+  return `/boards/images/cards/card_trap_${trapType}.png`;
 };
 
 interface GameBoardProps {

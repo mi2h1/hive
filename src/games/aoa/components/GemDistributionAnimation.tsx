@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const GEM_ICON_PATH = '/aoa/images/i_gem.png';
+const GEM_ICON_PATH = '/boards/images/i_gem.png';
 
 interface GemDistributionAnimationProps {
   gemValue: number;

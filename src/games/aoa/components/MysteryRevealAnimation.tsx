@@ -4,25 +4,25 @@ import { SPECIAL_EMOJI } from '../types/game';
 
 // カード画像パスのヘルパー関数
 const getGemImagePath = (value: number): string => {
-  if (value >= 15) return '/aoa/images/cards/card_gem_l.png';
-  if (value >= 7) return '/aoa/images/cards/card_gem_m.png';
-  return '/aoa/images/cards/card_gem_s.png';
+  if (value >= 15) return '/boards/images/cards/card_gem_l.png';
+  if (value >= 7) return '/boards/images/cards/card_gem_m.png';
+  return '/boards/images/cards/card_gem_s.png';
 };
 
 const getTrapImagePath = (trapType: TrapType): string => {
-  return `/aoa/images/cards/card_trap_${trapType}.png`;
+  return `/boards/images/cards/card_trap_${trapType}.png`;
 };
 
 // 遺物画像はカードIDからハッシュで決定的に選択
 const getRelicImagePath = (cardId: string): string => {
   const hash = cardId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const relicNum = (hash % 9) + 1;
-  return `/aoa/images/cards/card_relic_${relicNum.toString().padStart(2, '0')}.png`;
+  return `/boards/images/cards/card_relic_${relicNum.toString().padStart(2, '0')}.png`;
 };
 
 // カード裏面
-const CARD_BACK_AOA = '/aoa/images/cards/card_back_aoa.png';
-const CARD_BACK_INCAN = '/aoa/images/cards/card_back_incan.png';
+const CARD_BACK_AOA = '/boards/images/cards/card_back_aoa.png';
+const CARD_BACK_INCAN = '/boards/images/cards/card_back_incan.png';
 
 const getCardBackPath = (isIncan: boolean): string => {
   return isIncan ? CARD_BACK_INCAN : CARD_BACK_AOA;
