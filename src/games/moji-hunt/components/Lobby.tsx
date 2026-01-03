@@ -249,10 +249,10 @@ export const Lobby = ({
                 onChange={(e) => {
                   // IMEのコンポジション中は無視
                   if ((e.nativeEvent as InputEvent).isComposing) return;
-                  // 英字のみ抽出して大文字に変換、4文字まで
+                  // 英数字のみ抽出して大文字に変換、4文字まで
                   const filtered = e.target.value
                     .toUpperCase()
-                    .replace(/[^A-Z]/g, '')
+                    .replace(/[^A-Z0-9]/g, '')
                     .slice(0, 4);
                   setRoomCodeInput(filtered);
                 }}
@@ -260,7 +260,7 @@ export const Lobby = ({
                   const target = e.target as HTMLInputElement;
                   const filtered = target.value
                     .toUpperCase()
-                    .replace(/[^A-Z]/g, '')
+                    .replace(/[^A-Z0-9]/g, '')
                     .slice(0, 4);
                   setRoomCodeInput(filtered);
                 }}
@@ -269,7 +269,7 @@ export const Lobby = ({
                   const pasted = e.clipboardData.getData('text');
                   const filtered = pasted
                     .toUpperCase()
-                    .replace(/[^A-Z]/g, '')
+                    .replace(/[^A-Z0-9]/g, '')
                     .slice(0, 4);
                   setRoomCodeInput(filtered);
                 }}
