@@ -214,35 +214,6 @@ function App() {
             </div>
           </div>
 
-          {/* もじはんと（開発版） */}
-          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
-            <div className="h-40 bg-gradient-to-br from-orange-600 to-amber-500 flex items-center justify-center relative">
-              <img
-                src="/boards/images/vec_logo_moji-hant.svg"
-                alt="もじはんと"
-                className="h-12"
-                style={{ filter: 'brightness(0) invert(1)' }}
-              />
-              <span className="absolute top-2 right-2 bg-orange-800 text-white px-2 py-0.5 rounded text-xs font-bold">
-                DEV
-              </span>
-            </div>
-            <div className="p-4">
-              <h2 className="text-lg font-bold text-white mb-2">もじはんと（開発版）</h2>
-              <p className="text-slate-400 text-sm mb-4">
-                デバッグ機能付きの開発・テスト用バージョン。テストプレイヤーの追加などが可能。
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => selectGame('moji-hunt-dev')}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500
-                    hover:from-orange-600 hover:to-amber-600 rounded-lg text-white font-bold transition-all"
-                >
-                  遊ぶ
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
