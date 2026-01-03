@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Crown, FlaskConical } from 'lucide-react';
 import type { Player, GameSettings, TopicCategory } from '../types/game';
 import { TOPIC_LABELS } from '../types/game';
@@ -43,6 +43,7 @@ export const Lobby = ({
 }: LobbyProps) => {
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [showCopiedToast, setShowCopiedToast] = useState(false);
+  const isComposing = useRef(false);
 
   const copyRoomCode = () => {
     if (roomCode) {
@@ -246,12 +247,26 @@ export const Lobby = ({
               <input
                 type="text"
                 value={roomCodeInput}
-                onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
+                onChange={(e) => {
+                  if (!isComposing.current) {
+                    setRoomCodeInput(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''));
+                  }
+                }}
+                onCompositionStart={() => { isComposing.current = true; }}
+                onCompositionEnd={(e) => {
+                  isComposing.current = false;
+                  const target = e.target as HTMLInputElement;
+                  setRoomCodeInput(target.value.toUpperCase().replace(/[^A-Z]/g, ''));
+                }}
                 placeholder="ルームコードを入力"
                 className="w-full px-4 py-3 bg-slate-700 text-white text-center text-xl
                   font-mono tracking-widest rounded-lg uppercase
                   focus:outline-none focus:ring-2 focus:ring-pink-500"
                 maxLength={4}
+                inputMode="text"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="characters"
               />
               <button
                 onClick={() => onJoinRoom(roomCodeInput)}
