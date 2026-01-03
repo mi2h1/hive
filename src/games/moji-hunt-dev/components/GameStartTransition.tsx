@@ -9,11 +9,16 @@ interface GameStartTransitionProps {
 export const GameStartTransition = ({ topic, onComplete }: GameStartTransitionProps) => {
   const [phase, setPhase] = useState<'loading' | 'announce'>('loading');
   const [fadeOut, setFadeOut] = useState(false);
+  const [contentFade, setContentFade] = useState(false);
 
   useEffect(() => {
-    // ローディング表示 (1秒)
+    // ローディング表示 (1秒) → フェードアウト → お題表示
     const loadingTimer = setTimeout(() => {
-      setPhase('announce');
+      setContentFade(true); // ローディングをフェードアウト
+      setTimeout(() => {
+        setPhase('announce');
+        setContentFade(false); // お題をフェードイン
+      }, 300);
     }, 1000);
 
     return () => clearTimeout(loadingTimer);
@@ -44,14 +49,14 @@ export const GameStartTransition = ({ topic, onComplete }: GameStartTransitionPr
     >
       {phase === 'loading' ? (
         // ローディング画面
-        <div className="text-center animate-fade-in">
+        <div className={`text-center transition-opacity duration-300 ${contentFade ? 'opacity-0' : 'opacity-100'}`}>
           <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
           <p className="text-white/80 text-lg">ゲームを準備中...</p>
         </div>
       ) : (
         // お題アナウンス
         <div
-          className="text-center animate-fade-in cursor-pointer"
+          className={`text-center cursor-pointer transition-opacity duration-300 ${contentFade ? 'opacity-0' : 'opacity-100'}`}
           onClick={handleDismiss}
         >
           <p className="text-white/60 text-lg mb-4">今回のお題は...</p>
