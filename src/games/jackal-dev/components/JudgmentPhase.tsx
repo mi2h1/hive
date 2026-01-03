@@ -50,7 +50,7 @@ export const JudgmentPhase = ({
     };
   }, [judgmentResult]);
 
-  // ゲーム終了時の自動遷移
+  // ゲーム終了時の自動遷移（3秒後、またはクリックで即座に遷移）
   useEffect(() => {
     if (stage !== 'done' || !isGameOver) return;
 
@@ -60,6 +60,13 @@ export const JudgmentPhase = ({
 
     return () => clearTimeout(timer);
   }, [stage, isGameOver, onNextRound]);
+
+  // クリックで即座に遷移
+  const handleScreenClick = () => {
+    if (stage === 'done' && isGameOver) {
+      onNextRound();
+    }
+  };
 
   if (!judgmentResult) {
     return (
@@ -108,8 +115,13 @@ export const JudgmentPhase = ({
       : 'ring-4 ring-green-500 bg-green-900/60';
   };
 
+  const isClickable = stage === 'done' && isGameOver;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 p-4">
+    <div
+      className={`min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 p-4 ${isClickable ? 'cursor-pointer' : ''}`}
+      onClick={isClickable ? handleScreenClick : undefined}
+    >
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -292,7 +304,7 @@ export const JudgmentPhase = ({
           {isGameOver ? (
             <div className="text-center">
               <div className="text-slate-400 mb-2">ゲーム終了</div>
-              <div className="text-white text-lg">結果画面へ移動中...</div>
+              <div className="text-white/60 text-sm animate-pulse">タップして結果画面へ</div>
             </div>
           ) : (
             <div className="flex gap-3">

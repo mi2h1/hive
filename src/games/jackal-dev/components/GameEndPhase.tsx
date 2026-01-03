@@ -4,6 +4,7 @@ import type { GameState } from '../types/game';
 interface GameEndPhaseProps {
   gameState: GameState;
   playerId: string;
+  isHost: boolean;
   onBackToLobby: () => void;
   onLeaveRoom: () => void;
 }
@@ -11,6 +12,7 @@ interface GameEndPhaseProps {
 export const GameEndPhase = ({
   gameState,
   playerId,
+  isHost,
   onBackToLobby,
   onLeaveRoom,
 }: GameEndPhaseProps) => {
@@ -112,20 +114,32 @@ export const GameEndPhase = ({
         </div>
 
         {/* アクションボタン */}
-        <div className="flex gap-3">
-          <button
-            onClick={onLeaveRoom}
-            className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold transition-colors"
-          >
-            退出
-          </button>
-          <button
-            onClick={onBackToLobby}
-            className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 rounded-lg text-white font-bold transition-all"
-          >
-            もう一度プレイ
-          </button>
-        </div>
+        {isHost ? (
+          <div className="flex gap-3">
+            <button
+              onClick={onLeaveRoom}
+              className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold transition-colors"
+            >
+              退出
+            </button>
+            <button
+              onClick={onBackToLobby}
+              className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 rounded-lg text-white font-bold transition-all"
+            >
+              もう一度プレイ
+            </button>
+          </div>
+        ) : (
+          <div className="text-center">
+            <div className="text-slate-400 animate-pulse">ホストの選択を待っています...</div>
+            <button
+              onClick={onLeaveRoom}
+              className="mt-4 px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
+            >
+              退出
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
