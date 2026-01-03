@@ -48,7 +48,19 @@ src/
 │   │   │   └── hiragana.ts
 │   │   └── types/
 │   │       └── game.ts
-│   └── moji-hunt-dev/         # もじはんと（開発版）
+│   ├── moji-hunt-dev/         # もじはんと（開発版）
+│   │   └── ...                # 本番と同構造 + デバッグ機能
+│   ├── jackal/                # ジャッカル（本番）
+│   │   ├── JackalGame.tsx
+│   │   ├── components/
+│   │   │   └── Lobby.tsx
+│   │   ├── hooks/
+│   │   │   └── useRoom.ts
+│   │   ├── lib/
+│   │   │   └── cards.ts
+│   │   └── types/
+│   │       └── game.ts
+│   └── jackal-dev/            # ジャッカル（開発版）
 │       └── ...                # 本番と同構造 + デバッグ機能
 └── shared/
     └── hooks/
@@ -69,6 +81,13 @@ src/
 - 概要: ひらがな当てバトルゲーム（2〜5人）
 - 仕様: `docs/moji-hunt-spec.md` 参照
 
+### ジャッカル (jackal)
+- パス: `/boards/jackal`（本番）、`/boards/jackal-dev`（開発版）
+- 状態: 開発中（ロビーまで実装）
+- 概要: ブラフ＆心理戦カードゲーム（2〜10人）
+- 仕様: `docs/jackal-spec.md` 参照
+- 特徴: 自分のカードだけ見えない状態で宣言を繰り返す
+
 ### 管理画面 (admin)
 - パス: `/boards/admin`
 - 概要: 全ゲームの部屋をリアルタイム監視
@@ -85,6 +104,8 @@ src/
 - `/boards/aoa` → アトランティスの深淵
 - `/boards/moji-hunt` → もじはんと（本番）
 - `/boards/moji-hunt-dev` → もじはんと（開発版・デバッグ機能付き）
+- `/boards/jackal` → ジャッカル（本番）
+- `/boards/jackal-dev` → ジャッカル（開発版・デバッグ機能付き）
 - `/boards/admin` → 管理画面
 
 GitHub Pagesでは404.htmlによるSPAリダイレクトを使用。
@@ -100,6 +121,8 @@ GitHub Pagesでは404.htmlによるSPAリダイレクトを使用。
 | AOA（インカルール） | インカの黄金 |
 | もじはんと | もじはんと |
 | もじはんとDEV | もじはんとDEV |
+| ジャッカル | ジャッカル |
+| ジャッカルDEV | ジャッカルDEV |
 | 管理画面 | Game Board - Admin Dashboard |
 
 ## 部屋の自動削除

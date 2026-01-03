@@ -5,9 +5,10 @@ import { AoaGame } from './games/aoa/AoaGame';
 import { MojiHuntGame } from './games/moji-hunt/MojiHuntGame';
 import { MojiHuntDevGame } from './games/moji-hunt-dev/MojiHuntDevGame';
 import { JackalGame } from './games/jackal/JackalGame';
+import { JackalDevGame } from './games/jackal-dev/JackalDevGame';
 import { AdminPage } from './admin/AdminPage';
 
-type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'admin';
+type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'admin';
 
 // クエリパラメータを保持（?v=xxx などのキャッシュバスター用）
 const getQueryString = (excludeKeys: string[] = []) => {
@@ -31,6 +32,7 @@ const getGameFromPath = (): GameType => {
     if (redirectPath === 'moji-hunt') return 'moji-hunt';
     if (redirectPath === 'moji-hunt-dev') return 'moji-hunt-dev';
     if (redirectPath === 'jackal') return 'jackal';
+    if (redirectPath === 'jackal-dev') return 'jackal-dev';
     if (redirectPath === 'admin') return 'admin';
   }
 
@@ -40,6 +42,7 @@ const getGameFromPath = (): GameType => {
   if (path === 'moji-hunt') return 'moji-hunt';
   if (path === 'moji-hunt-dev') return 'moji-hunt-dev';
   if (path === 'jackal') return 'jackal';
+  if (path === 'jackal-dev') return 'jackal-dev';
   if (path === 'admin') return 'admin';
   return 'none';
 };
@@ -151,6 +154,9 @@ function App() {
   }
   if (selectedGame === 'jackal') {
     return <JackalGame onBack={() => selectGame('none')} />;
+  }
+  if (selectedGame === 'jackal-dev') {
+    return <JackalDevGame onBack={() => selectGame('none')} />;
   }
 
   // ゲーム選択画面
