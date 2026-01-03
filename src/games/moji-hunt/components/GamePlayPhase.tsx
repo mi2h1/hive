@@ -158,7 +158,9 @@ export const GamePlayPhase = ({
   // 攻撃結果処理
   const processAttackResult = (_attackedChar: string, hits: AttackHit[]) => {
     // 各プレイヤーの更新を計算
-    const anyHit = hits.length > 0;
+    // 他プレイヤーへのヒットのみをカウント（自分へのヒットは連続攻撃の対象外）
+    const otherPlayerHits = hits.filter(h => h.playerId !== currentTurnPlayerId);
+    const hitOthers = otherPlayerHits.length > 0;
     let eliminationCount = players.filter(p => p.isEliminated).length;
 
     // ヒットした全プレイヤーを更新
@@ -210,10 +212,10 @@ export const GamePlayPhase = ({
     }
 
     // 次のターンへの移動判定
-    // 連続攻撃は1回まで：前回ヒットしていなくて今回ヒットした場合のみ連続攻撃可能
-    const canContinue = anyHit && !lastAttackHadHit;
+    // 連続攻撃は1回まで：前回ヒットしていなくて今回「他プレイヤーに」ヒットした場合のみ連続攻撃可能
+    const canContinue = hitOthers && !lastAttackHadHit;
     let nextPlayerId = currentTurnPlayerId;
-    let nextLastAttackHadHit = anyHit;
+    let nextLastAttackHadHit = hitOthers;
 
     if (!canContinue) {
       // 次のプレイヤーへ
