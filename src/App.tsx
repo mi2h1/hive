@@ -67,7 +67,7 @@ function App() {
         <div className="bg-slate-800/95 rounded-xl p-8 max-w-md w-full">
           <div className="text-center mb-8">
             <Gamepad2 className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">lche-board</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">Game Board</h1>
             <p className="text-slate-400">オンラインボードゲーム</p>
           </div>
 
@@ -119,7 +119,7 @@ function App() {
         {/* ヘッダー */}
         <header className="text-center py-8">
           <Gamepad2 className="w-12 h-12 text-indigo-400 mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-white mb-1">lche-board</h1>
+          <h1 className="text-2xl font-bold text-white mb-1">Game Board</h1>
           <p className="text-slate-400">
             ようこそ、<span className="text-indigo-300">{playerName}</span> さん
           </p>
