@@ -89,35 +89,29 @@ export const ResultScreen = ({
                     )}
                   </div>
 
-                  {/* 言葉 */}
+                  {/* 言葉（結果画面では全員の言葉を全公開） */}
                   <div className="flex gap-0.5 flex-shrink-0">
-                    {isMe && localState ? (
-                      // 自分の言葉は表示
-                      Array.from(localState.normalizedWord).map((char, i) => (
-                        <span
-                          key={i}
-                          className="w-6 h-6 flex items-center justify-center bg-white/20 rounded text-white font-bold text-xs"
-                        >
-                          {char}
-                        </span>
-                      ))
-                    ) : (
-                      // 他プレイヤーの言葉
-                      Array.from({ length: player.wordLength }).map((_, i) => (
-                        <span
-                          key={i}
-                          className={`
-                            w-6 h-6 flex items-center justify-center rounded font-bold text-xs
-                            ${player.revealedPositions[i]
-                              ? 'bg-pink-500/50 text-white'
-                              : 'bg-white/10 text-white/40'
-                            }
-                          `}
-                        >
-                          {player.revealedCharacters[i] || '?'}
-                        </span>
-                      ))
-                    )}
+                    {(() => {
+                      // 自分の言葉はlocalStateから、他プレイヤーはnormalizedWordから取得
+                      const word = isMe && localState ? localState.normalizedWord : player.normalizedWord;
+                      return Array.from(word || '').map((char, i) => {
+                        const wasRevealed = player.revealedPositions[i];
+                        return (
+                          <span
+                            key={i}
+                            className={`
+                              w-6 h-6 flex items-center justify-center rounded font-bold text-xs
+                              ${wasRevealed
+                                ? 'bg-pink-500/50 text-white'
+                                : 'bg-emerald-500/50 text-emerald-100'
+                              }
+                            `}
+                          >
+                            {char}
+                          </span>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               );
