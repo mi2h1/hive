@@ -1,7 +1,7 @@
 // ジャッカル ゲーム状態の型定義
 
 // カードの種類
-export type CardType = 'number' | 'double' | 'max_zero' | 'mystery' | 'special';
+export type CardType = 'number' | 'double' | 'max_zero' | 'mystery' | 'shuffle_zero' | 'special';
 
 // カード
 export interface Card {
@@ -32,6 +32,10 @@ export type GamePhase =
 
 // ジャッカル判定結果
 export interface JudgmentResult {
+  jackalCallerId: string; // ジャッカルを宣言したプレイヤー
+  jackalCallerName: string;
+  declarerId: string; // 最後に数字を宣言したプレイヤー
+  declarerName: string;
   declaredValue: number;
   totalValue: number;
   loserId: string;
@@ -46,6 +50,7 @@ export interface JudgmentResult {
   mysteryCard?: Card; // ?カードで引いたカード
   hasDouble: boolean;
   hasMaxZero: boolean;
+  hasShuffleZero: boolean;
   maxValue: number;
 }
 
@@ -63,6 +68,7 @@ export interface GameState {
   players: Player[];
   // カード関連
   deck: Card[]; // 山札
+  discardPile: Card[]; // 捨て札
   dealtCards: Record<string, Card>; // プレイヤーID -> カード
   // ラウンド状態
   round: number;

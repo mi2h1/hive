@@ -81,6 +81,7 @@ export const createInitialGameState = (settings: GameSettings = DEFAULT_SETTINGS
   settings,
   players: [],
   deck: [],
+  discardPile: [],
   dealtCards: {},
   round: 1,
   currentTurnPlayerId: null,

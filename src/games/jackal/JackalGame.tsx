@@ -1,20 +1,21 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
 import { Lobby } from './components/Lobby';
-import { createGameDeck } from './lib/cards';
+import { GamePlayPhase } from './components/GamePlayPhase';
+import { JudgmentPhase } from './components/JudgmentPhase';
+import { GameEndPhase } from './components/GameEndPhase';
+import { createGameDeck, calculateTotal, shuffleDeck } from './lib/cards';
 import { DEFAULT_SETTINGS } from './types/game';
+import type { JudgmentResult, Card } from './types/game';
 
 interface JackalGameProps {
   onBack: () => void;
 }
 
 export const JackalGame = ({ onBack }: JackalGameProps) => {
-  // デバッグモード検出（URLパラメータ ?debug=true）
-  const debugMode = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('debug') === 'true';
-  }, []);
+  // 本番版はデバッグモードOFF
+  const debugMode = false;
 
   const { playerId, playerName, isLoading: isPlayerLoading } = usePlayer();
   const {
@@ -28,7 +29,6 @@ export const JackalGame = ({ onBack }: JackalGameProps) => {
     leaveRoom,
     updateGameState,
     updateSettings,
-    addTestPlayer,
   } = useRoom(playerId, playerName);
 
   // ブラウザタブのタイトルを設定
@@ -41,7 +41,7 @@ export const JackalGame = ({ onBack }: JackalGameProps) => {
   const players = gameState?.players ?? [];
   const settings = gameState?.settings ?? DEFAULT_SETTINGS;
 
-  // ゲーム開始処理
+  // ゲーム開始処理（デバッグモードでは1人でも開始可能）
   const handleStartGame = () => {
     if (!isHost || !gameState) return;
 
@@ -53,19 +53,20 @@ export const JackalGame = ({ onBack }: JackalGameProps) => {
     const shuffledOrder = [...playerIds].sort(() => Math.random() - 0.5);
 
     // 各プレイヤーにカードを配る
-    const dealtCards: Record<string, typeof deck[0]> = {};
+    const dealtCards: Record<string, Card> = {};
     const remainingDeck = [...deck];
 
-    for (const playerId of playerIds) {
+    for (const pid of playerIds) {
       const card = remainingDeck.pop();
       if (card) {
-        dealtCards[playerId] = card;
+        dealtCards[pid] = card;
       }
     }
 
     updateGameState({
-      phase: 'round_start',
+      phase: 'declaring',
       deck: remainingDeck,
+      discardPile: [],
       dealtCards,
       turnOrder: shuffledOrder,
       currentTurnPlayerId: shuffledOrder[0],
@@ -73,6 +74,247 @@ export const JackalGame = ({ onBack }: JackalGameProps) => {
       currentDeclaredValue: null,
       lastDeclarerId: null,
       judgmentResult: null,
+    });
+  };
+
+  // 数字を宣言
+  const handleDeclare = (value: number, actingPlayerId: string) => {
+    if (!gameState) return;
+    if (gameState.currentTurnPlayerId !== actingPlayerId) return;
+
+    const currentIndex = gameState.turnOrder.indexOf(actingPlayerId);
+
+    // 次のプレイヤーを探す（脱落していないプレイヤー）
+    let nextIndex = (currentIndex + 1) % gameState.turnOrder.length;
+    let attempts = 0;
+    while (attempts < gameState.turnOrder.length) {
+      const nextPlayerId = gameState.turnOrder[nextIndex];
+      const nextPlayer = players.find(p => p.id === nextPlayerId);
+      if (nextPlayer && !nextPlayer.isEliminated) {
+        break;
+      }
+      nextIndex = (nextIndex + 1) % gameState.turnOrder.length;
+      attempts++;
+    }
+
+    updateGameState({
+      currentDeclaredValue: value,
+      lastDeclarerId: actingPlayerId,
+      currentTurnPlayerId: gameState.turnOrder[nextIndex],
+    });
+  };
+
+  // ジャッカルを宣言
+  const handleCallJackal = (actingPlayerId: string) => {
+    if (!gameState) return;
+    if (gameState.currentTurnPlayerId !== actingPlayerId) return;
+    if (gameState.currentDeclaredValue === null) return;
+
+    // ?カードがある場合は山札から1枚引く
+    let mysteryDrawnCard: Card | null = null;
+    const hasMystery = Object.values(gameState.dealtCards).some(c => c.type === 'mystery');
+    if (hasMystery && gameState.deck.length > 0) {
+      mysteryDrawnCard = gameState.deck[gameState.deck.length - 1];
+    }
+
+    // 合計値を計算
+    const result = calculateTotal(gameState.dealtCards, mysteryDrawnCard);
+
+    // 判定
+    const declaredValue = gameState.currentDeclaredValue;
+    const lastDeclarerId = gameState.lastDeclarerId!;
+
+    let loserId: string;
+    let reason: 'over' | 'jackal';
+
+    if (declaredValue > result.totalValue) {
+      // 宣言が合計を超えている → 宣言者の負け
+      loserId = lastDeclarerId;
+      reason = 'over';
+    } else {
+      // 宣言が合計以下 → ジャッカル宣言者の負け
+      loserId = actingPlayerId;
+      reason = 'jackal';
+    }
+
+    const loser = players.find(p => p.id === loserId);
+    const jackalCaller = players.find(p => p.id === actingPlayerId);
+    const declarer = players.find(p => p.id === lastDeclarerId);
+
+    // 判定結果を作成
+    // Firebaseはundefinedを許可しないので、mysteryCardは存在する場合のみ設定
+    const judgmentResult: JudgmentResult = {
+      jackalCallerId: actingPlayerId,
+      jackalCallerName: jackalCaller?.name ?? '不明',
+      declarerId: lastDeclarerId,
+      declarerName: declarer?.name ?? '不明',
+      declaredValue,
+      totalValue: result.totalValue,
+      loserId,
+      loserName: loser?.name ?? '不明',
+      reason,
+      cardDetails: result.cardValues.map(cv => ({
+        playerId: cv.playerId,
+        playerName: players.find(p => p.id === cv.playerId)?.name ?? '不明',
+        card: cv.card,
+        resolvedValue: cv.resolvedValue,
+      })),
+      hasDouble: result.hasDouble,
+      hasMaxZero: result.hasMaxZero,
+      hasShuffleZero: result.hasShuffleZero,
+      maxValue: result.maxValue,
+    };
+    if (result.mysteryResolvedCard) {
+      judgmentResult.mysteryCard = result.mysteryResolvedCard;
+    }
+
+    // プレイヤーのライフを減らす
+    // Firebaseはundefinedを許可しないので、eliminatedAtは脱落時のみ設定
+    const updatedPlayers = players.map(p => {
+      // 既存のeliminatedAtを除外してコピー
+      const { eliminatedAt: _, ...playerWithoutEliminatedAt } = p;
+
+      if (p.id === loserId) {
+        const newLife = p.life - 1;
+        const isEliminated = newLife <= 0;
+        if (isEliminated) {
+          return {
+            ...playerWithoutEliminatedAt,
+            life: newLife,
+            isEliminated,
+            eliminatedAt: gameState.round,
+          };
+        }
+        return {
+          ...playerWithoutEliminatedAt,
+          life: newLife,
+          isEliminated,
+        };
+      }
+      // 脱落済みプレイヤーはeliminatedAtを保持
+      if (p.eliminatedAt !== undefined) {
+        return { ...playerWithoutEliminatedAt, eliminatedAt: p.eliminatedAt };
+      }
+      return playerWithoutEliminatedAt;
+    });
+
+    // 山札を更新（?カード用に引いた場合）
+    const updatedDeck = hasMystery && mysteryDrawnCard
+      ? gameState.deck.slice(0, -1)
+      : gameState.deck;
+
+    updateGameState({
+      phase: 'round_end',
+      players: updatedPlayers,
+      deck: updatedDeck,
+      judgmentResult,
+    });
+  };
+
+  // 次のラウンドへ
+  const handleNextRound = () => {
+    if (!gameState) return;
+
+    // 生き残っているプレイヤーを確認
+    const activePlayers = gameState.players.filter(p => !p.isEliminated);
+
+    // 勝者が決定した場合
+    if (activePlayers.length <= 1) {
+      updateGameState({
+        phase: 'game_end',
+        winnerId: activePlayers[0]?.id ?? null,
+      });
+      return;
+    }
+
+    // 今ラウンドで使ったカードを捨て札に追加
+    const usedCards = Object.values(gameState.dealtCards);
+    let newDiscardPile = [...(gameState.discardPile || []), ...usedCards];
+
+    // 現在の山札
+    let currentDeck = [...gameState.deck];
+
+    // 特殊0（シャッフル）があった場合、捨て札を山札に混ぜてシャッフル
+    const hasShuffleZero = gameState.judgmentResult?.hasShuffleZero ?? false;
+    if (hasShuffleZero && newDiscardPile.length > 0) {
+      // 捨て札を山札に追加してシャッフル
+      currentDeck = shuffleDeck([...currentDeck, ...newDiscardPile]);
+      newDiscardPile = [];
+    }
+
+    // 山札が足りない場合は捨て札をシャッフルして補充
+    if (currentDeck.length < activePlayers.length && newDiscardPile.length > 0) {
+      currentDeck = shuffleDeck([...currentDeck, ...newDiscardPile]);
+      newDiscardPile = [];
+    }
+
+    // アクティブプレイヤーにカードを配る
+    const dealtCards: Record<string, Card> = {};
+    const remainingDeck = [...currentDeck];
+
+    for (const player of activePlayers) {
+      const card = remainingDeck.pop();
+      if (card) {
+        dealtCards[player.id] = card;
+      }
+    }
+
+    // ターン順を更新（脱落者を除外）
+    const newTurnOrder = gameState.turnOrder.filter(id =>
+      activePlayers.some(p => p.id === id)
+    );
+
+    // 負けた人から開始（いなければ最初の人）
+    const lastLoserId = gameState.judgmentResult?.loserId;
+    let startIndex = 0;
+    if (lastLoserId && newTurnOrder.includes(lastLoserId)) {
+      startIndex = newTurnOrder.indexOf(lastLoserId);
+    }
+    const startPlayerId = newTurnOrder[startIndex];
+
+    updateGameState({
+      phase: 'declaring',
+      deck: remainingDeck,
+      discardPile: newDiscardPile,
+      dealtCards,
+      turnOrder: newTurnOrder,
+      currentTurnPlayerId: startPlayerId,
+      round: gameState.round + 1,
+      currentDeclaredValue: null,
+      lastDeclarerId: null,
+      judgmentResult: null,
+    });
+  };
+
+  // ロビーに戻る（ゲーム終了時）
+  const handleBackToLobby = () => {
+    if (!gameState) return;
+
+    // プレイヤーのライフをリセット（eliminatedAtを除外）
+    const resetPlayers = gameState.players.map(p => {
+      // eliminatedAtを除外してコピー
+      const { eliminatedAt: _, ...playerWithoutEliminatedAt } = p;
+      return {
+        ...playerWithoutEliminatedAt,
+        life: settings.initialLife,
+        isEliminated: false,
+        cardId: null,
+      };
+    });
+
+    updateGameState({
+      phase: 'waiting',
+      players: resetPlayers,
+      deck: [],
+      discardPile: [],
+      dealtCards: {},
+      round: 1,
+      currentTurnPlayerId: null,
+      turnOrder: [],
+      currentDeclaredValue: null,
+      lastDeclarerId: null,
+      judgmentResult: null,
+      winnerId: null,
     });
   };
 
@@ -103,46 +345,44 @@ export const JackalGame = ({ onBack }: JackalGameProps) => {
         onStartGame={handleStartGame}
         onUpdateSettings={updateSettings}
         onBack={onBack}
-        debugMode={debugMode}
-        onAddTestPlayer={addTestPlayer}
       />
     );
   }
 
-  // ゲーム画面（TODO: 実装予定）
+  // ゲーム終了画面
+  if (gameState.phase === 'game_end') {
+    return (
+      <GameEndPhase
+        gameState={gameState}
+        playerId={playerId ?? ''}
+        isHost={isHost}
+        onBackToLobby={handleBackToLobby}
+        onLeaveRoom={leaveRoom}
+      />
+    );
+  }
+
+  // 判定結果画面
+  if (gameState.phase === 'round_end' || gameState.phase === 'judging') {
+    return (
+      <JudgmentPhase
+        gameState={gameState}
+        playerId={playerId ?? ''}
+        onNextRound={handleNextRound}
+        onLeaveRoom={leaveRoom}
+      />
+    );
+  }
+
+  // ゲーム画面（宣言フェーズ）
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center p-4">
-      <div className="bg-slate-800/95 rounded-xl p-6 max-w-2xl w-full text-center">
-        <h1 className="text-2xl font-bold text-white mb-4">ジャッカル</h1>
-        <p className="text-white/60 mb-4">
-          フェーズ: {gameState.phase} / ラウンド: {gameState.round}
-        </p>
-        <p className="text-white/40 text-sm mb-6">
-          ゲーム画面は実装中です...
-        </p>
-
-        {/* デバッグ情報 */}
-        {debugMode && (
-          <div className="bg-slate-700/50 rounded-lg p-4 text-left text-sm">
-            <h3 className="text-orange-400 font-bold mb-2">デバッグ情報</h3>
-            <div className="text-slate-300 space-y-1">
-              <div>プレイヤー数: {players.length}</div>
-              <div>山札残り: {gameState.deck.length}枚</div>
-              <div>配られたカード: {Object.keys(gameState.dealtCards).length}枚</div>
-              <div>現在のターン: {gameState.currentTurnPlayerId}</div>
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={() => {
-            leaveRoom();
-          }}
-          className="mt-6 px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
-        >
-          退出
-        </button>
-      </div>
-    </div>
+    <GamePlayPhase
+      gameState={gameState}
+      playerId={playerId ?? ''}
+      debugMode={debugMode}
+      onDeclare={handleDeclare}
+      onCallJackal={handleCallJackal}
+      onLeaveRoom={leaveRoom}
+    />
   );
 };
