@@ -88,6 +88,7 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
         currentTopic: topic,
         turnOrder: shuffledOrder,
         currentTurnPlayerId: shuffledOrder[0],
+        topicChangeVotes: [],
       });
     }, 300);
   };
@@ -148,6 +149,47 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
     });
 
     updateGameState({ players: updatedPlayers });
+  };
+
+  // お題チェンジ投票処理
+  const handleVoteTopicChange = () => {
+    if (!playerId || !gameState) return;
+
+    const currentVotes = gameState.topicChangeVotes ?? [];
+    if (currentVotes.includes(playerId)) return; // 既に投票済み
+
+    const newVotes = [...currentVotes, playerId];
+
+    // 全員投票したらお題を変更
+    if (newVotes.length >= players.length) {
+      // 新しいお題を選出
+      const newTopic = getRandomTopic();
+      setTransitionTopic(newTopic);
+      setShowTransition(true);
+
+      // 全員の入力をリセット
+      const resetPlayers = players.map(p => ({
+        ...p,
+        isReady: false,
+        wordLength: 0,
+        normalizedWord: '',
+        revealedPositions: [],
+        revealedCharacters: [],
+      }));
+
+      // ローカル状態もリセット
+      setLocalState(null);
+      setDebugLocalStates({});
+
+      updateGameState({
+        currentTopic: newTopic,
+        topicChangeVotes: [],
+        players: resetPlayers,
+      });
+    } else {
+      // まだ全員投票していない
+      updateGameState({ topicChangeVotes: newVotes });
+    }
   };
 
   // 全員準備完了したらゲーム開始
@@ -250,6 +292,8 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
             currentPlayerId={playerId ?? ''}
             isReady={localState !== null}
             onSubmitWord={handleWordSubmit}
+            topicChangeVotes={gameState.topicChangeVotes ?? []}
+            onVoteTopicChange={handleVoteTopicChange}
             debugMode={debugMode}
             debugLocalStates={debugLocalStates}
             onDebugWordSubmit={handleDebugWordSubmit}
@@ -298,6 +342,7 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
                 attackHistory: [],
                 lastAttackHadHit: false,
                 winnerId: null,
+                topicChangeVotes: [],
               });
             }}
             onLeaveRoom={() => {

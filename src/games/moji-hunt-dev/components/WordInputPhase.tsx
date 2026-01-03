@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Loader2, FlaskConical } from 'lucide-react';
+import { Check, Loader2, FlaskConical, RefreshCw } from 'lucide-react';
 import type { Player, GameSettings, LocalPlayerState } from '../types/game';
 import { validateWord, normalizeWord } from '../lib/hiragana';
 
@@ -10,6 +10,9 @@ interface WordInputPhaseProps {
   currentPlayerId: string;
   isReady: boolean;
   onSubmitWord: (originalWord: string, normalizedWord: string) => void;
+  // お題チェンジ投票
+  topicChangeVotes: string[];
+  onVoteTopicChange: () => void;
   // デバッグ用
   debugMode?: boolean;
   debugLocalStates?: Record<string, LocalPlayerState>;
@@ -23,6 +26,8 @@ export const WordInputPhase = ({
   currentPlayerId,
   isReady,
   onSubmitWord,
+  topicChangeVotes,
+  onVoteTopicChange,
   debugMode = false,
   debugLocalStates = {},
   onDebugWordSubmit,
@@ -46,6 +51,9 @@ export const WordInputPhase = ({
   const readyPlayers = players.filter(p => p.isReady);
   const waitingPlayers = players.filter(p => !p.isReady);
 
+  const hasVoted = topicChangeVotes.includes(currentPlayerId);
+  const voteCount = topicChangeVotes.length;
+
   // 既に入力完了している場合
   if (isReady) {
     return (
@@ -54,6 +62,27 @@ export const WordInputPhase = ({
           <Check className="w-16 h-16 text-green-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">入力完了</h2>
           <p className="text-white/60">他のプレイヤーを待っています...</p>
+        </div>
+
+        {/* お題チェンジ投票 */}
+        <div className="bg-white/10 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white/60">
+              <RefreshCw className="w-4 h-4" />
+              <span>お題チェンジ ({voteCount}/{players.length})</span>
+            </div>
+            <button
+              onClick={onVoteTopicChange}
+              disabled={hasVoted}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                hasVoted
+                  ? 'bg-white/20 text-white/60 cursor-not-allowed'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+              }`}
+            >
+              {hasVoted ? '投票済み' : '投票する'}
+            </button>
+          </div>
         </div>
 
         {/* 待機状況 */}
@@ -97,6 +126,26 @@ export const WordInputPhase = ({
         <p className="text-white/60 mt-4">
           {settings.minWordLength}〜{settings.maxWordLength}文字のひらがなで言葉を入力してください
         </p>
+        {/* お題チェンジ投票 */}
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center gap-2 text-white/60 text-sm">
+              <RefreshCw className="w-4 h-4" />
+              <span>お題チェンジ ({voteCount}/{players.length})</span>
+            </div>
+            <button
+              onClick={onVoteTopicChange}
+              disabled={hasVoted}
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                hasVoted
+                  ? 'bg-white/20 text-white/60 cursor-not-allowed'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+              }`}
+            >
+              {hasVoted ? '投票済み' : '投票する'}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* 入力フォーム */}

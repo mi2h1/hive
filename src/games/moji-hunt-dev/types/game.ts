@@ -156,6 +156,7 @@ export interface GameState {
   lastAttackHadHit: boolean; // 最後の攻撃がヒットしたか（連続攻撃判定用）
   winnerId: string | null;
   currentAttack?: CurrentAttack | null; // 現在の攻撃演出（全員に表示）
+  topicChangeVotes: string[]; // お題チェンジに投票したプレイヤーID
 }
 
 // ルームデータ
