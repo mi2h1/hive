@@ -10,8 +10,8 @@
       const search = window.location.search;
       const hash = window.location.hash;
 
-      // /boards 以下のパスを取得
-      const gamePath = path.replace('/boards', '').replace(/^\//, '');
+      // /boards 以下のパスを取得（先頭・末尾のスラッシュを除去）
+      const gamePath = path.replace('/boards', '').replace(/^\/|\/$/g, '');
 
       if (gamePath) {
         // パスをクエリパラメータとして渡してリダイレクト

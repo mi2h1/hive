@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Zap, ArrowRight } from 'lucide-react';
+import { Zap, ArrowRight, FlaskConical, Eye } from 'lucide-react';
 import type { GameState, LocalPlayerState, AttackResult, AttackHit } from '../types/game';
 import { HiraganaBoard } from './HiraganaBoard';
 import { PlayerWordDisplay } from './PlayerWordDisplay';
@@ -11,6 +11,8 @@ interface GamePlayPhaseProps {
   playerId: string;
   isHost: boolean;
   updateGameState: (state: Partial<GameState>) => void;
+  // デバッグ用
+  debugMode?: boolean;
 }
 
 export const GamePlayPhase = ({
@@ -18,6 +20,7 @@ export const GamePlayPhase = ({
   localState,
   playerId,
   updateGameState,
+  debugMode = false,
 }: GamePlayPhaseProps) => {
   const {
     players,
@@ -76,9 +79,15 @@ export const GamePlayPhase = ({
     return () => clearInterval(interval);
   }, [currentAttack, updateGameState]);
 
-  const isMyTurn = currentTurnPlayerId === playerId;
+  // デバッグモード用: どのプレイヤーを操作しているか
+  const [debugControlledPlayerId, setDebugControlledPlayerId] = useState<string | null>(null);
+
+  // デバッグモードで操作中のプレイヤーを決定
+  const controlledPlayerId = debugMode && debugControlledPlayerId ? debugControlledPlayerId : playerId;
+
+  const isMyTurn = currentTurnPlayerId === controlledPlayerId;
   const currentPlayer = players.find(p => p.id === currentTurnPlayerId);
-  const myPlayer = players.find(p => p.id === playerId);
+  const myPlayer = players.find(p => p.id === controlledPlayerId);
 
   // 攻撃処理
   const handleAttack = (char: string) => {
@@ -128,7 +137,7 @@ export const GamePlayPhase = ({
 
       // 攻撃結果をFirebaseに送信
       const attackResult: AttackResult = {
-        attackerId: playerId,
+        attackerId: controlledPlayerId,
         attackerName: myPlayer?.name ?? '',
         targetChar: char,
         hits: allHits,
@@ -241,6 +250,87 @@ export const GamePlayPhase = ({
 
   return (
     <div className="space-y-4">
+      {/* デバッグ用: プレイヤー切り替え */}
+      {debugMode && (
+        <div className="bg-orange-900/30 border border-orange-600/50 rounded-xl p-4">
+          <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+            <FlaskConical className="w-4 h-4 text-orange-400" />
+            デバッグ: プレイヤー操作
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {players.map((player) => {
+              const isControlled = debugControlledPlayerId
+                ? player.id === debugControlledPlayerId
+                : player.id === playerId;
+              const isCurrentTurnPlayer = player.id === currentTurnPlayerId;
+
+              return (
+                <button
+                  key={player.id}
+                  onClick={() => setDebugControlledPlayerId(player.id === playerId ? null : player.id)}
+                  disabled={player.isEliminated}
+                  className={`
+                    px-3 py-2 rounded-lg text-sm font-bold transition-all
+                    ${isControlled
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-white/10 text-white/80 hover:bg-white/20'
+                    }
+                    ${isCurrentTurnPlayer ? 'ring-2 ring-yellow-400' : ''}
+                    ${player.isEliminated ? 'opacity-50 cursor-not-allowed line-through' : ''}
+                  `}
+                >
+                  {player.name}
+                  {player.id === playerId && ' (自分)'}
+                  {isCurrentTurnPlayer && ' ★'}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-orange-300/70 text-xs mt-2">
+            ★=現在のターン / 操作したいプレイヤーをクリック
+          </p>
+        </div>
+      )}
+
+      {/* デバッグ用: 全プレイヤーの言葉を表示 */}
+      {debugMode && (
+        <div className="bg-orange-900/30 border border-orange-600/50 rounded-xl p-4">
+          <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+            <Eye className="w-4 h-4 text-orange-400" />
+            デバッグ: 全プレイヤーの言葉
+          </h3>
+          <div className="space-y-2">
+            {players.map((player) => (
+              <div key={player.id} className="flex items-center gap-3">
+                <span className={`w-24 font-bold truncate ${player.isEliminated ? 'text-red-400 line-through' : 'text-white'}`}>
+                  {player.name}
+                </span>
+                <div className="flex gap-1">
+                  {player.normalizedWord ? (
+                    Array.from(player.normalizedWord).map((char, i) => {
+                      const isRevealed = player.revealedPositions[i];
+                      return (
+                        <div
+                          key={i}
+                          className={`
+                            w-8 h-8 flex items-center justify-center rounded text-sm font-bold
+                            ${isRevealed ? 'bg-red-500/50 text-white' : 'bg-white/20 text-white'}
+                          `}
+                        >
+                          {char}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <span className="text-white/40 text-sm">（未設定）</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 2カラムレイアウト */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* 左カラム: プレイヤー状況（コンパクト幅） */}
@@ -248,7 +338,8 @@ export const GamePlayPhase = ({
           <h3 className="text-white/80 font-bold">プレイヤー状況</h3>
           <div className="grid gap-3">
             {players.map((player) => {
-              const viewAsMe = player.id === playerId;
+              // デバッグモードでは操作中のプレイヤー視点で表示
+              const viewAsMe = player.id === controlledPlayerId;
               const revealingData = revealingPlayers[player.id];
               return (
                 <PlayerWordDisplay
@@ -334,6 +425,18 @@ export const GamePlayPhase = ({
                 </div>
               )}
             </>
+          )}
+
+          {/* デバッグ: パネル状態表示 */}
+          {debugMode && (
+            <div className="bg-red-900/50 text-white text-xs p-2 rounded mb-2 font-mono">
+              <div>isMyTurn: {String(isMyTurn)}</div>
+              <div>currentTurnPlayerId: {currentTurnPlayerId ?? 'null'}</div>
+              <div>controlledPlayerId: {controlledPlayerId}</div>
+              <div>playerId: {playerId}</div>
+              <div>currentAttack: {currentAttack ? JSON.stringify(currentAttack) : String(currentAttack)}</div>
+              <div>disabled: {String(!isMyTurn || !!currentAttack)}</div>
+            </div>
           )}
 
           {/* 50音ボード */}

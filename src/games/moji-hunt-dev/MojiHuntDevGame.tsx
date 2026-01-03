@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FlaskConical } from 'lucide-react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
 import { Lobby } from './components/Lobby';
@@ -9,16 +9,19 @@ import { ResultScreen } from './components/ResultScreen';
 import type { LocalPlayerState } from './types/game';
 import { DEFAULT_SETTINGS, TOPIC_LABELS } from './types/game';
 
-interface MojiHuntGameProps {
+interface MojiHuntDevGameProps {
   onBack: () => void;
 }
 
-export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
+export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
   // ブラウザタブのタイトルを設定
   useEffect(() => {
-    document.title = 'もじはんと';
+    document.title = 'もじはんと [DEV]';
     return () => { document.title = 'Game Board'; };
   }, []);
+
+  // 開発版は常にデバッグモードON
+  const debugMode = true;
 
   const { playerId, playerName } = usePlayer();
   const {
@@ -32,10 +35,14 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
     leaveRoom,
     updateGameState,
     updateSettings,
+    addTestPlayer,
   } = useRoom(playerId, playerName);
 
   // ローカルで保持する秘密の言葉
   const [localState, setLocalState] = useState<LocalPlayerState | null>(null);
+
+  // デバッグ用: 全プレイヤーの言葉を保持
+  const [debugLocalStates, setDebugLocalStates] = useState<Record<string, LocalPlayerState>>({});
 
   const gameState = roomData?.gameState;
   const players = gameState?.players ?? [];
@@ -67,6 +74,39 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
     // Firebaseにプレイヤーの準備完了を通知（normalizedWordも保存）
     const updatedPlayers = players.map(p => {
       if (p.id === playerId) {
+        return {
+          ...p,
+          isReady: true,
+          wordLength: normalizedWord.length,
+          normalizedWord, // Firebaseに保存してヒット判定に使用
+          revealedPositions: new Array(normalizedWord.length).fill(false),
+          revealedCharacters: new Array(normalizedWord.length).fill(''),
+        };
+      }
+      return p;
+    });
+
+    updateGameState({ players: updatedPlayers });
+  };
+
+  // デバッグ用: 任意のプレイヤーの言葉を設定
+  const handleDebugWordSubmit = (targetPlayerId: string, originalWord: string, normalizedWord: string) => {
+    if (!gameState) return;
+
+    // デバッグ用ローカル状態を保存
+    setDebugLocalStates(prev => ({
+      ...prev,
+      [targetPlayerId]: { originalWord, normalizedWord },
+    }));
+
+    // 自分自身の場合は通常のlocalStateも更新
+    if (targetPlayerId === playerId) {
+      setLocalState({ originalWord, normalizedWord });
+    }
+
+    // Firebaseにプレイヤーの準備完了を通知（normalizedWordも保存）
+    const updatedPlayers = players.map(p => {
+      if (p.id === targetPlayerId) {
         return {
           ...p,
           isReady: true,
@@ -114,6 +154,8 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
         onStartGame={handleStartGame}
         onUpdateSettings={updateSettings}
         onBack={handleBack}
+        debugMode={debugMode}
+        onAddTestPlayer={addTestPlayer}
       />
     );
   }
@@ -136,6 +178,12 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
               className="h-8"
               style={{ filter: 'brightness(0) invert(1)' }}
             />
+            {debugMode && (
+              <span className="bg-orange-600 text-white px-2 py-0.5 rounded text-xs inline-flex items-center gap-1">
+                <FlaskConical className="w-3 h-3" />
+                DEBUG
+              </span>
+            )}
             {roomCode && (
               <span className="text-white/60 text-sm">
                 お題: {TOPIC_LABELS[settings.topic]}
@@ -151,16 +199,20 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
             currentPlayerId={playerId ?? ''}
             isReady={localState !== null}
             onSubmitWord={handleWordSubmit}
+            debugMode={debugMode}
+            debugLocalStates={debugLocalStates}
+            onDebugWordSubmit={handleDebugWordSubmit}
           />
         )}
 
-        {phase === 'playing' && gameState && localState && (
+        {phase === 'playing' && gameState && (localState || debugMode) && (
           <GamePlayPhase
             gameState={gameState}
             localState={localState}
             playerId={playerId ?? ''}
             isHost={isHost}
             updateGameState={updateGameState}
+            debugMode={debugMode}
           />
         )}
 
@@ -172,6 +224,7 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
             isHost={isHost}
             onPlayAgain={() => {
               setLocalState(null);
+              setDebugLocalStates({});
               // プレイヤーをリセットしてロビーに戻る
               // Firebaseはundefinedを許可しないので、eliminatedAtは含めない
               const resetPlayers = players.map(p => ({

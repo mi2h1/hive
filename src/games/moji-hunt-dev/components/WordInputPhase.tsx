@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Check, Loader2 } from 'lucide-react';
-import type { Player, GameSettings } from '../types/game';
+import { Check, Loader2, FlaskConical } from 'lucide-react';
+import type { Player, GameSettings, LocalPlayerState } from '../types/game';
 import { TOPIC_LABELS } from '../types/game';
 import { validateWord, normalizeWord } from '../lib/hiragana';
 
@@ -10,6 +10,10 @@ interface WordInputPhaseProps {
   currentPlayerId: string;
   isReady: boolean;
   onSubmitWord: (originalWord: string, normalizedWord: string) => void;
+  // デバッグ用
+  debugMode?: boolean;
+  debugLocalStates?: Record<string, LocalPlayerState>;
+  onDebugWordSubmit?: (playerId: string, originalWord: string, normalizedWord: string) => void;
 }
 
 export const WordInputPhase = ({
@@ -18,6 +22,9 @@ export const WordInputPhase = ({
   currentPlayerId,
   isReady,
   onSubmitWord,
+  debugMode = false,
+  debugLocalStates = {},
+  onDebugWordSubmit,
 }: WordInputPhaseProps) => {
   const [word, setWord] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -162,6 +169,102 @@ export const WordInputPhase = ({
           </p>
         </div>
       )}
+
+      {/* デバッグ用: 全プレイヤーの言葉入力 */}
+      {debugMode && onDebugWordSubmit && (
+        <DebugWordInputPanel
+          players={players}
+          currentPlayerId={currentPlayerId}
+          settings={settings}
+          debugLocalStates={debugLocalStates}
+          onDebugWordSubmit={onDebugWordSubmit}
+        />
+      )}
+    </div>
+  );
+};
+
+// デバッグ用: 各プレイヤーの言葉入力パネル
+interface DebugWordInputPanelProps {
+  players: Player[];
+  currentPlayerId: string;
+  settings: GameSettings;
+  debugLocalStates: Record<string, LocalPlayerState>;
+  onDebugWordSubmit: (playerId: string, originalWord: string, normalizedWord: string) => void;
+}
+
+const DebugWordInputPanel = ({
+  players,
+  currentPlayerId,
+  settings,
+  debugLocalStates,
+  onDebugWordSubmit,
+}: DebugWordInputPanelProps) => {
+  const [inputs, setInputs] = useState<Record<string, string>>({});
+
+  const handleSubmit = (player: Player) => {
+    const word = inputs[player.id] || '';
+    const validation = validateWord(word, settings.minWordLength, settings.maxWordLength);
+
+    if (validation.isValid) {
+      onDebugWordSubmit(player.id, word, validation.normalizedWord);
+    }
+  };
+
+  // 自分以外のプレイヤーのみ表示
+  const otherPlayers = players.filter(p => p.id !== currentPlayerId);
+
+  if (otherPlayers.length === 0) return null;
+
+  return (
+    <div className="bg-orange-900/30 border border-orange-600/50 rounded-xl p-4">
+      <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+        <FlaskConical className="w-4 h-4 text-orange-400" />
+        デバッグ: 他プレイヤーの言葉入力
+      </h3>
+      <div className="space-y-3">
+        {otherPlayers.map((player) => {
+          const localState = debugLocalStates[player.id];
+          const inputValue = inputs[player.id] || '';
+          const validation = validateWord(inputValue, settings.minWordLength, settings.maxWordLength);
+
+          return (
+            <div key={player.id} className="bg-white/5 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-white font-bold">{player.name}</span>
+                {player.isReady && localState && (
+                  <span className="text-green-400 text-sm flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    {localState.originalWord}（{localState.normalizedWord.length}文字）
+                  </span>
+                )}
+              </div>
+              {!player.isReady && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputs(prev => ({ ...prev, [player.id]: e.target.value }))}
+                    placeholder="ひらがなで入力..."
+                    className="flex-1 px-3 py-2 bg-white/10 text-white rounded-lg
+                      focus:outline-none focus:ring-2 focus:ring-orange-500
+                      placeholder:text-white/30 text-sm"
+                    maxLength={settings.maxWordLength + 3}
+                  />
+                  <button
+                    onClick={() => handleSubmit(player)}
+                    disabled={!validation.isValid}
+                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600
+                      rounded-lg text-white text-sm font-bold transition-all"
+                  >
+                    決定
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

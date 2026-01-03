@@ -3,8 +3,9 @@ import { Gamepad2 } from 'lucide-react';
 import { usePlayer } from './shared/hooks/usePlayer';
 import { AoaGame } from './games/aoa/AoaGame';
 import { MojiHuntGame } from './games/moji-hunt/MojiHuntGame';
+import { MojiHuntDevGame } from './games/moji-hunt-dev/MojiHuntDevGame';
 
-type GameType = 'none' | 'aoa' | 'moji-hunt';
+type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev';
 
 // クエリパラメータを保持（?v=xxx などのキャッシュバスター用）
 const getQueryString = (excludeKeys: string[] = []) => {
@@ -26,12 +27,14 @@ const getGameFromPath = (): GameType => {
     window.history.replaceState({}, '', newPath);
     if (redirectPath === 'aoa') return 'aoa';
     if (redirectPath === 'moji-hunt') return 'moji-hunt';
+    if (redirectPath === 'moji-hunt-dev') return 'moji-hunt-dev';
   }
 
-  // 通常のパスから取得
-  const path = window.location.pathname.replace('/boards', '').replace(/^\//, '');
+  // 通常のパスから取得（先頭・末尾のスラッシュを除去）
+  const path = window.location.pathname.replace('/boards', '').replace(/^\/|\/$/g, '');
   if (path === 'aoa') return 'aoa';
   if (path === 'moji-hunt') return 'moji-hunt';
+  if (path === 'moji-hunt-dev') return 'moji-hunt-dev';
   return 'none';
 };
 
@@ -125,6 +128,9 @@ function App() {
   if (selectedGame === 'moji-hunt') {
     return <MojiHuntGame onBack={() => selectGame('none')} />;
   }
+  if (selectedGame === 'moji-hunt-dev') {
+    return <MojiHuntDevGame onBack={() => selectGame('none')} />;
+  }
 
   // ゲーム選択画面
   return (
@@ -193,6 +199,36 @@ function App() {
                   onClick={() => selectGame('moji-hunt')}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-500
                     hover:from-pink-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
+                >
+                  遊ぶ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* もじはんと（開発版） */}
+          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
+            <div className="h-40 bg-gradient-to-br from-orange-600 to-amber-500 flex items-center justify-center relative">
+              <img
+                src="/boards/images/vec_logo_moji-hant.svg"
+                alt="もじはんと"
+                className="h-12"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+              <span className="absolute top-2 right-2 bg-orange-800 text-white px-2 py-0.5 rounded text-xs font-bold">
+                DEV
+              </span>
+            </div>
+            <div className="p-4">
+              <h2 className="text-lg font-bold text-white mb-2">もじはんと（開発版）</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                デバッグ機能付きの開発・テスト用バージョン。テストプレイヤーの追加などが可能。
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => selectGame('moji-hunt-dev')}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500
+                    hover:from-orange-600 hover:to-amber-600 rounded-lg text-white font-bold transition-all"
                 >
                   遊ぶ
                 </button>
