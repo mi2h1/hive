@@ -141,6 +141,7 @@ export const JackalDevGame = ({ onBack }: JackalDevGameProps) => {
     const loser = players.find(p => p.id === loserId);
 
     // 判定結果を作成
+    // Firebaseはundefinedを許可しないので、mysteryCardは存在する場合のみ設定
     const judgmentResult: JudgmentResult = {
       declaredValue,
       totalValue: result.totalValue,
@@ -153,12 +154,14 @@ export const JackalDevGame = ({ onBack }: JackalDevGameProps) => {
         card: cv.card,
         resolvedValue: cv.resolvedValue,
       })),
-      mysteryCard: result.mysteryResolvedCard ?? undefined,
       hasDouble: result.hasDouble,
       hasMaxZero: result.hasMaxZero,
       hasShuffleZero: result.hasShuffleZero,
       maxValue: result.maxValue,
     };
+    if (result.mysteryResolvedCard) {
+      judgmentResult.mysteryCard = result.mysteryResolvedCard;
+    }
 
     // プレイヤーのライフを減らす
     // Firebaseはundefinedを許可しないので、eliminatedAtは脱落時のみ設定
