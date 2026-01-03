@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Crown, FlaskConical } from 'lucide-react';
 import type { Player, GameSettings, TopicCategory } from '../types/game';
 import { TOPIC_LABELS } from '../types/game';
@@ -43,7 +43,6 @@ export const Lobby = ({
 }: LobbyProps) => {
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [showCopiedToast, setShowCopiedToast] = useState(false);
-  const isComposing = useRef(false);
 
   const copyRoomCode = () => {
     if (roomCode) {
@@ -248,25 +247,29 @@ export const Lobby = ({
                 type="text"
                 value={roomCodeInput}
                 onChange={(e) => {
-                  if (!isComposing.current) {
-                    setRoomCodeInput(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''));
-                  }
+                  // 英字のみ抽出して大文字に変換、4文字まで
+                  const filtered = e.target.value
+                    .toUpperCase()
+                    .replace(/[^A-Z]/g, '')
+                    .slice(0, 4);
+                  setRoomCodeInput(filtered);
                 }}
-                onCompositionStart={() => { isComposing.current = true; }}
-                onCompositionEnd={(e) => {
-                  isComposing.current = false;
-                  const target = e.target as HTMLInputElement;
-                  setRoomCodeInput(target.value.toUpperCase().replace(/[^A-Z]/g, ''));
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pasted = e.clipboardData.getData('text');
+                  const filtered = pasted
+                    .toUpperCase()
+                    .replace(/[^A-Z]/g, '')
+                    .slice(0, 4);
+                  setRoomCodeInput(filtered);
                 }}
                 placeholder="ルームコードを入力"
                 className="w-full px-4 py-3 bg-slate-700 text-white text-center text-xl
                   font-mono tracking-widest rounded-lg uppercase
                   focus:outline-none focus:ring-2 focus:ring-pink-500"
-                maxLength={4}
-                inputMode="text"
                 autoComplete="off"
                 autoCorrect="off"
-                autoCapitalize="characters"
+                spellCheck={false}
               />
               <button
                 onClick={() => onJoinRoom(roomCodeInput)}
