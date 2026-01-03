@@ -21,6 +21,10 @@
 ```
 src/
 ├── App.tsx                    # ポータル（名前入力・ゲーム選択）
+├── admin/                     # 管理画面
+│   ├── AdminPage.tsx          # 管理ダッシュボード
+│   └── hooks/
+│       └── useAdminRooms.ts   # 部屋監視フック
 ├── games/
 │   ├── aoa/                   # アトランティスの深淵
 │   │   ├── AoaGame.tsx
@@ -36,6 +40,7 @@ src/
 │   │   │   ├── ResultScreen.tsx
 │   │   │   ├── HiraganaBoard.tsx
 │   │   │   ├── PlayerWordDisplay.tsx
+│   │   │   ├── RulesModal.tsx
 │   │   │   └── GameStartTransition.tsx
 │   │   ├── hooks/
 │   │   │   └── useRoom.ts
@@ -56,6 +61,7 @@ src/
 - パス: `/boards/aoa`
 - 状態: 完成・稼働中
 - 概要: 宝を求めて潜水するチキンレースゲーム
+- ルールセット: アトランティス / インカの黄金（選択可）
 
 ### もじはんと (moji-hunt)
 - パス: `/boards/moji-hunt`（本番）、`/boards/moji-hunt-dev`（開発版）
@@ -63,14 +69,45 @@ src/
 - 概要: ひらがな当てバトルゲーム（2〜5人）
 - 仕様: `docs/moji-hunt-spec.md` 参照
 
+### 管理画面 (admin)
+- パス: `/boards/admin`
+- 概要: 全ゲームの部屋をリアルタイム監視
+- 機能:
+  - 部屋一覧表示（AOA / もじはんと / もじはんとDEV）
+  - 部屋の詳細情報（プレイヤー、フェーズ、お題等）
+  - もじはんとの文字パネル状況表示（50音グリッド）
+  - 古い部屋の一括削除
+  - 個別部屋の削除
+
 ## URL ルーティング
 
 - `/boards/` → ゲーム選択画面
 - `/boards/aoa` → アトランティスの深淵
 - `/boards/moji-hunt` → もじはんと（本番）
 - `/boards/moji-hunt-dev` → もじはんと（開発版・デバッグ機能付き）
+- `/boards/admin` → 管理画面
 
 GitHub Pagesでは404.htmlによるSPAリダイレクトを使用。
+
+## ブラウザタブタイトル
+
+各画面で適切なタイトルを表示：
+
+| 画面 | タイトル |
+|------|----------|
+| ゲーム一覧 | Game Board |
+| AOA（アトランティスルール） | アトランティスの深淵 |
+| AOA（インカルール） | インカの黄金 |
+| もじはんと | もじはんと |
+| もじはんとDEV | もじはんとDEV |
+| 管理画面 | Game Board - Admin Dashboard |
+
+## 部屋の自動削除
+
+- Firebase `onDisconnect` を使用したプレゼンスシステム
+- ホストが切断すると別のプレイヤーにホスト権限を継承
+- 全プレイヤーが切断すると部屋を自動削除
+- テストプレイヤー（ID: `test-`プレフィックス）はプレゼンス対象外
 
 ---
 
