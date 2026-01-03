@@ -358,6 +358,9 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
             onPlayAgain={() => {
               setLocalState(null);
               setDebugLocalStates({});
+              setIsStartingGame(false);
+              setShowTransition(false);
+              setTransitionTopic(null);
               // プレイヤーをリセットしてロビーに戻る
               // Firebaseはundefinedを許可しないので、eliminatedAtは含めない
               const resetPlayers = players.map(p => ({
