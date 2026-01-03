@@ -66,6 +66,9 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
   useEffect(() => {
     // 他プレイヤーが waiting → word_input の遷移を検知した時
     if (prevPhaseRef.current === 'waiting' && phase === 'word_input' && !showTransition) {
+      // ローカル状態をリセット（前回のゲームの状態をクリア）
+      setLocalState(null);
+      setDebugLocalStates({});
       setTransitionTopic(currentTopic || null);
       setShowTransition(true);
     }
@@ -91,6 +94,10 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
   // ゲーム開始処理（フェードアウト付き）
   const handleStartGame = () => {
     if (!isHost || !gameState) return;
+
+    // ローカル状態をリセット（前回のゲームの状態をクリア）
+    setLocalState(null);
+    setDebugLocalStates({});
 
     // お題をランダムに選出（先に決める）
     const topic = getRandomTopic();
