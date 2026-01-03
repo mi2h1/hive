@@ -8,8 +8,8 @@ interface GamePlayPhaseProps {
   playerId: string;
   playerName: string;
   debugMode?: boolean;
-  onDeclare: (value: number) => void;
-  onCallJackal: () => void;
+  onDeclare: (value: number, actingPlayerId: string) => void;
+  onCallJackal: (actingPlayerId: string) => void;
   onLeaveRoom: () => void;
 }
 
@@ -24,6 +24,12 @@ export const GamePlayPhase = ({
 }: GamePlayPhaseProps) => {
   const [selectedValue, setSelectedValue] = useState<number | null>(null);
 
+  // デバッグモード用: どのプレイヤーを操作しているか
+  const [debugControlledPlayerId, setDebugControlledPlayerId] = useState<string | null>(null);
+
+  // デバッグモードで操作中のプレイヤーを決定
+  const controlledPlayerId = debugMode && debugControlledPlayerId ? debugControlledPlayerId : playerId;
+
   const {
     phase,
     players,
@@ -35,14 +41,14 @@ export const GamePlayPhase = ({
     turnOrder,
   } = gameState;
 
-  const isMyTurn = currentTurnPlayerId === playerId;
+  const isMyTurn = currentTurnPlayerId === controlledPlayerId;
   const currentPlayer = players.find(p => p.id === currentTurnPlayerId);
   const lastDeclarer = players.find(p => p.id === lastDeclarerId);
 
   // 自分以外のプレイヤー（脱落していない）
   const activePlayers = players.filter(p => !p.isEliminated);
-  const otherPlayers = activePlayers.filter(p => p.id !== playerId);
-  const myPlayer = players.find(p => p.id === playerId);
+  const otherPlayers = activePlayers.filter(p => p.id !== controlledPlayerId);
+  const myPlayer = players.find(p => p.id === controlledPlayerId);
 
   // 宣言可能な数字の範囲を計算
   const minDeclareValue = (currentDeclaredValue ?? 0) + 1;
@@ -56,9 +62,13 @@ export const GamePlayPhase = ({
 
   const handleDeclare = () => {
     if (selectedValue !== null && selectedValue >= minDeclareValue) {
-      onDeclare(selectedValue);
+      onDeclare(selectedValue, controlledPlayerId);
       setSelectedValue(null);
     }
+  };
+
+  const handleCallJackal = () => {
+    onCallJackal(controlledPlayerId);
   };
 
   // プレイヤーのカードを取得（自分のは見えない）
@@ -84,6 +94,46 @@ export const GamePlayPhase = ({
             </span>
           )}
         </div>
+
+        {/* デバッグ用: プレイヤー切り替え */}
+        {debugMode && (
+          <div className="bg-orange-900/30 border border-orange-600/50 rounded-xl p-4 mb-4">
+            <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+              <FlaskConical className="w-4 h-4 text-orange-400" />
+              デバッグ: プレイヤー操作
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {activePlayers.map((player) => {
+                const isControlled = debugControlledPlayerId
+                  ? player.id === debugControlledPlayerId
+                  : player.id === playerId;
+                const isCurrentTurnPlayer = player.id === currentTurnPlayerId;
+
+                return (
+                  <button
+                    key={player.id}
+                    onClick={() => setDebugControlledPlayerId(player.id === playerId ? null : player.id)}
+                    className={`
+                      px-3 py-2 rounded-lg text-sm font-bold transition-all
+                      ${isControlled
+                        ? 'bg-orange-600 text-white'
+                        : 'bg-white/10 text-white/80 hover:bg-white/20'
+                      }
+                      ${isCurrentTurnPlayer ? 'ring-2 ring-yellow-400' : ''}
+                    `}
+                  >
+                    {player.name}
+                    {player.id === playerId && ' (自分)'}
+                    {isCurrentTurnPlayer && ' ★'}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-orange-300/70 text-xs mt-2">
+              ★=現在のターン / 操作したいプレイヤーをクリック
+            </p>
+          </div>
+        )}
 
         {/* 現在の宣言値 */}
         <div className="bg-slate-800/80 rounded-xl p-4 mb-4 text-center">
@@ -156,14 +206,14 @@ export const GamePlayPhase = ({
             }`}>
               <Card hidden size="lg" highlighted={isMyTurn} />
               <div className="mt-2 text-center">
-                <div className="text-white text-sm font-medium">{playerName}</div>
+                <div className="text-white text-sm font-medium">{myPlayer?.name ?? playerName}</div>
                 <div className="flex items-center justify-center gap-0.5 mt-1">
                   {Array.from({ length: myPlayer?.life ?? 0 }).map((_, i) => (
                     <Heart key={i} className="w-3 h-3 text-red-400 fill-red-400" />
                   ))}
                 </div>
                 <div className="text-slate-500 text-xs mt-1">
-                  #{getTurnPosition(playerId) + 1}
+                  #{getTurnPosition(controlledPlayerId) + 1}
                 </div>
               </div>
             </div>
@@ -210,7 +260,7 @@ export const GamePlayPhase = ({
             {currentDeclaredValue !== null && (
               <div className="border-t border-slate-600 pt-4">
                 <button
-                  onClick={onCallJackal}
+                  onClick={handleCallJackal}
                   className="w-full py-4 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg text-white font-bold text-lg transition-all"
                 >
                   ジャッカル！

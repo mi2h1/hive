@@ -79,11 +79,11 @@ export const JackalDevGame = ({ onBack }: JackalDevGameProps) => {
   };
 
   // 数字を宣言
-  const handleDeclare = (value: number) => {
-    if (!gameState || !playerId) return;
-    if (gameState.currentTurnPlayerId !== playerId) return;
+  const handleDeclare = (value: number, actingPlayerId: string) => {
+    if (!gameState) return;
+    if (gameState.currentTurnPlayerId !== actingPlayerId) return;
 
-    const currentIndex = gameState.turnOrder.indexOf(playerId);
+    const currentIndex = gameState.turnOrder.indexOf(actingPlayerId);
 
     // 次のプレイヤーを探す（脱落していないプレイヤー）
     let nextIndex = (currentIndex + 1) % gameState.turnOrder.length;
@@ -100,15 +100,15 @@ export const JackalDevGame = ({ onBack }: JackalDevGameProps) => {
 
     updateGameState({
       currentDeclaredValue: value,
-      lastDeclarerId: playerId,
+      lastDeclarerId: actingPlayerId,
       currentTurnPlayerId: gameState.turnOrder[nextIndex],
     });
   };
 
   // ジャッカルを宣言
-  const handleCallJackal = () => {
-    if (!gameState || !playerId) return;
-    if (gameState.currentTurnPlayerId !== playerId) return;
+  const handleCallJackal = (actingPlayerId: string) => {
+    if (!gameState) return;
+    if (gameState.currentTurnPlayerId !== actingPlayerId) return;
     if (gameState.currentDeclaredValue === null) return;
 
     // ?カードがある場合は山札から1枚引く
@@ -134,7 +134,7 @@ export const JackalDevGame = ({ onBack }: JackalDevGameProps) => {
       reason = 'over';
     } else {
       // 宣言が合計以下 → ジャッカル宣言者の負け
-      loserId = playerId;
+      loserId = actingPlayerId;
       reason = 'jackal';
     }
 
