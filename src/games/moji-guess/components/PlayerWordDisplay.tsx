@@ -39,17 +39,18 @@ export const PlayerWordDisplay = ({
     }
   } else {
     // 他プレイヤーの場合は常に7文字表示
+    // 脱落するまではすべて「?」、脱落したら実際の文字を表示
     for (let i = 0; i < DISPLAY_LENGTH; i++) {
-      if (i < wordLength) {
-        // 実際の言葉の範囲内
-        if (revealedPositions[i] && revealedCharacters[i]) {
+      if (isEliminated) {
+        // 脱落後：実際の文字を表示
+        if (i < wordLength && revealedCharacters[i]) {
           displayChars.push({ char: revealedCharacters[i], type: 'revealed' });
         } else {
-          displayChars.push({ char: '?', type: 'hidden' });
+          displayChars.push({ char: '-', type: 'dummy' });
         }
       } else {
-        // ダミー文字（実際の言葉より後ろ）
-        displayChars.push({ char: '-', type: 'dummy' });
+        // 脱落前：すべて「?」
+        displayChars.push({ char: '?', type: 'hidden' });
       }
     }
   }

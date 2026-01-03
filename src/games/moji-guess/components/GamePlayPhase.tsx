@@ -265,8 +265,8 @@ export const GamePlayPhase = ({
 
       {/* 2カラムレイアウト */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* 左カラム: プレイヤー状況（7文字分の幅に固定） */}
-        <div className="space-y-3 order-2 lg:order-1 lg:w-80 lg:shrink-0">
+        {/* 左カラム: プレイヤー状況（コンパクト幅） */}
+        <div className="space-y-3 order-2 lg:order-1 lg:w-72 lg:shrink-0">
           <h3 className="text-white/80 font-bold">プレイヤー状況</h3>
           <div className="grid gap-3">
             {players.map((player) => (
@@ -282,7 +282,7 @@ export const GamePlayPhase = ({
         </div>
 
         {/* 右カラム: アナウンス + 50音ボード */}
-        <div className="space-y-4 order-1 lg:order-2 lg:shrink-0">
+        <div className="space-y-4 order-1 lg:order-2 lg:flex-1">
           {/* ターン表示 */}
           <div className="bg-white/10 rounded-xl p-4 text-center">
             {isMyTurn ? (
