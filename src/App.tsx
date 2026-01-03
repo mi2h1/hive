@@ -6,14 +6,23 @@ import { MojiHuntGame } from './games/moji-hunt/MojiHuntGame';
 
 type GameType = 'none' | 'aoa' | 'moji-hunt';
 
+// クエリパラメータを保持（?v=xxx などのキャッシュバスター用）
+const getQueryString = (excludeKeys: string[] = []) => {
+  const params = new URLSearchParams(window.location.search);
+  excludeKeys.forEach(key => params.delete(key));
+  const str = params.toString();
+  return str ? `?${str}` : '';
+};
+
 // URL からゲームタイプを取得
 const getGameFromPath = (): GameType => {
   // クエリパラメータ ?p= からリダイレクトされた場合
   const params = new URLSearchParams(window.location.search);
   const redirectPath = params.get('p');
   if (redirectPath) {
-    // クエリパラメータをクリアして正しいURLに置き換え
-    const newPath = `/boards/${redirectPath}`;
+    // pパラメータを除いたクエリを保持
+    const query = getQueryString(['p']);
+    const newPath = `/boards/${redirectPath}${query}`;
     window.history.replaceState({}, '', newPath);
     if (redirectPath === 'aoa') return 'aoa';
     if (redirectPath === 'moji-hunt') return 'moji-hunt';
@@ -26,9 +35,10 @@ const getGameFromPath = (): GameType => {
   return 'none';
 };
 
-// URL を更新
+// URL を更新（クエリパラメータを保持）
 const updatePath = (game: GameType) => {
-  const newPath = game === 'none' ? '/boards/' : `/boards/${game}`;
+  const query = getQueryString();
+  const newPath = game === 'none' ? `/boards/${query}` : `/boards/${game}${query}`;
   window.history.pushState({}, '', newPath);
 };
 
