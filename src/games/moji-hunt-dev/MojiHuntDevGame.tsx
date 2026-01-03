@@ -192,6 +192,43 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
     }
   };
 
+  // デバッグ用: 任意のプレイヤーとしてお題チェンジ投票
+  const handleDebugVoteTopicChange = (targetPlayerId: string) => {
+    if (!gameState) return;
+
+    const currentVotes = gameState.topicChangeVotes ?? [];
+    if (currentVotes.includes(targetPlayerId)) return; // 既に投票済み
+
+    const newVotes = [...currentVotes, targetPlayerId];
+
+    // 全員投票したらお題を変更
+    if (newVotes.length >= players.length) {
+      const newTopic = getRandomTopic();
+      setTransitionTopic(newTopic);
+      setShowTransition(true);
+
+      const resetPlayers = players.map(p => ({
+        ...p,
+        isReady: false,
+        wordLength: 0,
+        normalizedWord: '',
+        revealedPositions: [],
+        revealedCharacters: [],
+      }));
+
+      setLocalState(null);
+      setDebugLocalStates({});
+
+      updateGameState({
+        currentTopic: newTopic,
+        topicChangeVotes: [],
+        players: resetPlayers,
+      });
+    } else {
+      updateGameState({ topicChangeVotes: newVotes });
+    }
+  };
+
   // 全員準備完了したらゲーム開始
   const allReady = players.length > 0 && players.every(p => p.isReady);
   if (phase === 'word_input' && allReady && isHost) {
@@ -297,6 +334,7 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
             debugMode={debugMode}
             debugLocalStates={debugLocalStates}
             onDebugWordSubmit={handleDebugWordSubmit}
+            onDebugVoteTopicChange={handleDebugVoteTopicChange}
           />
         )}
 

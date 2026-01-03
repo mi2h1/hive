@@ -17,6 +17,7 @@ interface WordInputPhaseProps {
   debugMode?: boolean;
   debugLocalStates?: Record<string, LocalPlayerState>;
   onDebugWordSubmit?: (playerId: string, originalWord: string, normalizedWord: string) => void;
+  onDebugVoteTopicChange?: (playerId: string) => void;
 }
 
 export const WordInputPhase = ({
@@ -31,6 +32,7 @@ export const WordInputPhase = ({
   debugMode = false,
   debugLocalStates = {},
   onDebugWordSubmit,
+  onDebugVoteTopicChange,
 }: WordInputPhaseProps) => {
   const [word, setWord] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -228,6 +230,8 @@ export const WordInputPhase = ({
           settings={settings}
           debugLocalStates={debugLocalStates}
           onDebugWordSubmit={onDebugWordSubmit}
+          topicChangeVotes={topicChangeVotes}
+          onDebugVoteTopicChange={onDebugVoteTopicChange}
         />
       )}
     </div>
@@ -241,6 +245,8 @@ interface DebugWordInputPanelProps {
   settings: GameSettings;
   debugLocalStates: Record<string, LocalPlayerState>;
   onDebugWordSubmit: (playerId: string, originalWord: string, normalizedWord: string) => void;
+  topicChangeVotes: string[];
+  onDebugVoteTopicChange?: (playerId: string) => void;
 }
 
 const DebugWordInputPanel = ({
@@ -249,6 +255,8 @@ const DebugWordInputPanel = ({
   settings,
   debugLocalStates,
   onDebugWordSubmit,
+  topicChangeVotes,
+  onDebugVoteTopicChange,
 }: DebugWordInputPanelProps) => {
   const [inputs, setInputs] = useState<Record<string, string>>({});
 
@@ -278,16 +286,35 @@ const DebugWordInputPanel = ({
           const inputValue = inputs[player.id] || '';
           const validation = validateWord(inputValue, settings.minWordLength, settings.maxWordLength);
 
+          const hasVoted = topicChangeVotes.includes(player.id);
+
           return (
             <div key={player.id} className="bg-white/5 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-white font-bold">{player.name}</span>
-                {player.isReady && localState && (
-                  <span className="text-green-400 text-sm flex items-center gap-1">
-                    <Check className="w-3 h-3" />
-                    {localState.originalWord}（{localState.normalizedWord.length}文字）
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {player.isReady && localState && (
+                    <span className="text-green-400 text-sm flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      {localState.originalWord}（{localState.normalizedWord.length}文字）
+                    </span>
+                  )}
+                  {/* お題チェンジ投票ボタン */}
+                  {onDebugVoteTopicChange && (
+                    <button
+                      onClick={() => onDebugVoteTopicChange(player.id)}
+                      disabled={hasVoted}
+                      className={`px-2 py-1 rounded text-xs font-bold transition-all flex items-center gap-1 ${
+                        hasVoted
+                          ? 'bg-white/20 text-white/60 cursor-not-allowed'
+                          : 'bg-orange-500 hover:bg-orange-600 text-white'
+                      }`}
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      {hasVoted ? '投票済' : '投票'}
+                    </button>
+                  )}
+                </div>
               </div>
               {!player.isReady && (
                 <div className="flex gap-2">
