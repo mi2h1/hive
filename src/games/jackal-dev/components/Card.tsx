@@ -7,24 +7,48 @@ interface CardProps {
   highlighted?: boolean;
 }
 
+// カードの画像パスを取得
+const getCardImagePath = (card: CardType): string => {
+  const basePath = import.meta.env.BASE_URL + 'images/cards/';
+
+  switch (card.type) {
+    case 'number':
+      if (card.value === null) return '';
+      // 1-5は01-05形式、それ以外はそのまま
+      if (card.value >= 1 && card.value <= 5) {
+        return `${basePath}card_jackal_0${card.value}.png`;
+      }
+      return `${basePath}card_jackal_${card.value}.png`;
+    case 'shuffle_zero':
+      return `${basePath}card_jackal_0_sp.png`;
+    case 'double':
+      return `${basePath}card_jackal_x2.png`;
+    case 'max_zero':
+      return `${basePath}card_jackal_max0.png`;
+    case 'mystery':
+      return `${basePath}card_jackal_mistery.png`;
+    default:
+      return '';
+  }
+};
+
 export const Card = ({
   card,
   hidden = false,
   size = 'md',
   highlighted = false,
 }: CardProps) => {
-  // サイズ設定
+  // サイズ設定（カード画像のアスペクト比に合わせて調整）
   const sizeClasses = {
-    sm: 'w-12 h-16 text-sm',
-    md: 'w-16 h-22 text-base',
-    lg: 'w-20 h-28 text-lg',
+    sm: 'w-12 h-[4.5rem]',
+    md: 'w-16 h-24',
+    lg: 'w-20 h-[7.5rem]',
   };
 
   const baseClasses = `
     ${sizeClasses[size]}
     rounded-lg
-    flex items-center justify-center
-    font-bold
+    overflow-hidden
     transition-all
     ${highlighted ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-slate-800' : ''}
   `;
@@ -33,82 +57,23 @@ export const Card = ({
   if (hidden || !card) {
     return (
       <div
-        className={`${baseClasses} bg-gradient-to-br from-indigo-600 to-purple-700 border-2 border-indigo-400`}
+        className={`${baseClasses} bg-gradient-to-br from-indigo-600 to-purple-700 border-2 border-indigo-400 flex items-center justify-center`}
       >
-        <div className="text-white/30 text-2xl">?</div>
+        <div className="text-white/30 text-2xl font-bold">?</div>
       </div>
     );
   }
 
-  // カードの種類に応じた表示
-  const getCardStyle = () => {
-    switch (card.type) {
-      case 'number':
-        if (card.value !== null && card.value < 0) {
-          // マイナス値
-          return {
-            bg: 'bg-gradient-to-br from-blue-600 to-blue-800',
-            border: 'border-blue-400',
-            text: 'text-blue-100',
-          };
-        } else if (card.value !== null && card.value >= 10) {
-          // 高い値
-          return {
-            bg: 'bg-gradient-to-br from-amber-500 to-orange-600',
-            border: 'border-amber-300',
-            text: 'text-amber-100',
-          };
-        } else {
-          // 通常値
-          return {
-            bg: 'bg-gradient-to-br from-slate-100 to-slate-300',
-            border: 'border-slate-400',
-            text: 'text-slate-800',
-          };
-        }
-      case 'double':
-        return {
-          bg: 'bg-gradient-to-br from-pink-500 to-rose-600',
-          border: 'border-pink-300',
-          text: 'text-white',
-        };
-      case 'max_zero':
-        return {
-          bg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
-          border: 'border-emerald-300',
-          text: 'text-white',
-        };
-      case 'mystery':
-        return {
-          bg: 'bg-gradient-to-br from-violet-500 to-purple-600',
-          border: 'border-violet-300',
-          text: 'text-white',
-        };
-      case 'shuffle_zero':
-        // 特殊0（シャッフル）- 黄色系で目立たせる
-        return {
-          bg: 'bg-gradient-to-br from-yellow-500 to-amber-600',
-          border: 'border-yellow-300',
-          text: 'text-yellow-900',
-        };
-      default:
-        return {
-          bg: 'bg-gradient-to-br from-gray-500 to-gray-700',
-          border: 'border-gray-400',
-          text: 'text-white',
-        };
-    }
-  };
-
-  const style = getCardStyle();
+  const imagePath = getCardImagePath(card);
 
   return (
-    <div
-      className={`${baseClasses} ${style.bg} border-2 ${style.border}`}
-    >
-      <span className={`${style.text} font-bold`}>
-        {card.label}
-      </span>
+    <div className={baseClasses}>
+      <img
+        src={imagePath}
+        alt={card.label}
+        className="w-full h-full object-cover"
+        draggable={false}
+      />
     </div>
   );
 };
