@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Gamepad2 } from 'lucide-react';
 import { usePlayer } from './shared/hooks/usePlayer';
 import { AoaGame } from './games/aoa/AoaGame';
+import { MojiGuessGame } from './games/moji-guess/MojiGuessGame';
 
 type GameType = 'none' | 'aoa' | 'moji-guess';
 
@@ -111,6 +112,9 @@ function App() {
   if (selectedGame === 'aoa') {
     return <AoaGame onBack={() => selectGame('none')} />;
   }
+  if (selectedGame === 'moji-guess') {
+    return <MojiGuessGame onBack={() => selectGame('none')} />;
+  }
 
   // ゲーム選択画面
   return (
@@ -159,8 +163,8 @@ function App() {
             </div>
           </div>
 
-          {/* 文字ゲス（準備中） */}
-          <div className="bg-slate-800/80 rounded-xl overflow-hidden opacity-60">
+          {/* 文字ゲス */}
+          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all">
             <div className="h-40 bg-gradient-to-br from-pink-600 to-orange-500 flex items-center justify-center">
               <span className="text-4xl font-bold text-white">文字ゲス</span>
             </div>
@@ -171,10 +175,11 @@ function App() {
               </p>
               <div className="flex gap-2">
                 <button
-                  disabled
-                  className="flex-1 px-4 py-2 bg-gray-600 rounded-lg text-gray-400 font-bold cursor-not-allowed"
+                  onClick={() => selectGame('moji-guess')}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-500
+                    hover:from-pink-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
                 >
-                  準備中...
+                  遊ぶ
                 </button>
               </div>
             </div>
