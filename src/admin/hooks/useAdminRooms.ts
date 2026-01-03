@@ -23,6 +23,9 @@ interface AoaRoom {
   code: string;
   hostId: string;
   createdAt: number;
+  ruleSet?: {
+    type: 'atlantis' | 'incan_gold';
+  };
   gameState: {
     phase: string;
     round: number;
@@ -44,7 +47,7 @@ interface MojiHuntRoom {
 }
 
 export interface AdminRoom {
-  gameType: 'aoa' | 'moji-hunt';
+  gameType: 'aoa' | 'moji-hunt' | 'moji-hunt-dev';
   code: string;
   hostId: string;
   createdAt: number;
@@ -55,6 +58,7 @@ export interface AdminRoom {
   details: {
     // AOA
     round?: number;
+    ruleSetType?: 'atlantis' | 'incan_gold';
     // もじはんと
     currentTopic?: string;
     currentTurnPlayerName?: string;
@@ -69,12 +73,14 @@ export const useAdminRooms = () => {
   useEffect(() => {
     const aoaRef = ref(db, 'rooms');
     const mojiHuntRef = ref(db, 'moji-hunt-rooms');
+    const mojiHuntDevRef = ref(db, 'moji-hunt-dev-rooms');
 
     let aoaRooms: AdminRoom[] = [];
     let mojiHuntRooms: AdminRoom[] = [];
+    let mojiHuntDevRooms: AdminRoom[] = [];
 
     const updateRooms = () => {
-      setRooms([...aoaRooms, ...mojiHuntRooms].sort((a, b) => b.createdAt - a.createdAt));
+      setRooms([...aoaRooms, ...mojiHuntRooms, ...mojiHuntDevRooms].sort((a, b) => b.createdAt - a.createdAt));
       setIsLoading(false);
     };
 
@@ -104,6 +110,7 @@ export const useAdminRooms = () => {
           players: players.map(p => ({ id: p.id, name: p.name })),
           details: {
             round: r.gameState?.round,
+            ruleSetType: r.ruleSet?.type,
           },
         };
       });
@@ -147,15 +154,60 @@ export const useAdminRooms = () => {
       updateRooms();
     });
 
+    // もじはんと（開発版）の部屋を監視
+    onValue(mojiHuntDevRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        mojiHuntDevRooms = [];
+        updateRooms();
+        return;
+      }
+
+      const data = snapshot.val();
+      mojiHuntDevRooms = Object.entries(data).map(([code, room]) => {
+        const r = room as MojiHuntRoom;
+        const rawPlayers = r.gameState?.players;
+        const players: MojiHuntPlayer[] = Array.isArray(rawPlayers)
+          ? rawPlayers
+          : Object.values(rawPlayers || {}) as MojiHuntPlayer[];
+
+        const currentTurnPlayer = players.find(p => p.id === r.gameState?.currentTurnPlayerId);
+        const eliminatedCount = players.filter(p => p.isEliminated).length;
+
+        return {
+          gameType: 'moji-hunt-dev' as const,
+          code,
+          hostId: r.hostId,
+          createdAt: r.createdAt || 0,
+          phase: r.gameState?.phase || 'unknown',
+          playerCount: players.length,
+          players: players.map(p => ({ id: p.id, name: p.name })),
+          details: {
+            currentTopic: r.gameState?.currentTopic,
+            currentTurnPlayerName: currentTurnPlayer?.name,
+            eliminatedCount,
+          },
+        };
+      });
+      updateRooms();
+    });
+
     return () => {
       off(aoaRef);
       off(mojiHuntRef);
+      off(mojiHuntDevRef);
     };
   }, []);
 
   // 特定の部屋を削除
-  const deleteRoom = useCallback(async (gameType: 'aoa' | 'moji-hunt', code: string) => {
-    const path = gameType === 'aoa' ? `rooms/${code}` : `moji-hunt-rooms/${code}`;
+  const deleteRoom = useCallback(async (gameType: 'aoa' | 'moji-hunt' | 'moji-hunt-dev', code: string) => {
+    let path: string;
+    if (gameType === 'aoa') {
+      path = `rooms/${code}`;
+    } else if (gameType === 'moji-hunt') {
+      path = `moji-hunt-rooms/${code}`;
+    } else {
+      path = `moji-hunt-dev-rooms/${code}`;
+    }
     await remove(ref(db, path));
   }, []);
 
@@ -167,7 +219,14 @@ export const useAdminRooms = () => {
     const deletePromises: Promise<void>[] = [];
     for (const room of rooms) {
       if (now - room.createdAt > maxAge) {
-        const path = room.gameType === 'aoa' ? `rooms/${room.code}` : `moji-hunt-rooms/${room.code}`;
+        let path: string;
+        if (room.gameType === 'aoa') {
+          path = `rooms/${room.code}`;
+        } else if (room.gameType === 'moji-hunt') {
+          path = `moji-hunt-rooms/${room.code}`;
+        } else {
+          path = `moji-hunt-dev-rooms/${room.code}`;
+        }
         deletePromises.push(remove(ref(db, path)));
       }
     }
@@ -180,7 +239,14 @@ export const useAdminRooms = () => {
   const deleteAllRooms = useCallback(async () => {
     const deletePromises: Promise<void>[] = [];
     for (const room of rooms) {
-      const path = room.gameType === 'aoa' ? `rooms/${room.code}` : `moji-hunt-rooms/${room.code}`;
+      let path: string;
+      if (room.gameType === 'aoa') {
+        path = `rooms/${room.code}`;
+      } else if (room.gameType === 'moji-hunt') {
+        path = `moji-hunt-rooms/${room.code}`;
+      } else {
+        path = `moji-hunt-dev-rooms/${room.code}`;
+      }
       deletePromises.push(remove(ref(db, path)));
     }
     await Promise.all(deletePromises);

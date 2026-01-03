@@ -55,11 +55,30 @@ const getPhaseColor = (phase: string) => {
   }
 };
 
+const getGameInfo = (room: AdminRoom) => {
+  if (room.gameType === 'aoa') {
+    const isIncan = room.details.ruleSetType === 'incan_gold';
+    return {
+      label: isIncan ? 'インカの黄金' : 'アトランティスの深淵',
+      color: isIncan ? 'from-amber-600 to-yellow-600' : 'from-cyan-600 to-teal-600',
+    };
+  } else if (room.gameType === 'moji-hunt-dev') {
+    return {
+      label: 'もじはんと [DEV]',
+      color: 'from-orange-600 to-amber-500',
+    };
+  } else {
+    return {
+      label: 'もじはんと',
+      color: 'from-pink-600 to-orange-600',
+    };
+  }
+};
+
 const RoomCard = ({ room, onDelete }: { room: AdminRoom; onDelete: () => void }) => {
   const [expanded, setExpanded] = useState(false);
 
-  const gameLabel = room.gameType === 'aoa' ? 'アトランティスの深淵' : 'もじはんと';
-  const gameColor = room.gameType === 'aoa' ? 'from-cyan-600 to-teal-600' : 'from-pink-600 to-orange-600';
+  const { label: gameLabel, color: gameColor } = getGameInfo(room);
 
   return (
     <div className="bg-slate-800/80 rounded-xl overflow-hidden">
@@ -102,7 +121,7 @@ const RoomCard = ({ room, onDelete }: { room: AdminRoom; onDelete: () => void })
             ラウンド {room.details.round}/5
           </div>
         )}
-        {room.gameType === 'moji-hunt' && (
+        {(room.gameType === 'moji-hunt' || room.gameType === 'moji-hunt-dev') && (
           <div className="text-slate-400 text-sm mb-2 space-y-1">
             {room.details.currentTopic && (
               <div>お題: <span className="text-white">{room.details.currentTopic}</span></div>
@@ -161,6 +180,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
   const aoaRooms = rooms.filter(r => r.gameType === 'aoa');
   const mojiHuntRooms = rooms.filter(r => r.gameType === 'moji-hunt');
+  const mojiHuntDevRooms = rooms.filter(r => r.gameType === 'moji-hunt-dev');
 
   // 1時間以上前の部屋数
   const oldRoomsCount = rooms.filter(r => Date.now() - r.createdAt > 60 * 60 * 1000).length;
@@ -224,18 +244,22 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
         </header>
 
         {/* サマリー */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-slate-800/60 rounded-xl p-4 text-center">
             <div className="text-3xl font-bold text-white">{rooms.length}</div>
             <div className="text-slate-500 text-sm">総部屋数</div>
           </div>
           <div className="bg-slate-800/60 rounded-xl p-4 text-center">
             <div className="text-3xl font-bold text-cyan-400">{aoaRooms.length}</div>
-            <div className="text-slate-500 text-sm">アトランティス</div>
+            <div className="text-slate-500 text-sm">AOA</div>
           </div>
           <div className="bg-slate-800/60 rounded-xl p-4 text-center">
             <div className="text-3xl font-bold text-pink-400">{mojiHuntRooms.length}</div>
             <div className="text-slate-500 text-sm">もじはんと</div>
+          </div>
+          <div className="bg-slate-800/60 rounded-xl p-4 text-center">
+            <div className="text-3xl font-bold text-orange-400">{mojiHuntDevRooms.length}</div>
+            <div className="text-slate-500 text-sm">もじはんと DEV</div>
           </div>
         </div>
 
