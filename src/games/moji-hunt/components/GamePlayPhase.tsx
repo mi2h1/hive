@@ -429,15 +429,15 @@ export const GamePlayPhase = ({
               <div>currentTurnPlayerId: {currentTurnPlayerId ?? 'null'}</div>
               <div>controlledPlayerId: {controlledPlayerId}</div>
               <div>playerId: {playerId}</div>
-              <div>currentAttack: {currentAttack ? JSON.stringify(currentAttack) : 'null'}</div>
-              <div>disabled: {String(!isMyTurn || currentAttack !== null)}</div>
+              <div>currentAttack: {currentAttack ? JSON.stringify(currentAttack) : String(currentAttack)}</div>
+              <div>disabled: {String(!isMyTurn || !!currentAttack)}</div>
             </div>
           )}
 
           {/* 50音ボード */}
           <HiraganaBoard
             usedCharacters={usedCharacters}
-            disabled={!isMyTurn || currentAttack !== null}
+            disabled={!isMyTurn || !!currentAttack}
             onSelectCharacter={handleAttack}
             highlightedChar={currentAttack?.targetChar}
           />
