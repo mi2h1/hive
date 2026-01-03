@@ -47,6 +47,7 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
   // ゲーム開始時のトランジション表示
   const [showTransition, setShowTransition] = useState(false);
   const [isStartingGame, setIsStartingGame] = useState(false);
+  const [transitionTopic, setTransitionTopic] = useState<string | null>(null);
   const prevPhaseRef = useRef<string | null>(null);
 
   const gameState = roomData?.gameState;
@@ -54,30 +55,33 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
   const settings = gameState?.settings ?? DEFAULT_SETTINGS;
   const phase = gameState?.phase ?? 'waiting';
 
-  // フェーズ変更を監視してトランジションを表示
+  // フェーズ変更を監視（他プレイヤー用）
   useEffect(() => {
-    // waiting → word_input の遷移時にトランジションを表示
-    if (prevPhaseRef.current === 'waiting' && phase === 'word_input') {
+    // 他プレイヤーが waiting → word_input の遷移を検知した時
+    if (prevPhaseRef.current === 'waiting' && phase === 'word_input' && !showTransition) {
+      setTransitionTopic(gameState?.currentTopic ?? null);
       setShowTransition(true);
     }
     prevPhaseRef.current = phase;
-  }, [phase]);
+  }, [phase, gameState?.currentTopic, showTransition]);
 
   // ゲーム開始処理（フェードアウト付き）
   const handleStartGame = () => {
     if (!isHost || !gameState) return;
 
-    // まずロビーをフェードアウト
+    // お題をランダムに選出（先に決める）
+    const topic = getRandomTopic();
+    setTransitionTopic(topic);
+
+    // トランジションを即座に表示
+    setShowTransition(true);
     setIsStartingGame(true);
 
-    // フェードアウト完了後にゲーム状態を更新
+    // 少し待ってからゲーム状態を更新
     setTimeout(() => {
       // ターン順をシャッフル
       const playerIds = players.map(p => p.id);
       const shuffledOrder = [...playerIds].sort(() => Math.random() - 0.5);
-
-      // お題をランダムに選出
-      const topic = getRandomTopic();
 
       updateGameState({
         phase: 'word_input',
@@ -85,7 +89,7 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
         turnOrder: shuffledOrder,
         currentTurnPlayerId: shuffledOrder[0],
       });
-    }, 400); // フェードアウト時間
+    }, 300);
   };
 
   // 言葉入力完了処理
@@ -163,7 +167,18 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
   // waitingフェーズはLobbyが全画面表示
   if (phase === 'waiting') {
     return (
-      <Lobby
+      <>
+        {/* ゲーム開始トランジション（ロビーの上に表示） */}
+        {showTransition && transitionTopic && (
+          <GameStartTransition
+            topic={transitionTopic}
+            onComplete={() => {
+              setShowTransition(false);
+              setTransitionTopic(null);
+            }}
+          />
+        )}
+        <Lobby
         roomCode={roomCode}
         players={players}
         isHost={isHost}
@@ -180,16 +195,20 @@ export const MojiHuntDevGame = ({ onBack }: MojiHuntDevGameProps) => {
         onAddTestPlayer={addTestPlayer}
         isFadingOut={isStartingGame}
       />
+      </>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-900 to-orange-900 p-4">
       {/* ゲーム開始トランジション */}
-      {showTransition && gameState?.currentTopic && (
+      {showTransition && transitionTopic && (
         <GameStartTransition
-          topic={gameState.currentTopic}
-          onComplete={() => setShowTransition(false)}
+          topic={transitionTopic}
+          onComplete={() => {
+            setShowTransition(false);
+            setTransitionTopic(null);
+          }}
         />
       )}
 
