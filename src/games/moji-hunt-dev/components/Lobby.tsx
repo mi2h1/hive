@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
-import { Crown, FlaskConical } from 'lucide-react';
+import { Crown, FlaskConical, HelpCircle } from 'lucide-react';
 import type { Player } from '../types/game';
+import { RulesModal } from './RulesModal';
 
 interface LobbyProps {
   roomCode: string | null;
@@ -40,6 +41,7 @@ export const Lobby = ({
   isFadingOut = false,
 }: LobbyProps) => {
   const [showCopiedToast, setShowCopiedToast] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const roomCodeInputRef = useRef<HTMLInputElement>(null);
   const [canJoin, setCanJoin] = useState(false);
 
@@ -57,24 +59,33 @@ export const Lobby = ({
   // ルーム待機画面
   if (roomCode) {
     return (
-      <div className={`min-h-screen bg-gradient-to-br from-pink-900 to-orange-900 transition-opacity duration-300 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
-        <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
-          <div className="bg-slate-800/95 rounded-xl p-6 max-w-2xl w-full">
-            {/* タイトル */}
-            <div className="text-center mb-4">
-              <img
-                src="/boards/images/vec_logo_moji-hant.svg"
-                alt="もじはんと"
-                className="h-12 mx-auto"
-                style={{ filter: 'brightness(0) invert(1)' }}
-              />
-              {debugMode && (
-                <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2">
-                  <FlaskConical className="w-3 h-3" />
-                  デバッグモード
-                </span>
-              )}
-            </div>
+      <>
+        {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+        <div className={`min-h-screen bg-gradient-to-br from-pink-900 to-orange-900 transition-opacity duration-300 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
+          <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
+            <div className="bg-slate-800/95 rounded-xl p-6 max-w-2xl w-full">
+              {/* タイトル */}
+              <div className="text-center mb-4 relative">
+                <button
+                  onClick={() => setShowRules(true)}
+                  className="absolute right-0 top-0 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  title="遊び方"
+                >
+                  <HelpCircle className="w-5 h-5" />
+                </button>
+                <img
+                  src="/boards/images/vec_logo_moji-hant.svg"
+                  alt="もじはんと"
+                  className="h-12 mx-auto"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
+                {debugMode && (
+                  <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2">
+                    <FlaskConical className="w-3 h-3" />
+                    デバッグモード
+                  </span>
+                )}
+              </div>
 
             {/* ルームコード */}
             <div className="bg-slate-700 rounded-lg p-4 mb-6 text-center relative">
@@ -176,114 +187,127 @@ export const Lobby = ({
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   // ルーム作成/参加画面
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-900 to-orange-900">
-      <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
-        <div className="bg-slate-800/95 rounded-xl p-6 max-w-md w-full">
-          {/* タイトル */}
-          <img
-            src="/boards/images/vec_logo_moji-hant.svg"
-            alt="もじはんと"
-            className="h-16 mx-auto mb-2"
-            style={{ filter: 'brightness(0) invert(1)' }}
-          />
-          <div className="text-slate-400 text-center mb-6">
-            ようこそ、{playerName}さん
-          </div>
-
-          {error && (
-            <div className="bg-red-900/50 text-red-300 px-4 py-2 rounded-lg mb-4 text-center">
-              {error}
+    <>
+      {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+      <div className="min-h-screen bg-gradient-to-br from-pink-900 to-orange-900">
+        <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
+          <div className="bg-slate-800/95 rounded-xl p-6 max-w-md w-full">
+            {/* タイトル */}
+            <div className="relative mb-2">
+              <button
+                onClick={() => setShowRules(true)}
+                className="absolute right-0 top-0 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                title="遊び方"
+              >
+                <HelpCircle className="w-5 h-5" />
+              </button>
+              <img
+                src="/boards/images/vec_logo_moji-hant.svg"
+                alt="もじはんと"
+                className="h-16 mx-auto"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
             </div>
-          )}
-
-          <div className="space-y-6">
-            {/* ルーム作成 */}
-            <button
-              onClick={onCreateRoom}
-              disabled={isLoading}
-              className="w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-orange-500
-                hover:from-pink-600 hover:to-orange-600 disabled:from-gray-500 disabled:to-gray-600
-                rounded-lg text-white font-bold text-lg transition-all"
-            >
-              {isLoading ? '作成中...' : '新しいルームを作成'}
-            </button>
-
-            <div className="flex items-center gap-4">
-              <div className="flex-1 h-px bg-slate-600" />
-              <span className="text-slate-500">または</span>
-              <div className="flex-1 h-px bg-slate-600" />
+            <div className="text-slate-400 text-center mb-6">
+              ようこそ、{playerName}さん
             </div>
 
-            {/* ルーム参加 */}
-            <div className="space-y-3">
-              <input
-                ref={roomCodeInputRef}
-                type="text"
-                inputMode="url"
-                enterKeyHint="go"
-                lang="en"
-                onChange={(e) => {
-                  // ボタン有効化判定のみ（入力値は変更しない）
-                  const filtered = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                  setCanJoin(filtered.length >= 4);
-                }}
-                onBlur={(e) => {
-                  // フォーカスが外れた時に整形
-                  const raw = e.target.value;
-                  const filtered = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
-                  e.target.value = filtered;
-                  setCanJoin(filtered.length === 4);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+            {error && (
+              <div className="bg-red-900/50 text-red-300 px-4 py-2 rounded-lg mb-4 text-center">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-6">
+              {/* ルーム作成 */}
+              <button
+                onClick={onCreateRoom}
+                disabled={isLoading}
+                className="w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-orange-500
+                  hover:from-pink-600 hover:to-orange-600 disabled:from-gray-500 disabled:to-gray-600
+                  rounded-lg text-white font-bold text-lg transition-all"
+              >
+                {isLoading ? '作成中...' : '新しいルームを作成'}
+              </button>
+
+              <div className="flex items-center gap-4">
+                <div className="flex-1 h-px bg-slate-600" />
+                <span className="text-slate-500">または</span>
+                <div className="flex-1 h-px bg-slate-600" />
+              </div>
+
+              {/* ルーム参加 */}
+              <div className="space-y-3">
+                <input
+                  ref={roomCodeInputRef}
+                  type="text"
+                  inputMode="url"
+                  enterKeyHint="go"
+                  lang="en"
+                  onChange={(e) => {
+                    // ボタン有効化判定のみ（入力値は変更しない）
+                    const filtered = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    setCanJoin(filtered.length >= 4);
+                  }}
+                  onBlur={(e) => {
+                    // フォーカスが外れた時に整形
+                    const raw = e.target.value;
+                    const filtered = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+                    e.target.value = filtered;
+                    setCanJoin(filtered.length === 4);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const raw = roomCodeInputRef.current?.value ?? '';
+                      const code = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+                      if (code.length === 4) onJoinRoom(code);
+                    }
+                  }}
+                  placeholder="ルームコードを入力"
+                  className="w-full px-4 py-3 bg-slate-700 text-white text-center text-xl
+                    font-mono tracking-widest rounded-lg uppercase
+                    focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  maxLength={10}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                />
+                <button
+                  onClick={() => {
                     const raw = roomCodeInputRef.current?.value ?? '';
                     const code = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
                     if (code.length === 4) onJoinRoom(code);
-                  }
-                }}
-                placeholder="ルームコードを入力"
-                className="w-full px-4 py-3 bg-slate-700 text-white text-center text-xl
-                  font-mono tracking-widest rounded-lg uppercase
-                  focus:outline-none focus:ring-2 focus:ring-pink-500"
-                maxLength={10}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-              />
-              <button
-                onClick={() => {
-                  const raw = roomCodeInputRef.current?.value ?? '';
-                  const code = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
-                  if (code.length === 4) onJoinRoom(code);
-                }}
-                disabled={isLoading || !canJoin}
-                className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500
-                  hover:from-orange-600 hover:to-red-600 disabled:from-gray-500 disabled:to-gray-600
-                  rounded-lg text-white font-bold transition-all"
-              >
-                {isLoading ? '参加中...' : 'ルームに参加'}
-              </button>
-            </div>
+                  }}
+                  disabled={isLoading || !canJoin}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500
+                    hover:from-orange-600 hover:to-red-600 disabled:from-gray-500 disabled:to-gray-600
+                    rounded-lg text-white font-bold transition-all"
+                >
+                  {isLoading ? '参加中...' : 'ルームに参加'}
+                </button>
+              </div>
 
-            {/* 戻るボタン */}
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="w-full px-6 py-3 bg-slate-700 hover:bg-slate-600
-                  rounded-lg text-slate-300 font-bold transition-all"
-              >
-                ゲーム選択に戻る
-              </button>
-            )}
+              {/* 戻るボタン */}
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="w-full px-6 py-3 bg-slate-700 hover:bg-slate-600
+                    rounded-lg text-slate-300 font-bold transition-all"
+                >
+                  ゲーム選択に戻る
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
