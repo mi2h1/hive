@@ -53,35 +53,35 @@ export const ResultScreen = ({
         <div className="bg-white/10 rounded-xl p-4">
           <h3 className="text-white font-bold mb-3 text-sm">みんなの言葉</h3>
           <div className="space-y-2">
-            {sortedPlayers.map((player) => {
+            {sortedPlayers.map((player, index) => {
               const isMe = player.id === playerId;
-              const isPlayerWinner = player.id === winnerId;
+              // 順位（sortedPlayersの順番が順位）
+              const rank = index + 1;
+
+              // メダルカラー（1位:金, 2位:銀, 3位:銅, 4位以降:グレー）
+              const getMedalStyle = () => {
+                switch (rank) {
+                  case 1: return { bg: 'bg-yellow-500', text: 'text-white', nameBg: 'bg-yellow-500/20', nameText: 'text-yellow-300' };
+                  case 2: return { bg: 'bg-slate-400', text: 'text-slate-900', nameBg: 'bg-slate-400/20', nameText: 'text-slate-300' };
+                  case 3: return { bg: 'bg-amber-600', text: 'text-white', nameBg: 'bg-amber-600/20', nameText: 'text-amber-300' };
+                  default: return { bg: 'bg-white/10', text: 'text-white/60', nameBg: 'bg-white/5', nameText: 'text-white' };
+                }
+              };
+              const medalStyle = getMedalStyle();
 
               return (
                 <div
                   key={player.id}
-                  className={`
-                    flex items-center gap-3 p-2 rounded-lg
-                    ${isPlayerWinner
-                      ? 'bg-yellow-500/20'
-                      : 'bg-white/5'
-                    }
-                  `}
+                  className={`flex items-center gap-3 p-2 rounded-lg ${medalStyle.nameBg}`}
                 >
                   {/* 順位 */}
-                  <div className={`
-                    w-6 h-6 flex items-center justify-center rounded-full font-bold text-sm
-                    ${isPlayerWinner
-                      ? 'bg-yellow-500 text-white'
-                      : 'bg-white/10 text-white/60'
-                    }
-                  `}>
-                    {isPlayerWinner ? '1' : player.eliminatedAt ? players.length - player.eliminatedAt + 1 : '-'}
+                  <div className={`w-6 h-6 flex items-center justify-center rounded-full font-bold text-sm ${medalStyle.bg} ${medalStyle.text}`}>
+                    {rank}
                   </div>
 
                   {/* プレイヤー名 */}
                   <div className="flex-1 min-w-0">
-                    <span className={`font-bold text-sm ${isPlayerWinner ? 'text-yellow-300' : 'text-white'}`}>
+                    <span className={`font-bold text-sm ${medalStyle.nameText}`}>
                       {player.name}
                     </span>
                     {isMe && (
