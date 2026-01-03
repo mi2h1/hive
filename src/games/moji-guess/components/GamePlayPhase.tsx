@@ -152,6 +152,7 @@ export const GamePlayPhase = ({
     // 連続攻撃は1回まで：前回ヒットしていなくて今回ヒットした場合のみ連続攻撃可能
     const canContinue = anyHit && !lastAttackHadHit;
     let nextPlayerId = currentTurnPlayerId;
+    let nextLastAttackHadHit = anyHit;
 
     if (!canContinue) {
       // 次のプレイヤーへ
@@ -165,12 +166,14 @@ export const GamePlayPhase = ({
           break;
         }
       }
+      // ターンが移動したら、次のプレイヤーのlastAttackHadHitはリセット
+      nextLastAttackHadHit = false;
     }
 
     updateGameState({
       players: updatedPlayers,
       currentTurnPlayerId: nextPlayerId,
-      lastAttackHadHit: anyHit,
+      lastAttackHadHit: nextLastAttackHadHit,
     });
   };
 
