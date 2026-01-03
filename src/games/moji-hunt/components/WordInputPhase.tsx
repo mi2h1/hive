@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Loader2, FlaskConical, RefreshCw } from 'lucide-react';
+import { Check, Loader2, FlaskConical, RefreshCw, Pencil } from 'lucide-react';
 import type { Player, GameSettings, LocalPlayerState } from '../types/game';
 import { validateWord, normalizeWord } from '../lib/hiragana';
 
@@ -10,6 +10,7 @@ interface WordInputPhaseProps {
   currentPlayerId: string;
   isReady: boolean;
   onSubmitWord: (originalWord: string, normalizedWord: string) => void;
+  onCancelReady?: () => void; // 入力完了を取り消す
   // お題チェンジ投票
   topicChangeVotes: string[];
   onVoteTopicChange: () => void;
@@ -29,6 +30,7 @@ export const WordInputPhase = ({
   currentPlayerId,
   isReady,
   onSubmitWord,
+  onCancelReady,
   topicChangeVotes,
   onVoteTopicChange,
   turnOrder,
@@ -68,12 +70,24 @@ export const WordInputPhase = ({
 
   // 既に入力完了している場合
   if (isReady) {
+    const canEdit = waitingPlayers.length > 0 && onCancelReady;
+
     return (
       <div className="space-y-6">
         <div className="bg-white/10 rounded-xl p-8 text-center">
           <Check className="w-16 h-16 text-green-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">入力完了</h2>
-          <p className="text-white/60">他のプレイヤーを待っています...</p>
+          <p className="text-white/60 mb-4">他のプレイヤーを待っています...</p>
+          {canEdit && (
+            <button
+              onClick={onCancelReady}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20
+                rounded-lg text-white/80 text-sm transition-all"
+            >
+              <Pencil className="w-4 h-4" />
+              修正する
+            </button>
+          )}
         </div>
 
         {/* お題チェンジ投票 */}

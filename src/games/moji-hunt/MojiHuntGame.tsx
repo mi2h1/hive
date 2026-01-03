@@ -137,6 +137,31 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
     updateGameState({ players: updatedPlayers });
   };
 
+  // 入力完了を取り消して再編集
+  const handleCancelReady = () => {
+    if (!playerId || !gameState) return;
+
+    // ローカル状態をクリア
+    setLocalState(null);
+
+    // Firebaseのプレイヤー状態をリセット
+    const updatedPlayers = players.map(p => {
+      if (p.id === playerId) {
+        return {
+          ...p,
+          isReady: false,
+          wordLength: 0,
+          normalizedWord: '',
+          revealedPositions: [],
+          revealedCharacters: [],
+        };
+      }
+      return p;
+    });
+
+    updateGameState({ players: updatedPlayers });
+  };
+
   // お題チェンジ投票処理
   const handleVoteTopicChange = () => {
     if (!playerId || !gameState) return;
@@ -280,6 +305,7 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
             currentPlayerId={playerId ?? ''}
             isReady={localState !== null}
             onSubmitWord={handleWordSubmit}
+            onCancelReady={handleCancelReady}
             topicChangeVotes={gameState.topicChangeVotes ?? []}
             onVoteTopicChange={handleVoteTopicChange}
             turnOrder={gameState.turnOrder}
