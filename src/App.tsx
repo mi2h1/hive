@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Gamepad2 } from 'lucide-react';
 import { usePlayer } from './shared/hooks/usePlayer';
 import { AoaGame } from './games/aoa/AoaGame';
-import { MojiGuessGame } from './games/moji-guess/MojiGuessGame';
+import { MojiHuntGame } from './games/moji-hunt/MojiHuntGame';
 
-type GameType = 'none' | 'aoa' | 'moji-guess';
+type GameType = 'none' | 'aoa' | 'moji-hunt';
 
 // URL からゲームタイプを取得
 const getGameFromPath = (): GameType => {
@@ -16,13 +16,13 @@ const getGameFromPath = (): GameType => {
     const newPath = `/boards/${redirectPath}`;
     window.history.replaceState({}, '', newPath);
     if (redirectPath === 'aoa') return 'aoa';
-    if (redirectPath === 'moji-guess') return 'moji-guess';
+    if (redirectPath === 'moji-hunt') return 'moji-hunt';
   }
 
   // 通常のパスから取得
   const path = window.location.pathname.replace('/boards', '').replace(/^\//, '');
   if (path === 'aoa') return 'aoa';
-  if (path === 'moji-guess') return 'moji-guess';
+  if (path === 'moji-hunt') return 'moji-hunt';
   return 'none';
 };
 
@@ -112,8 +112,8 @@ function App() {
   if (selectedGame === 'aoa') {
     return <AoaGame onBack={() => selectGame('none')} />;
   }
-  if (selectedGame === 'moji-guess') {
-    return <MojiGuessGame onBack={() => selectGame('none')} />;
+  if (selectedGame === 'moji-hunt') {
+    return <MojiHuntGame onBack={() => selectGame('none')} />;
   }
 
   // ゲーム選択画面
@@ -163,19 +163,19 @@ function App() {
             </div>
           </div>
 
-          {/* 文字ゲス */}
+          {/* もじはんと */}
           <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all">
             <div className="h-40 bg-gradient-to-br from-pink-600 to-orange-500 flex items-center justify-center">
-              <span className="text-4xl font-bold text-white">文字ゲス</span>
+              <span className="text-4xl font-bold text-white">もじはんと</span>
             </div>
             <div className="p-4">
-              <h2 className="text-lg font-bold text-white mb-2">文字ゲス</h2>
+              <h2 className="text-lg font-bold text-white mb-2">もじはんと</h2>
               <p className="text-slate-400 text-sm mb-4">
                 ひらがなで秘密の言葉を当て合うパーティーゲーム。最後まで残った人の勝ち！
               </p>
               <div className="flex gap-2">
                 <button
-                  onClick={() => selectGame('moji-guess')}
+                  onClick={() => selectGame('moji-hunt')}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-500
                     hover:from-pink-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
                 >

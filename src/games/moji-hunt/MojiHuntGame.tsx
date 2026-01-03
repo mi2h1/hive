@@ -9,11 +9,11 @@ import { ResultScreen } from './components/ResultScreen';
 import type { LocalPlayerState } from './types/game';
 import { DEFAULT_SETTINGS, TOPIC_LABELS } from './types/game';
 
-interface MojiGuessGameProps {
+interface MojiHuntGameProps {
   onBack: () => void;
 }
 
-export const MojiGuessGame = ({ onBack }: MojiGuessGameProps) => {
+export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
   // デバッグモード検出（URLパラメータ ?debug=true）
   const debugMode = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -170,7 +170,7 @@ export const MojiGuessGame = ({ onBack }: MojiGuessGameProps) => {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              文字ゲス
+              もじはんと
               {debugMode && (
                 <span className="bg-orange-600 text-white px-2 py-0.5 rounded text-xs inline-flex items-center gap-1">
                   <FlaskConical className="w-3 h-3" />

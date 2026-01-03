@@ -63,7 +63,7 @@ export const Lobby = ({
           <div className="bg-slate-800/95 rounded-xl p-6 max-w-2xl w-full">
             {/* タイトル */}
             <h1 className="text-3xl font-bold text-white text-center mb-4 flex items-center justify-center gap-2">
-              文字ゲス
+              もじはんと
               {debugMode && (
                 <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded inline-flex items-center gap-1">
                   <FlaskConical className="w-3 h-3" />
@@ -212,7 +212,7 @@ export const Lobby = ({
       <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
         <div className="bg-slate-800/95 rounded-xl p-6 max-w-md w-full">
           {/* タイトル */}
-          <h1 className="text-4xl font-bold text-white text-center mb-2">文字ゲス</h1>
+          <h1 className="text-4xl font-bold text-white text-center mb-2">もじはんと</h1>
           <div className="text-slate-400 text-center mb-6">
             ようこそ、{playerName}さん
           </div>

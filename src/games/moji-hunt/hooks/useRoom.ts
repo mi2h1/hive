@@ -7,7 +7,7 @@ import { createInitialPlayer, createInitialGameState, DEFAULT_SETTINGS } from '.
 // 古いルームを削除（24時間以上前のルーム）
 const cleanupOldRooms = async () => {
   try {
-    const roomsRef = ref(db, 'moji-guess-rooms');
+    const roomsRef = ref(db, 'moji-hunt-rooms');
     const snapshot = await get(roomsRef);
     if (!snapshot.exists()) return;
 
@@ -24,7 +24,7 @@ const cleanupOldRooms = async () => {
 
       // 24時間以上前 または プレイヤーが0人のルームを削除
       if (now - createdAt > maxAge || playerCount === 0) {
-        deletePromises.push(remove(ref(db, `moji-guess-rooms/${code}`)));
+        deletePromises.push(remove(ref(db, `moji-hunt-rooms/${code}`)));
       }
     }
 
@@ -67,7 +67,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
       return;
     }
 
-    const roomRef = ref(db, `moji-guess-rooms/${roomCode}`);
+    const roomRef = ref(db, `moji-hunt-rooms/${roomCode}`);
 
     onValue(roomRef, (snapshot) => {
       const data = snapshot.val();
@@ -130,7 +130,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
       await cleanupOldRooms();
 
       const code = generateRoomCode();
-      const roomRef = ref(db, `moji-guess-rooms/${code}`);
+      const roomRef = ref(db, `moji-hunt-rooms/${code}`);
 
       const initialPlayer = createInitialPlayer(playerId, playerName);
 
@@ -167,7 +167,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
 
     try {
       const upperCode = code.toUpperCase();
-      const roomRef = ref(db, `moji-guess-rooms/${upperCode}`);
+      const roomRef = ref(db, `moji-hunt-rooms/${upperCode}`);
 
       return new Promise<boolean>((resolve) => {
         onValue(roomRef, async (snapshot) => {
@@ -212,7 +212,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
           const newPlayer = createInitialPlayer(playerId, playerName);
           const updatedPlayers = [...players, newPlayer];
 
-          await update(ref(db, `moji-guess-rooms/${upperCode}/gameState`), {
+          await update(ref(db, `moji-hunt-rooms/${upperCode}/gameState`), {
             players: updatedPlayers,
           });
 
@@ -238,15 +238,15 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
 
       if (isHost) {
         // ホストの場合はルームを削除
-        await remove(ref(db, `moji-guess-rooms/${roomCode}`));
+        await remove(ref(db, `moji-hunt-rooms/${roomCode}`));
       } else {
         // プレイヤーの場合は自分を削除
         const updatedPlayers = roomData.gameState.players.filter(p => p.id !== playerId);
 
         if (updatedPlayers.length === 0) {
-          await remove(ref(db, `moji-guess-rooms/${roomCode}`));
+          await remove(ref(db, `moji-hunt-rooms/${roomCode}`));
         } else {
-          await update(ref(db, `moji-guess-rooms/${roomCode}/gameState`), {
+          await update(ref(db, `moji-hunt-rooms/${roomCode}/gameState`), {
             players: updatedPlayers,
           });
         }
@@ -264,7 +264,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     if (!roomCode) return;
 
     try {
-      await update(ref(db, `moji-guess-rooms/${roomCode}/gameState`), newState);
+      await update(ref(db, `moji-hunt-rooms/${roomCode}/gameState`), newState);
     } catch (err) {
       console.error('Update game state error:', err);
       setError('状態の更新に失敗しました');
@@ -277,7 +277,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
 
     try {
       const currentSettings = roomData.gameState.settings;
-      await update(ref(db, `moji-guess-rooms/${roomCode}/gameState`), {
+      await update(ref(db, `moji-hunt-rooms/${roomCode}/gameState`), {
         settings: { ...currentSettings, ...settings },
       });
     } catch (err) {
@@ -302,7 +302,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     );
 
     try {
-      await update(ref(db, `moji-guess-rooms/${roomCode}/gameState`), {
+      await update(ref(db, `moji-hunt-rooms/${roomCode}/gameState`), {
         players: [...players, testPlayer],
       });
     } catch (err) {
