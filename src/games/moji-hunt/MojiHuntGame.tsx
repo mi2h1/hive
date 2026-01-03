@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
@@ -6,8 +6,9 @@ import { Lobby } from './components/Lobby';
 import { WordInputPhase } from './components/WordInputPhase';
 import { GamePlayPhase } from './components/GamePlayPhase';
 import { ResultScreen } from './components/ResultScreen';
+import { GameStartTransition } from './components/GameStartTransition';
 import type { LocalPlayerState } from './types/game';
-import { DEFAULT_SETTINGS, TOPIC_LABELS } from './types/game';
+import { DEFAULT_SETTINGS, getRandomTopic } from './types/game';
 
 interface MojiHuntGameProps {
   onBack: () => void;
@@ -20,6 +21,9 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
     return () => { document.title = 'Game Board'; };
   }, []);
 
+  // 本番はデバッグモードOFF
+  const debugMode = false;
+
   const { playerId, playerName } = usePlayer();
   const {
     roomCode,
@@ -31,30 +35,58 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
     joinRoom,
     leaveRoom,
     updateGameState,
-    updateSettings,
   } = useRoom(playerId, playerName);
 
   // ローカルで保持する秘密の言葉
   const [localState, setLocalState] = useState<LocalPlayerState | null>(null);
+
+  // ゲーム開始時のトランジション表示
+  const [showTransition, setShowTransition] = useState(false);
+  const [isStartingGame, setIsStartingGame] = useState(false);
+  const [transitionTopic, setTransitionTopic] = useState<string | null>(null);
+  const prevPhaseRef = useRef<string | null>(null);
 
   const gameState = roomData?.gameState;
   const players = gameState?.players ?? [];
   const settings = gameState?.settings ?? DEFAULT_SETTINGS;
   const phase = gameState?.phase ?? 'waiting';
 
-  // ゲーム開始処理
+  // フェーズ変更を監視（他プレイヤー用）
+  useEffect(() => {
+    // 他プレイヤーが waiting → word_input の遷移を検知した時
+    if (prevPhaseRef.current === 'waiting' && phase === 'word_input' && !showTransition) {
+      setTransitionTopic(gameState?.currentTopic ?? null);
+      setShowTransition(true);
+    }
+    prevPhaseRef.current = phase;
+  }, [phase, gameState?.currentTopic, showTransition]);
+
+  // ゲーム開始処理（フェードアウト付き）
   const handleStartGame = () => {
     if (!isHost || !gameState) return;
 
-    // ターン順をシャッフル
-    const playerIds = players.map(p => p.id);
-    const shuffledOrder = [...playerIds].sort(() => Math.random() - 0.5);
+    // お題をランダムに選出（先に決める）
+    const topic = getRandomTopic();
+    setTransitionTopic(topic);
 
-    updateGameState({
-      phase: 'word_input',
-      turnOrder: shuffledOrder,
-      currentTurnPlayerId: shuffledOrder[0],
-    });
+    // トランジションを即座に表示
+    setShowTransition(true);
+    setIsStartingGame(true);
+
+    // 少し待ってからゲーム状態を更新
+    setTimeout(() => {
+      // ターン順をシャッフル
+      const playerIds = players.map(p => p.id);
+      const shuffledOrder = [...playerIds].sort(() => Math.random() - 0.5);
+
+      updateGameState({
+        phase: 'word_input',
+        currentTopic: topic,
+        turnOrder: shuffledOrder,
+        currentTurnPlayerId: shuffledOrder[0],
+        topicChangeVotes: [],
+      });
+    }, 300);
   };
 
   // 言葉入力完了処理
@@ -82,6 +114,46 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
     updateGameState({ players: updatedPlayers });
   };
 
+  // お題チェンジ投票処理
+  const handleVoteTopicChange = () => {
+    if (!playerId || !gameState) return;
+
+    const currentVotes = gameState.topicChangeVotes ?? [];
+    if (currentVotes.includes(playerId)) return; // 既に投票済み
+
+    const newVotes = [...currentVotes, playerId];
+
+    // 全員投票したらお題を変更
+    if (newVotes.length >= players.length) {
+      // 新しいお題を選出
+      const newTopic = getRandomTopic();
+      setTransitionTopic(newTopic);
+      setShowTransition(true);
+
+      // 全員の入力をリセット
+      const resetPlayers = players.map(p => ({
+        ...p,
+        isReady: false,
+        wordLength: 0,
+        normalizedWord: '',
+        revealedPositions: [],
+        revealedCharacters: [],
+      }));
+
+      // ローカル状態もリセット
+      setLocalState(null);
+
+      updateGameState({
+        currentTopic: newTopic,
+        topicChangeVotes: [],
+        players: resetPlayers,
+      });
+    } else {
+      // まだ全員投票していない
+      updateGameState({ topicChangeVotes: newVotes });
+    }
+  };
+
   // 全員準備完了したらゲーム開始
   const allReady = players.length > 0 && players.every(p => p.isReady);
   if (phase === 'word_input' && allReady && isHost) {
@@ -99,27 +171,50 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
   // waitingフェーズはLobbyが全画面表示
   if (phase === 'waiting') {
     return (
-      <Lobby
+      <>
+        {/* ゲーム開始トランジション（ロビーの上に表示） */}
+        {showTransition && transitionTopic && (
+          <GameStartTransition
+            topic={transitionTopic}
+            onComplete={() => {
+              setShowTransition(false);
+              setTransitionTopic(null);
+            }}
+          />
+        )}
+        <Lobby
         roomCode={roomCode}
         players={players}
         isHost={isHost}
         isLoading={isLoading}
         error={error}
-        settings={settings}
         hostId={roomData?.hostId ?? ''}
         playerName={playerName}
         onCreateRoom={createRoom}
         onJoinRoom={joinRoom}
         onLeaveRoom={leaveRoom}
         onStartGame={handleStartGame}
-        onUpdateSettings={updateSettings}
         onBack={handleBack}
+        debugMode={debugMode}
+        isFadingOut={isStartingGame}
       />
+      </>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-900 to-orange-900 p-4">
+      {/* ゲーム開始トランジション */}
+      {showTransition && transitionTopic && (
+        <GameStartTransition
+          topic={transitionTopic}
+          onComplete={() => {
+            setShowTransition(false);
+            setTransitionTopic(null);
+          }}
+        />
+      )}
+
       <div className="max-w-6xl mx-auto">
         {/* ヘッダー */}
         <header className="flex items-center gap-4 mb-6">
@@ -136,9 +231,9 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
               className="h-8"
               style={{ filter: 'brightness(0) invert(1)' }}
             />
-            {roomCode && (
+            {gameState?.currentTopic && (
               <span className="text-white/60 text-sm">
-                お題: {TOPIC_LABELS[settings.topic]}
+                お題: {gameState.currentTopic}
               </span>
             )}
           </div>
@@ -147,10 +242,14 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
         {phase === 'word_input' && gameState && (
           <WordInputPhase
             settings={settings}
+            currentTopic={gameState.currentTopic}
             players={players}
             currentPlayerId={playerId ?? ''}
             isReady={localState !== null}
             onSubmitWord={handleWordSubmit}
+            topicChangeVotes={gameState.topicChangeVotes ?? []}
+            onVoteTopicChange={handleVoteTopicChange}
+            debugMode={debugMode}
           />
         )}
 
@@ -161,6 +260,7 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
             playerId={playerId ?? ''}
             isHost={isHost}
             updateGameState={updateGameState}
+            debugMode={debugMode}
           />
         )}
 
@@ -172,6 +272,9 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
             isHost={isHost}
             onPlayAgain={() => {
               setLocalState(null);
+              setIsStartingGame(false);
+              setShowTransition(false);
+              setTransitionTopic(null);
               // プレイヤーをリセットしてロビーに戻る
               // Firebaseはundefinedを許可しないので、eliminatedAtは含めない
               const resetPlayers = players.map(p => ({
@@ -187,12 +290,14 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
               updateGameState({
                 phase: 'waiting',
                 players: resetPlayers,
+                currentTopic: '',
                 currentTurnPlayerId: null,
                 turnOrder: [],
                 usedCharacters: [],
                 attackHistory: [],
                 lastAttackHadHit: false,
                 winnerId: null,
+                topicChangeVotes: [],
               });
             }}
             onLeaveRoom={() => {

@@ -1,15 +1,95 @@
 // ゲームフェーズ
 export type GamePhase = 'waiting' | 'word_input' | 'playing' | 'game_end';
 
-// お題カテゴリ
-export type TopicCategory = 'free' | 'animal' | 'food' | 'place' | 'character';
+// お題リスト
+export const TOPICS = [
+  '飲みもの',
+  'のりもの',
+  '文房具',
+  '動物',
+  '職業',
+  '食べもの',
+  '音の出るもの',
+  'スポーツ',
+  'キャラクター',
+  '学校にあるもの',
+  'いま部屋にあるもの',
+  'コンビニにあるもの',
+  '行きたい場所',
+  '最近出かけた場所',
+  '公園にあるもの',
+  '最近買ったもの',
+  '家にあるもの',
+  'この近所にあるもの',
+  '楽器',
+  '野菜',
+  'くだもの',
+  'お菓子',
+  'キッチン用品',
+  '電子機器',
+  '架空の生き物',
+  'いま食べたいもの',
+  '名称',
+  '年間行事',
+  '春といえば',
+  '夏といえば',
+  '秋といえば',
+  '冬といえば',
+  'お正月',
+  '夏休み',
+  '海といえば',
+  '山といえば',
+  '常に持っていくもの',
+  '本のタイトル',
+  'ゲームのタイトル',
+  'マンガのタイトル',
+  '有名人の名前',
+  'バンド・グループの名前',
+  '会社の名前',
+  'チェーン店の名前',
+  '武器の名前',
+  '技の名前',
+  '日本の観光地',
+  '海外の観光地',
+  'あいさつ',
+  '宇宙といえば',
+  'お弁当のおかず',
+  'めん類',
+  '中華料理',
+  'パンといえば',
+  '植物',
+  '虫',
+  '生き物',
+  '寿司ネタ',
+  'おいしいもの',
+  'なつかしいもの',
+  '大好きなもの',
+  '嫌いなもの',
+  'あまいもの',
+  'にがいもの',
+  '禁止されてるもの',
+  'あたたかいもの',
+  'つめたいもの',
+  '赤いもの',
+  '丸いもの',
+  '長いもの',
+  '大きいもの',
+  'やわらかいもの',
+  'とぶもの',
+  'まわるもの',
+  '苦手だった人の名前',
+  '好きなタイプ',
+  '自分を動物に例えると',
+  '自分を一言で表すと',
+  '自分の一番大切なもの',
+  'ドキドキするもの',
+  '気になるもの',
+  '災害時に必要なもの',
+] as const;
 
-export const TOPIC_LABELS: Record<TopicCategory, string> = {
-  free: '自由',
-  animal: '動物',
-  food: '食べ物',
-  place: '場所',
-  character: 'キャラクター',
+// ランダムにお題を選ぶ
+export const getRandomTopic = (): string => {
+  return TOPICS[Math.floor(Math.random() * TOPICS.length)];
 };
 
 // プレイヤー状態（Firebase同期対象）
@@ -61,13 +141,13 @@ export interface CurrentAttack {
 export interface GameSettings {
   minWordLength: number;
   maxWordLength: number;
-  topic: TopicCategory;
 }
 
 // ゲーム状態（Firebase同期対象）
 export interface GameState {
   phase: GamePhase;
   settings: GameSettings;
+  currentTopic: string; // ゲーム開始時にランダム選出されたお題
   players: Player[];
   currentTurnPlayerId: string | null;
   turnOrder: string[]; // プレイヤーIDの順番
@@ -76,6 +156,7 @@ export interface GameState {
   lastAttackHadHit: boolean; // 最後の攻撃がヒットしたか（連続攻撃判定用）
   winnerId: string | null;
   currentAttack?: CurrentAttack | null; // 現在の攻撃演出（全員に表示）
+  topicChangeVotes: string[]; // お題チェンジに投票したプレイヤーID
 }
 
 // ルームデータ
@@ -89,7 +170,6 @@ export interface RoomData {
 export const DEFAULT_SETTINGS: GameSettings = {
   minWordLength: 2,
   maxWordLength: 7,
-  topic: 'free',
 };
 
 // 初期プレイヤー状態を作成
@@ -108,10 +188,12 @@ export const createInitialPlayer = (id: string, name: string): Player => ({
 export const createInitialGameState = (): Omit<GameState, 'players'> => ({
   phase: 'waiting',
   settings: { ...DEFAULT_SETTINGS },
+  currentTopic: '', // ゲーム開始時に設定される
   currentTurnPlayerId: null,
   turnOrder: [],
   usedCharacters: [],
   attackHistory: [],
   lastAttackHadHit: false,
   winnerId: null,
+  topicChangeVotes: [],
 });

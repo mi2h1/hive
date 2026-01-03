@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import { Crown, FlaskConical } from 'lucide-react';
-import type { Player, GameSettings, TopicCategory } from '../types/game';
-import { TOPIC_LABELS } from '../types/game';
+import type { Player } from '../types/game';
 
 interface LobbyProps {
   roomCode: string | null;
@@ -9,18 +8,18 @@ interface LobbyProps {
   isHost: boolean;
   isLoading: boolean;
   error: string | null;
-  settings: GameSettings;
   hostId: string;
   playerName: string | null;
   onCreateRoom: () => void;
   onJoinRoom: (code: string) => void;
   onLeaveRoom: () => void;
   onStartGame: () => void;
-  onUpdateSettings: (settings: Partial<GameSettings>) => void;
   onBack?: () => void;
   // デバッグ用
   debugMode?: boolean;
   onAddTestPlayer?: () => void;
+  // フェードアウト中
+  isFadingOut?: boolean;
 }
 
 export const Lobby = ({
@@ -29,17 +28,16 @@ export const Lobby = ({
   isHost,
   isLoading,
   error,
-  settings,
   hostId,
   playerName,
   onCreateRoom,
   onJoinRoom,
   onLeaveRoom,
   onStartGame,
-  onUpdateSettings,
   onBack,
   debugMode = false,
   onAddTestPlayer,
+  isFadingOut = false,
 }: LobbyProps) => {
   const [showCopiedToast, setShowCopiedToast] = useState(false);
   const roomCodeInputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +57,7 @@ export const Lobby = ({
   // ルーム待機画面
   if (roomCode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-900 to-orange-900">
+      <div className={`min-h-screen bg-gradient-to-br from-pink-900 to-orange-900 transition-opacity duration-300 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
         <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
           <div className="bg-slate-800/95 rounded-xl p-6 max-w-2xl w-full">
             {/* タイトル */}
@@ -133,69 +131,38 @@ export const Lobby = ({
               </div>
             )}
 
-            {/* 参加者とお題設定（2列レイアウト） */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              {/* 左列: プレイヤー追加（デバッグ時）+ プレイヤー一覧 */}
-              <div>
-                {/* デバッグ用: テストプレイヤー追加 */}
-                {debugMode && onAddTestPlayer && players.length < 5 && (
-                  <button
-                    onClick={onAddTestPlayer}
-                    className="w-full mb-2 px-3 py-2 bg-orange-600 hover:bg-orange-700
-                      rounded-lg text-white text-sm font-bold transition-all"
+            {/* 参加者一覧 */}
+            <div className="mb-4">
+              {/* デバッグ用: テストプレイヤー追加 */}
+              {debugMode && onAddTestPlayer && players.length < 5 && (
+                <button
+                  onClick={onAddTestPlayer}
+                  className="w-full mb-2 px-3 py-2 bg-orange-600 hover:bg-orange-700
+                    rounded-lg text-white text-sm font-bold transition-all"
+                >
+                  + テストプレイヤーを追加
+                </button>
+              )}
+              <div className="text-slate-400 text-sm mb-2">
+                参加者 ({players.length}/5)
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {players.map((player) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center gap-1 bg-slate-700 px-3 py-1.5 rounded-lg text-sm"
                   >
-                    + テストプレイヤーを追加
-                  </button>
-                )}
-                <div className="text-slate-400 text-sm mb-2">
-                  参加者 ({players.length}/5)
-                </div>
-                <div className="space-y-1">
-                  {players.map((player) => (
-                    <div
-                      key={player.id}
-                      className="flex items-center gap-1 bg-slate-700 px-3 py-1.5 rounded-lg text-sm"
-                    >
-                      {player.id === hostId && <Crown className="w-4 h-4 text-yellow-400" />}
-                      <span className="text-white truncate">{player.name}</span>
-                      {player.name === playerName && (
-                        <span className="text-slate-400 text-xs">(自分)</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 右列: お題設定 */}
-              <div>
-                <div className="text-slate-400 text-sm mb-2">お題</div>
-                <div className="space-y-1">
-                  {(Object.keys(TOPIC_LABELS) as TopicCategory[]).map((topic) => {
-                    const isActive = settings.topic === topic;
-                    return (
-                      <button
-                        key={topic}
-                        onClick={() => isHost && onUpdateSettings({ topic })}
-                        disabled={!isHost}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-sm ${
-                          isActive
-                            ? 'bg-pink-600 text-white'
-                            : isHost
-                              ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                              : 'bg-slate-700/50 text-slate-400 cursor-not-allowed'
-                        }`}
-                      >
-                        <span className="font-bold">{TOPIC_LABELS[topic]}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {!isHost && (
-                  <div className="text-slate-500 text-xs mt-1 text-center">
-                    ホストのみ変更可
+                    {player.id === hostId && <Crown className="w-4 h-4 text-yellow-400" />}
+                    <span className="text-white">{player.name}</span>
+                    {player.name === playerName && (
+                      <span className="text-slate-400 text-xs">(自分)</span>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
+              <p className="text-slate-500 text-xs mt-3 text-center">
+                お題はゲーム開始時にランダムで決まります
+              </p>
             </div>
 
             {/* 退出ボタン */}
