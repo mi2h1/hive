@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { Crown, FlaskConical, HelpCircle, Heart } from 'lucide-react';
+import { RulesModal } from './RulesModal';
 import type { Player, GameSettings } from '../types/game';
 
 interface LobbyProps {
@@ -41,6 +42,7 @@ export const Lobby = ({
   onAddTestPlayer,
 }: LobbyProps) => {
   const [showCopiedToast, setShowCopiedToast] = useState(false);
+  const [showRulesModal, setShowRulesModal] = useState(false);
   const roomCodeInputRef = useRef<HTMLInputElement>(null);
   const [canJoin, setCanJoin] = useState(false);
 
@@ -64,7 +66,7 @@ export const Lobby = ({
             {/* タイトル */}
             <div className="text-center mb-4 relative">
               <button
-                onClick={() => {/* TODO: ルールモーダル */}}
+                onClick={() => setShowRulesModal(true)}
                 className="absolute right-0 top-0 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                 title="遊び方"
               >
@@ -77,6 +79,7 @@ export const Lobby = ({
                 style={{ filter: 'brightness(0) invert(1)' }}
               />
               <p className="text-white/60 text-sm mt-2">ブラフ＆心理戦ゲーム</p>
+              {showRulesModal && <RulesModal onClose={() => setShowRulesModal(false)} />}
               {debugMode && (
                 <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2">
                   <FlaskConical className="w-3 h-3" />
@@ -221,7 +224,7 @@ export const Lobby = ({
           {/* タイトル */}
           <div className="relative mb-2">
             <button
-              onClick={() => {/* TODO: ルールモーダル */}}
+              onClick={() => setShowRulesModal(true)}
               className="absolute right-0 top-0 p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               title="遊び方"
             >
@@ -233,6 +236,7 @@ export const Lobby = ({
               className="h-16 mx-auto"
               style={{ filter: 'brightness(0) invert(1)' }}
             />
+            {showRulesModal && <RulesModal onClose={() => setShowRulesModal(false)} />}
             {debugMode && (
               <div className="text-center mt-2">
                 <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded inline-flex items-center gap-1">
