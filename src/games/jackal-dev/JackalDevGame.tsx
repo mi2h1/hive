@@ -291,14 +291,17 @@ export const JackalDevGame = ({ onBack }: JackalDevGameProps) => {
   const handleBackToLobby = () => {
     if (!gameState) return;
 
-    // プレイヤーのライフをリセット
-    const resetPlayers = gameState.players.map(p => ({
-      ...p,
-      life: settings.initialLife,
-      isEliminated: false,
-      eliminatedAt: undefined,
-      cardId: null,
-    }));
+    // プレイヤーのライフをリセット（eliminatedAtを除外）
+    const resetPlayers = gameState.players.map(p => {
+      // eliminatedAtを除外してコピー
+      const { eliminatedAt: _, ...playerWithoutEliminatedAt } = p;
+      return {
+        ...playerWithoutEliminatedAt,
+        life: settings.initialLife,
+        isEliminated: false,
+        cardId: null,
+      };
+    });
 
     updateGameState({
       phase: 'waiting',
