@@ -32,6 +32,10 @@ export type GamePhase =
 
 // ジャッカル判定結果
 export interface JudgmentResult {
+  jackalCallerId: string; // ジャッカルを宣言したプレイヤー
+  jackalCallerName: string;
+  declarerId: string; // 最後に数字を宣言したプレイヤー
+  declarerName: string;
   declaredValue: number;
   totalValue: number;
   loserId: string;

@@ -139,10 +139,16 @@ export const JackalDevGame = ({ onBack }: JackalDevGameProps) => {
     }
 
     const loser = players.find(p => p.id === loserId);
+    const jackalCaller = players.find(p => p.id === actingPlayerId);
+    const declarer = players.find(p => p.id === lastDeclarerId);
 
     // 判定結果を作成
     // Firebaseはundefinedを許可しないので、mysteryCardは存在する場合のみ設定
     const judgmentResult: JudgmentResult = {
+      jackalCallerId: actingPlayerId,
+      jackalCallerName: jackalCaller?.name ?? '不明',
+      declarerId: lastDeclarerId,
+      declarerName: declarer?.name ?? '不明',
       declaredValue,
       totalValue: result.totalValue,
       loserId,
