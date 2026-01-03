@@ -37,7 +37,10 @@ export const GamePlayPhase = ({
     currentDeclaredValue,
     lastDeclarerId,
     turnOrder,
+    settings,
   } = gameState;
+
+  const initialLife = settings.initialLife;
 
   const isMyTurn = currentTurnPlayerId === controlledPlayerId;
   const currentPlayer = players.find(p => p.id === currentTurnPlayerId);
@@ -264,8 +267,13 @@ export const GamePlayPhase = ({
                         {isMe && ' (自分)'}
                       </div>
                       <div className="flex items-center justify-center gap-0.5 mt-1">
+                        {/* 現在のライフ（塗りつぶし） */}
                         {Array.from({ length: player.life }).map((_, i) => (
-                          <Heart key={i} className="w-3 h-3 text-red-400 fill-red-400" />
+                          <Heart key={`filled-${i}`} className="w-3 h-3 text-red-400 fill-red-400" />
+                        ))}
+                        {/* 失ったライフ（中抜き） */}
+                        {Array.from({ length: initialLife - player.life }).map((_, i) => (
+                          <Heart key={`empty-${i}`} className="w-3 h-3 text-red-400/50" strokeWidth={2} />
                         ))}
                       </div>
                     </div>
