@@ -213,20 +213,24 @@ export const GamePlayPhase = ({
         </div>
 
         {/* 場のパズル（横長エリア） */}
-        <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
+        <div className="bg-slate-800/50 rounded-lg p-4 mb-4 overflow-x-auto">
           {/* 白パズル */}
           <div className="mb-4">
             <h3 className="text-slate-300 text-sm font-bold mb-2">白パズル</h3>
-            <div className="flex gap-2 items-stretch">
+            <div className="flex gap-2 items-start">
               {whitePuzzles.map((card) => (
-                <div key={card.id} className="w-28 flex-shrink-0">
-                  <PuzzleCardDisplay card={card} size="sm" />
-                </div>
+                <PuzzleCardDisplay key={card.id} card={card} size="sm" />
               ))}
-              {/* 山札 */}
-              <div className="w-28 flex-shrink-0 bg-slate-200 border-2 border-slate-400 rounded-lg flex flex-col items-center justify-center p-2">
-                <div className="text-slate-600 text-xs mb-1">山札</div>
-                <div className="text-slate-800 text-2xl font-bold">{gameState.whitePuzzleDeck.length}</div>
+              {/* 山札（重なったカード風） */}
+              <div className="relative w-[106px] h-[140px] flex-shrink-0">
+                {/* 背面カード（3枚重ね） */}
+                <div className="absolute top-1 left-1 w-[106px] h-[140px] bg-slate-300 border-2 border-slate-400 rounded-lg" />
+                <div className="absolute top-0.5 left-0.5 w-[106px] h-[140px] bg-slate-200 border-2 border-slate-400 rounded-lg" />
+                {/* 表面カード */}
+                <div className="absolute top-0 left-0 w-[106px] h-[140px] bg-slate-100 border-2 border-slate-400 rounded-lg flex flex-col items-center justify-center">
+                  <div className="text-slate-500 text-xs mb-1">山札</div>
+                  <div className="text-slate-800 text-3xl font-bold">{gameState.whitePuzzleDeck.length}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -234,16 +238,20 @@ export const GamePlayPhase = ({
           {/* 黒パズル */}
           <div>
             <h3 className="text-slate-300 text-sm font-bold mb-2">黒パズル</h3>
-            <div className="flex gap-2 items-stretch">
+            <div className="flex gap-2 items-start">
               {blackPuzzles.map((card) => (
-                <div key={card.id} className="w-28 flex-shrink-0">
-                  <PuzzleCardDisplay card={card} size="sm" />
-                </div>
+                <PuzzleCardDisplay key={card.id} card={card} size="sm" />
               ))}
-              {/* 山札 */}
-              <div className="w-28 flex-shrink-0 bg-slate-700 border-2 border-slate-500 rounded-lg flex flex-col items-center justify-center p-2">
-                <div className="text-slate-400 text-xs mb-1">山札</div>
-                <div className="text-white text-2xl font-bold">{gameState.blackPuzzleDeck.length}</div>
+              {/* 山札（重なったカード風） */}
+              <div className="relative w-[106px] h-[140px] flex-shrink-0">
+                {/* 背面カード（3枚重ね） */}
+                <div className="absolute top-1 left-1 w-[106px] h-[140px] bg-slate-900 border-2 border-slate-600 rounded-lg" />
+                <div className="absolute top-0.5 left-0.5 w-[106px] h-[140px] bg-slate-850 border-2 border-slate-600 rounded-lg" style={{ backgroundColor: '#1e293b' }} />
+                {/* 表面カード */}
+                <div className="absolute top-0 left-0 w-[106px] h-[140px] bg-slate-800 border-2 border-slate-600 rounded-lg flex flex-col items-center justify-center">
+                  <div className="text-slate-400 text-xs mb-1">山札</div>
+                  <div className="text-white text-3xl font-bold">{gameState.blackPuzzleDeck.length}</div>
+                </div>
               </div>
             </div>
           </div>

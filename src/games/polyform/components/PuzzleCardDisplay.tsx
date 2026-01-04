@@ -27,6 +27,13 @@ export const PuzzleCardDisplay = ({
     lg: 'w-8 h-8',
   }[size];
 
+  // カード全体のサイズ
+  const cardSize = {
+    sm: 'w-[106px] h-[140px]',
+    md: 'w-[158px] h-[200px]',
+    lg: 'w-[210px] h-[260px]',
+  }[size];
+
   // 配置済みピースのセル情報を計算
   const placedCells: Map<string, { color: string; pieceId: string }> = new Map();
   placedPieces.forEach((placed) => {
@@ -50,7 +57,7 @@ export const PuzzleCardDisplay = ({
   return (
     <div
       onClick={onClick}
-      className={`inline-block rounded-lg p-2 transition-all ${
+      className={`${cardSize} flex flex-col rounded-lg p-2 transition-all ${
         card.type === 'white'
           ? 'bg-slate-100 border-2 border-slate-300'
           : 'bg-slate-800 border-2 border-slate-600'
@@ -58,8 +65,8 @@ export const PuzzleCardDisplay = ({
         selected ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-900' : ''
       } ${isComplete ? 'ring-2 ring-yellow-400' : ''}`}
     >
-      {/* カード情報ヘッダー */}
-      <div className="flex items-center justify-between mb-1 gap-2">
+      {/* カード情報ヘッダー（固定高さ） */}
+      <div className="flex items-center justify-between h-6 mb-1">
         {/* ポイント */}
         <div
           className={`text-xs font-bold px-1.5 py-0.5 rounded ${
@@ -72,78 +79,84 @@ export const PuzzleCardDisplay = ({
         </div>
 
         {/* 報酬ピース */}
-        {showReward && card.rewardPieceType && (
-          <div className="flex items-center gap-1">
-            <span
-              className={`text-xs ${
-                card.type === 'white' ? 'text-slate-600' : 'text-slate-400'
-              }`}
-            >
-              +
-            </span>
-            <PieceDisplay type={card.rewardPieceType} size="sm" />
-          </div>
-        )}
+        <div className="h-5 flex items-center">
+          {showReward && card.rewardPieceType && (
+            <div className="flex items-center gap-0.5">
+              <span
+                className={`text-xs ${
+                  card.type === 'white' ? 'text-slate-600' : 'text-slate-400'
+                }`}
+              >
+                +
+              </span>
+              <PieceDisplay type={card.rewardPieceType} size="sm" />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* 5x5グリッド */}
-      <div className="flex flex-col gap-0.5">
-        {card.shape.map((row, y) => (
-          <div key={y} className="flex gap-0.5">
-            {row.map((isActive, x) => {
-              const key = `${x},${y}`;
-              const placed = placedCells.get(key);
+      {/* 5x5グリッド（中央配置） */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex flex-col gap-0.5">
+          {card.shape.map((row, y) => (
+            <div key={y} className="flex gap-0.5">
+              {row.map((isActive, x) => {
+                const key = `${x},${y}`;
+                const placed = placedCells.get(key);
 
-              if (!isActive) {
-                // 枠外は「・」で表示
+                if (!isActive) {
+                  // 枠外は「・」で表示
+                  return (
+                    <div
+                      key={x}
+                      className={`${cellSize} flex items-center justify-center ${
+                        card.type === 'white' ? 'bg-slate-100 text-slate-300' : 'bg-slate-800 text-slate-600'
+                      }`}
+                    >
+                      <div className="w-1 h-1 rounded-full bg-current" />
+                    </div>
+                  );
+                }
+
+                if (placed) {
+                  // ピースが配置済み
+                  return (
+                    <div
+                      key={x}
+                      className={`${cellSize} ${placed.color} rounded-sm border border-black/20`}
+                    />
+                  );
+                }
+
+                // 空のマス
                 return (
                   <div
                     key={x}
-                    className={`${cellSize} flex items-center justify-center ${
-                      card.type === 'white' ? 'bg-slate-100 text-slate-300' : 'bg-slate-800 text-slate-600'
+                    className={`${cellSize} rounded-sm border-2 border-dashed ${
+                      card.type === 'white'
+                        ? 'bg-white border-slate-400'
+                        : 'bg-slate-700 border-slate-500'
                     }`}
-                  >
-                    <div className="w-1 h-1 rounded-full bg-current" />
-                  </div>
-                );
-              }
-
-              if (placed) {
-                // ピースが配置済み
-                return (
-                  <div
-                    key={x}
-                    className={`${cellSize} ${placed.color} rounded-sm border border-black/20`}
                   />
                 );
-              }
-
-              // 空のマス
-              return (
-                <div
-                  key={x}
-                  className={`${cellSize} rounded-sm border-2 border-dashed ${
-                    card.type === 'white'
-                      ? 'bg-white border-slate-400'
-                      : 'bg-slate-700 border-slate-500'
-                  }`}
-                />
-              );
-            })}
-          </div>
-        ))}
+              })}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* 進捗表示 */}
-      {placedPieces.length > 0 && (
-        <div
-          className={`text-xs text-center mt-1 ${
-            card.type === 'white' ? 'text-slate-600' : 'text-slate-400'
-          }`}
-        >
-          {filledCells}/{totalCells}
-        </div>
-      )}
+      {/* 進捗表示（固定位置） */}
+      <div className="h-4 flex items-center justify-center">
+        {placedPieces.length > 0 && (
+          <span
+            className={`text-xs ${
+              card.type === 'white' ? 'text-slate-600' : 'text-slate-400'
+            }`}
+          >
+            {filledCells}/{totalCells}
+          </span>
+        )}
+      </div>
     </div>
   );
 };
