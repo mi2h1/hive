@@ -1046,15 +1046,14 @@ export const GamePlayPhase = ({
           </div>
         </div>
 
-        {/* 2カラムレイアウト */}
-        <div className="flex gap-4 items-start">
-          {/* 左カラム: 他プレイヤー情報 */}
-          <div className="w-64 flex-shrink-0">
-            <div className="relative bg-slate-800/50 border border-slate-600 rounded-lg p-3 pt-5">
-              <span className="absolute -top-5 left-3 z-10 px-2 text-sm font-medium text-slate-400">プレイヤー</span>
-              {/* プレイヤー一覧 */}
-              <div className="space-y-3">
-                <div className={`rounded-lg p-2 border ${
+        {/* 2カラムレイアウト（1200px以下で縦積み） */}
+        <div className="flex flex-col xl:flex-row gap-4 xl:items-start">
+          {/* 左カラム: 他プレイヤー情報（1200px以下で全幅・上部配置） */}
+          <div className="w-full xl:w-64 flex-shrink-0">
+            <div className="relative bg-slate-800/50 border border-slate-600 rounded-lg p-3">
+              {/* プレイヤー一覧（全幅時は横並び） */}
+              <div className="flex flex-row xl:flex-col gap-3 overflow-x-auto">
+                <div className={`rounded-lg p-2 border min-w-[200px] xl:min-w-0 flex-shrink-0 xl:flex-shrink ${
                   isMyTurn
                     ? 'bg-teal-700/50 border-teal-400 ring-2 ring-teal-400/50'
                     : 'bg-teal-700/30 border-teal-500/50'
@@ -1104,7 +1103,7 @@ export const GamePlayPhase = ({
                 {otherPlayers.map((player) => {
                   const isActivePlayer = player.id === activePlayerId;
                   return (
-                  <div key={player.id} className={`rounded-lg p-2 border ${
+                  <div key={player.id} className={`rounded-lg p-2 border min-w-[200px] xl:min-w-0 flex-shrink-0 xl:flex-shrink ${
                     isActivePlayer
                       ? 'bg-amber-700/50 border-amber-400 ring-2 ring-amber-400/50'
                       : 'bg-slate-700/50 border-slate-600'
@@ -1497,8 +1496,8 @@ export const GamePlayPhase = ({
           </div>
               </div>
 
-              {/* ピース一覧 */}
-              <div className="relative flex-shrink-0 w-36 bg-slate-800/50 border border-slate-600 rounded-lg p-3">
+              {/* ピース一覧（1200px以下で非表示） */}
+              <div className="relative flex-shrink-0 w-36 bg-slate-800/50 border border-slate-600 rounded-lg p-3 hidden xl:block">
                 <div className="space-y-3">
                   {[1, 2, 3, 4].map((level) => (
                     <div key={level}>
