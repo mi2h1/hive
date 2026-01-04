@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { RotateCw, FlipHorizontal } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PieceDisplay } from './PieceDisplay';
 import { PuzzleCardDisplay } from './PuzzleCardDisplay';
 import { DroppablePuzzleCard, isValidPlacement } from './DroppablePuzzleCard';
@@ -32,6 +33,18 @@ export const GamePlayPhase = ({
   const [hoverPuzzleId, setHoverPuzzleId] = useState<string | null>(null);
   const [hoverGridPosition, setHoverGridPosition] = useState<{ x: number; y: number } | null>(null);
 
+  // カードアニメーション状態
+  const [animatingCard, setAnimatingCard] = useState<{
+    cardId: string;
+    type: 'white' | 'black';
+    targetSlotIndex: number;
+  } | null>(null);
+  const [newCardId, setNewCardId] = useState<string | null>(null);
+
+  // アニメーション用のRef
+  const workingPuzzleSlotRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const marketCardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
   // 現在のプレイヤーを取得
   const currentPlayer = gameState.players.find((p) => p.id === currentPlayerId);
   if (!currentPlayer) {
@@ -62,12 +75,18 @@ export const GamePlayPhase = ({
   // 選択中のピース
   const selectedPiece = currentPlayer.pieces.find((p) => p.id === selectedPieceId);
 
-  // パズルを場から取得
+  // パズルを場から取得（アニメーション開始）
   const handleTakePuzzle = (puzzleId: string, puzzleType: 'white' | 'black') => {
     console.log('handleTakePuzzle called:', { puzzleId, puzzleType, hasCallback: !!onUpdateGameState });
 
     if (!onUpdateGameState) {
       console.log('onUpdateGameState is undefined');
+      return;
+    }
+
+    // アニメーション中は無視
+    if (animatingCard) {
+      console.log('アニメーション中です');
       return;
     }
 
@@ -77,20 +96,36 @@ export const GamePlayPhase = ({
       return;
     }
 
+    // アニメーション開始
+    const targetSlotIndex = currentPlayer.workingPuzzles.length;
+    setAnimatingCard({ cardId: puzzleId, type: puzzleType, targetSlotIndex });
+  };
+
+  // アニメーション完了時の実際の状態更新
+  const completeCardAnimation = () => {
+    if (!animatingCard || !onUpdateGameState) return;
+
+    const { cardId: puzzleId, type: puzzleType } = animatingCard;
+
     // マーケットと山札を取得
     const market = puzzleType === 'white' ? [...gameState.whitePuzzleMarket] : [...gameState.blackPuzzleMarket];
     const deck = puzzleType === 'white' ? [...gameState.whitePuzzleDeck] : [...gameState.blackPuzzleDeck];
 
     // マーケットからパズルを削除
     const puzzleIndex = market.indexOf(puzzleId);
-    if (puzzleIndex === -1) return;
+    if (puzzleIndex === -1) {
+      setAnimatingCard(null);
+      return;
+    }
     market.splice(puzzleIndex, 1);
 
     // 山札から補充（あれば）
+    let addedCardId: string | null = null;
     if (deck.length > 0) {
       const newPuzzle = deck.shift();
       if (newPuzzle) {
         market.push(newPuzzle);
+        addedCardId = newPuzzle;
       }
     }
 
@@ -123,8 +158,17 @@ export const GamePlayPhase = ({
       updates.blackPuzzleDeck = deck;
     }
 
+    // 新しいカードのIDを設定（フリップアニメーション用）
+    setNewCardId(addedCardId);
     onUpdateGameState(updates);
-    console.log('パズル取得:', { puzzleId, puzzleType });
+    setAnimatingCard(null);
+
+    // 新カードのフリップアニメーション終了後にnewCardIdをリセット
+    if (addedCardId) {
+      setTimeout(() => setNewCardId(null), 500);
+    }
+
+    console.log('パズル取得完了:', { puzzleId, puzzleType });
   };
 
   // マウス移動の追跡
@@ -381,14 +425,56 @@ export const GamePlayPhase = ({
           {/* 白パズル */}
           <div className="mb-3">
             <div className="flex gap-2 items-start">
-              {whitePuzzles.map((card) => (
-                <PuzzleCardDisplay
-                  key={card.id}
-                  card={card}
-                  size="md"
-                  onClick={() => handleTakePuzzle(card.id, 'white')}
+              <AnimatePresence mode="popLayout">
+                {whitePuzzles.map((card) => {
+                  const isAnimating = animatingCard?.cardId === card.id;
+                  const isNewCard = newCardId === card.id;
+
+                  return (
+                    <motion.div
+                      key={card.id}
+                      ref={(el) => {
+                        if (el) marketCardRefs.current.set(card.id, el);
+                      }}
+                      layout
+                      initial={isNewCard ? { rotateY: 180, opacity: 0 } : false}
+                      animate={{ rotateY: 0, opacity: 1 }}
+                      exit={isAnimating ? {
+                        y: 300,
+                        x: -100 * (whitePuzzles.indexOf(card)),
+                        opacity: 0.8,
+                        transition: { duration: 0.4, ease: 'easeInOut' }
+                      } : { opacity: 0, scale: 0.8 }}
+                      transition={{
+                        layout: { duration: 0.3, ease: 'easeOut' },
+                        rotateY: { duration: 0.4, ease: 'easeOut' }
+                      }}
+                      onAnimationComplete={(definition) => {
+                        if (isAnimating && definition === 'exit') {
+                          // スライドアニメーション完了
+                        }
+                      }}
+                      style={{ perspective: 1000 }}
+                    >
+                      <PuzzleCardDisplay
+                        card={card}
+                        size="md"
+                        onClick={() => handleTakePuzzle(card.id, 'white')}
+                      />
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+              {/* アニメーション中の空きスロット */}
+              {animatingCard?.type === 'white' && (
+                <motion.div
+                  initial={{ width: 180, opacity: 1 }}
+                  animate={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                  className="h-[225px] overflow-hidden"
+                  onAnimationComplete={() => completeCardAnimation()}
                 />
-              ))}
+              )}
               {/* 山札（重なったカード風） */}
               <div className="relative w-[180px] h-[225px] flex-shrink-0">
                 {/* 背面カード（3枚重ね） */}
@@ -406,14 +492,51 @@ export const GamePlayPhase = ({
           {/* 黒パズル */}
           <div>
             <div className="flex gap-2 items-start">
-              {blackPuzzles.map((card) => (
-                <PuzzleCardDisplay
-                  key={card.id}
-                  card={card}
-                  size="md"
-                  onClick={() => handleTakePuzzle(card.id, 'black')}
+              <AnimatePresence mode="popLayout">
+                {blackPuzzles.map((card) => {
+                  const isAnimating = animatingCard?.cardId === card.id;
+                  const isNewCard = newCardId === card.id;
+
+                  return (
+                    <motion.div
+                      key={card.id}
+                      ref={(el) => {
+                        if (el) marketCardRefs.current.set(card.id, el);
+                      }}
+                      layout
+                      initial={isNewCard ? { rotateY: 180, opacity: 0 } : false}
+                      animate={{ rotateY: 0, opacity: 1 }}
+                      exit={isAnimating ? {
+                        y: 300,
+                        x: -100 * (blackPuzzles.indexOf(card)),
+                        opacity: 0.8,
+                        transition: { duration: 0.4, ease: 'easeInOut' }
+                      } : { opacity: 0, scale: 0.8 }}
+                      transition={{
+                        layout: { duration: 0.3, ease: 'easeOut' },
+                        rotateY: { duration: 0.4, ease: 'easeOut' }
+                      }}
+                      style={{ perspective: 1000 }}
+                    >
+                      <PuzzleCardDisplay
+                        card={card}
+                        size="md"
+                        onClick={() => handleTakePuzzle(card.id, 'black')}
+                      />
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+              {/* アニメーション中の空きスロット */}
+              {animatingCard?.type === 'black' && (
+                <motion.div
+                  initial={{ width: 180, opacity: 1 }}
+                  animate={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                  className="h-[225px] overflow-hidden"
+                  onAnimationComplete={() => completeCardAnimation()}
                 />
-              ))}
+              )}
               {/* 山札（重なったカード風） */}
               <div className="relative w-[180px] h-[225px] flex-shrink-0">
                 {/* 背面カード（3枚重ね） */}
@@ -436,27 +559,48 @@ export const GamePlayPhase = ({
           <div className="bg-slate-800/50 rounded-lg p-4 flex-shrink-0 w-[776px]">
             <h2 className="text-white font-bold mb-3">所持パズル（{workingPuzzles.length}/4）</h2>
             <div className="flex gap-2">
-              {workingPuzzles.map((wp) => (
-                <DroppablePuzzleCard
-                  key={wp.cardId}
-                  card={wp.card}
-                  placedPieces={wp.placedPieces}
-                  size="md"
-                  draggingPiece={draggingPiece}
-                  hoverPosition={hoverPuzzleId === wp.cardId ? hoverGridPosition : null}
-                  onHover={(pos) => {
-                    setHoverPuzzleId(pos ? wp.cardId : null);
-                    setHoverGridPosition(pos);
-                  }}
-                  onDrop={(pos) => handleDrop(wp.cardId, pos)}
-                />
-              ))}
+              <AnimatePresence mode="popLayout">
+                {workingPuzzles.map((wp, index) => (
+                  <motion.div
+                    key={wp.cardId}
+                    ref={(el) => {
+                      workingPuzzleSlotRefs.current[index] = el;
+                    }}
+                    layout
+                    initial={{ y: -200, opacity: 0, scale: 0.9 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 300,
+                      damping: 25,
+                      layout: { duration: 0.3 }
+                    }}
+                  >
+                    <DroppablePuzzleCard
+                      card={wp.card}
+                      placedPieces={wp.placedPieces}
+                      size="md"
+                      draggingPiece={draggingPiece}
+                      hoverPosition={hoverPuzzleId === wp.cardId ? hoverGridPosition : null}
+                      onHover={(pos) => {
+                        setHoverPuzzleId(pos ? wp.cardId : null);
+                        setHoverGridPosition(pos);
+                      }}
+                      onDrop={(pos) => handleDrop(wp.cardId, pos)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
               {/* 空きスロット */}
               {Array(4 - workingPuzzles.length)
                 .fill(null)
                 .map((_, i) => (
                   <div
                     key={`empty-${i}`}
+                    ref={(el) => {
+                      workingPuzzleSlotRefs.current[workingPuzzles.length + i] = el;
+                    }}
                     className="w-[180px] h-[225px] border-2 border-dashed border-slate-600 rounded-lg flex items-center justify-center text-slate-500"
                   >
                     空き
