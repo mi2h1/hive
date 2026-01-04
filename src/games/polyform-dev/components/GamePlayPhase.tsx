@@ -296,24 +296,34 @@ export const GamePlayPhase = ({
           <div className="w-80 flex-shrink-0">
             <div className="bg-slate-800/50 rounded-lg p-3">
               <h3 className="text-white font-bold text-sm mb-3">他プレイヤー</h3>
-              {otherPlayers.length > 0 ? (
-                <div className="space-y-3">
-                  {otherPlayers.map((player) => (
-                    <div key={player.id} className="bg-slate-700/50 rounded-lg p-2">
-                      <div className="text-white text-sm font-medium truncate">{player.name}</div>
-                      <div className="text-white/60 text-xs mt-1">{player.score}pt</div>
-                      <div className="text-white/40 text-xs">
-                        パズル: {player.workingPuzzles.length}/4
-                      </div>
-                      <div className="text-white/40 text-xs">
-                        ピース: {player.pieces.length}
-                      </div>
-                    </div>
-                  ))}
+              {/* デバッグ: 自分の情報も表示 */}
+              <div className="space-y-3">
+                <div className="bg-teal-700/50 rounded-lg p-2 border border-teal-500/50">
+                  <div className="text-white text-sm font-medium truncate">{currentPlayer.name} (自分)</div>
+                  <div className="text-white/60 text-xs mt-1">{currentPlayer.score}pt</div>
+                  <div className="text-white/40 text-xs">
+                    パズル: {currentPlayer.workingPuzzles.length}/4
+                  </div>
+                  <div className="text-white/40 text-xs">
+                    ピース: {currentPlayer.pieces.length}
+                  </div>
                 </div>
-              ) : (
-                <div className="text-slate-500 text-xs">他のプレイヤーはいません</div>
-              )}
+                {otherPlayers.map((player) => (
+                  <div key={player.id} className="bg-slate-700/50 rounded-lg p-2">
+                    <div className="text-white text-sm font-medium truncate">{player.name}</div>
+                    <div className="text-white/60 text-xs mt-1">{player.score}pt</div>
+                    <div className="text-white/40 text-xs">
+                      パズル: {player.workingPuzzles.length}/4
+                    </div>
+                    <div className="text-white/40 text-xs">
+                      ピース: {player.pieces.length}
+                    </div>
+                  </div>
+                ))}
+                {otherPlayers.length === 0 && (
+                  <div className="text-slate-500 text-xs">他のプレイヤーはいません</div>
+                )}
+              </div>
             </div>
           </div>
 
