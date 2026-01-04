@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { RotateCw, FlipHorizontal, RefreshCw } from 'lucide-react';
+import { RotateCw, FlipHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieceDisplay, getTransformedShape } from './PieceDisplay';
 import { PuzzleCardDisplay } from './PuzzleCardDisplay';
@@ -67,6 +67,10 @@ export const GamePlayPhase = ({
   // リサイクルアニメーション状態
   const [recyclingMarket, setRecyclingMarket] = useState<'white' | 'black' | null>(null);
   const [recyclePhase, setRecyclePhase] = useState<'exit' | 'enter' | null>(null);
+
+  // 選択中のアクションモード
+  type ActionMode = 'none' | 'takePuzzle' | 'placePiece' | 'levelChange' | 'recycle' | 'masterAction';
+  const [actionMode, setActionMode] = useState<ActionMode>('none');
 
   // アニメーション用のRef
   const workingPuzzleSlotRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -1058,14 +1062,9 @@ export const GamePlayPhase = ({
           {/* 右カラム: メインコンテンツ */}
           <div className="flex-1 min-w-0">
             {/* インフォボード */}
-            <div className="bg-slate-800/50 rounded-lg p-3 mb-4 text-center">
-              <div className="text-white mb-1">
-                <span className="text-white/60 text-sm">現在のターン：</span>
-                <span className="font-bold ml-1">
-                  {gameState.players[gameState.currentPlayerIndex]?.name}
-                </span>
-              </div>
-              <div className="h-7 flex items-center justify-center">
+            <div className="bg-slate-800/50 rounded-lg p-3 mb-4">
+              {/* 上段：アナウンス */}
+              <div className="h-7 flex items-center justify-center mb-3">
                 <AnimatePresence mode="wait">
                   {announcement && (
                     <motion.div
@@ -1080,10 +1079,149 @@ export const GamePlayPhase = ({
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* 下段：アクションボタン */}
+              {isMyTurn && currentPlayer.remainingActions > 0 && !masterActionMode && (
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => setActionMode(actionMode === 'takePuzzle' ? 'none' : 'takePuzzle')}
+                    disabled={currentPlayer.workingPuzzles.length >= 4}
+                    className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${
+                      actionMode === 'takePuzzle'
+                        ? 'bg-teal-500 text-white ring-2 ring-teal-300'
+                        : currentPlayer.workingPuzzles.length >= 4
+                          ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                          : 'bg-slate-700 text-white hover:bg-slate-600'
+                    }`}
+                  >
+                    パズル取得
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleGetLevel1Piece();
+                      setActionMode('none');
+                    }}
+                    className="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 rounded text-white text-sm font-medium transition-all flex items-center gap-1"
+                  >
+                    <PieceDisplay type="dot" size="xs" />
+                    <span>ピース獲得</span>
+                  </button>
+                  <button
+                    onClick={() => setActionMode(actionMode === 'placePiece' ? 'none' : 'placePiece')}
+                    disabled={currentPlayer.pieces.length === 0 || currentPlayer.workingPuzzles.length === 0}
+                    className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${
+                      actionMode === 'placePiece'
+                        ? 'bg-teal-500 text-white ring-2 ring-teal-300'
+                        : currentPlayer.pieces.length === 0 || currentPlayer.workingPuzzles.length === 0
+                          ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                          : 'bg-slate-700 text-white hover:bg-slate-600'
+                    }`}
+                  >
+                    ピース配置
+                  </button>
+                  <button
+                    onClick={() => setActionMode(actionMode === 'levelChange' ? 'none' : 'levelChange')}
+                    disabled={currentPlayer.pieces.length === 0}
+                    className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${
+                      actionMode === 'levelChange'
+                        ? 'bg-teal-500 text-white ring-2 ring-teal-300'
+                        : currentPlayer.pieces.length === 0
+                          ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                          : 'bg-slate-700 text-white hover:bg-slate-600'
+                    }`}
+                  >
+                    レベル変更
+                  </button>
+                  {actionMode === 'recycle' ? (
+                    <div className="flex items-center gap-1 bg-slate-700 rounded px-2 py-1">
+                      <span className="text-white text-sm mr-1">リサイクル:</span>
+                      <button
+                        onClick={() => {
+                          handleRecycle('white');
+                          setActionMode('none');
+                        }}
+                        disabled={gameState.whitePuzzleMarket.length < 4 || gameState.whitePuzzleDeck.length < 4}
+                        className="px-2 py-1 bg-slate-200 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed rounded text-slate-700 text-sm font-medium"
+                      >
+                        白
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleRecycle('black');
+                          setActionMode('none');
+                        }}
+                        disabled={gameState.blackPuzzleMarket.length < 4 || gameState.blackPuzzleDeck.length < 4}
+                        className="px-2 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-white text-sm font-medium border border-slate-500"
+                      >
+                        黒
+                      </button>
+                      <button
+                        onClick={() => setActionMode('none')}
+                        className="px-2 py-1 text-slate-400 hover:text-white text-sm"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setActionMode('recycle')}
+                      className="px-3 py-1.5 bg-slate-700 text-white hover:bg-slate-600 rounded text-sm font-medium transition-all"
+                    >
+                      リサイクル
+                    </button>
+                  )}
+                  {!currentPlayer.usedMasterAction && currentPlayer.workingPuzzles.length > 0 && (
+                    <button
+                      onClick={() => {
+                        handleStartMasterAction();
+                        setActionMode('none');
+                      }}
+                      className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-white text-sm font-medium transition-all"
+                    >
+                      マスター
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* マスターアクション中の表示 */}
+              {masterActionMode && (
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-purple-300 text-sm">
+                    マスターアクション中（{masterActionPlacedPuzzles.size}/{currentPlayer.workingPuzzles.length}枚配置）
+                  </span>
+                  <button
+                    onClick={handleCompleteMasterAction}
+                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-white text-sm font-medium"
+                  >
+                    完了
+                  </button>
+                  <button
+                    onClick={handleCancelMasterAction}
+                    className="px-2 py-1.5 bg-slate-600 hover:bg-slate-500 rounded text-white text-sm"
+                  >
+                    中止
+                  </button>
+                </div>
+              )}
+
+              {/* ターン外の表示 */}
+              {(!isMyTurn || currentPlayer.remainingActions <= 0) && !masterActionMode && (
+                <div className="text-center text-slate-400 text-sm">
+                  {!isMyTurn ? `${gameState.players.find(p => p.id === activePlayerId)?.name}のターン` : 'ターン終了'}
+                </div>
+              )}
             </div>
 
             {/* 場のパズル（横長エリア） */}
-            <div className="bg-slate-800/50 rounded-lg p-4 mb-4 overflow-x-auto">
+            <div className={`rounded-lg p-4 mb-4 overflow-x-auto transition-all ${
+              actionMode === 'takePuzzle'
+                ? 'bg-teal-800/50 ring-2 ring-teal-400 ring-offset-2 ring-offset-transparent'
+                : 'bg-slate-800/50'
+            }`}>
+          <div className="flex gap-4">
+            {/* 左: パズルマーケット */}
+            <div className="flex-1 min-w-0">
           {/* 白パズル */}
           <div className="mb-3">
             <div className="flex gap-2 items-start">
@@ -1143,24 +1281,6 @@ export const GamePlayPhase = ({
                       <div className="text-slate-800 text-4xl font-bold">{gameState.whitePuzzleDeck.length}</div>
                     </div>
                   </div>
-                );
-              })()}
-              {/* リサイクルボタン */}
-              {(() => {
-                const canRecycle = gameState.whitePuzzleMarket.length >= 4 && gameState.whitePuzzleDeck.length >= 4 && !animatingCard && !recyclingMarket;
-                return (
-                  <button
-                    onClick={() => canRecycle && handleRecycle('white')}
-                    className={`flex flex-col items-center justify-center w-16 h-[225px] rounded-lg border-2 border-dashed transition-all ${
-                      canRecycle
-                        ? 'border-slate-400 text-slate-600 hover:border-teal-400 hover:text-teal-500 hover:bg-teal-50 cursor-pointer'
-                        : 'border-slate-300 text-slate-400 opacity-50 cursor-not-allowed'
-                    }`}
-                    disabled={!canRecycle}
-                  >
-                    <RefreshCw className={`w-6 h-6 mb-1 ${recyclingMarket === 'white' ? 'animate-spin' : ''}`} />
-                    <span className="text-xs font-medium">リサイクル</span>
-                  </button>
                 );
               })()}
             </div>
@@ -1227,24 +1347,24 @@ export const GamePlayPhase = ({
                   </div>
                 );
               })()}
-              {/* リサイクルボタン */}
-              {(() => {
-                const canRecycle = gameState.blackPuzzleMarket.length >= 4 && gameState.blackPuzzleDeck.length >= 4 && !animatingCard && !recyclingMarket;
-                return (
-                  <button
-                    onClick={() => canRecycle && handleRecycle('black')}
-                    className={`flex flex-col items-center justify-center w-16 h-[225px] rounded-lg border-2 border-dashed transition-all ${
-                      canRecycle
-                        ? 'border-slate-600 text-slate-400 hover:border-teal-400 hover:text-teal-400 hover:bg-teal-900/20 cursor-pointer'
-                        : 'border-slate-700 text-slate-600 opacity-50 cursor-not-allowed'
-                    }`}
-                    disabled={!canRecycle}
-                  >
-                    <RefreshCw className={`w-6 h-6 mb-1 ${recyclingMarket === 'black' ? 'animate-spin' : ''}`} />
-                    <span className="text-xs font-medium">リサイクル</span>
-                  </button>
-                );
-              })()}
+            </div>
+          </div>
+            </div>
+            {/* 右: ピースレベル情報 */}
+            <div className="flex-shrink-0 w-48 bg-slate-700/50 rounded-lg p-3">
+              <div className="text-white font-bold text-sm mb-3">ピース一覧</div>
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((level) => (
+                  <div key={level}>
+                    <div className="text-slate-400 text-xs mb-1">Lv.{level}</div>
+                    <div className="flex flex-wrap gap-1">
+                      {PIECES_BY_LEVEL[level].map((type) => (
+                        <PieceDisplay key={type} type={type} size="sm" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1253,7 +1373,11 @@ export const GamePlayPhase = ({
         <div className="flex flex-col lg:flex-row gap-4">
 
           {/* 所持パズル（4枚並ぶ幅で固定） */}
-          <div className="bg-slate-800/50 rounded-lg p-4 flex-shrink-0 w-[776px]">
+          <div className={`rounded-lg p-4 flex-shrink-0 w-[776px] transition-all ${
+            actionMode === 'placePiece' || masterActionMode
+              ? 'bg-teal-800/50 ring-2 ring-teal-400 ring-offset-2 ring-offset-transparent'
+              : 'bg-slate-800/50'
+          }`}>
             <h2 className="text-white font-bold mb-3">所持パズル（{workingPuzzles.length}/4）</h2>
             <div className="flex gap-2">
               <AnimatePresence mode="popLayout">
@@ -1308,63 +1432,17 @@ export const GamePlayPhase = ({
           </div>
 
           {/* 右: 手持ちピース */}
-          <div className="bg-slate-800/50 rounded-lg p-4 flex-1 min-w-0">
+          <div className={`rounded-lg p-4 flex-1 min-w-0 transition-all ${
+            actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode
+              ? 'bg-teal-800/50 ring-2 ring-teal-400 ring-offset-2 ring-offset-transparent'
+              : 'bg-slate-800/50'
+          }`}>
             <div className="flex items-center gap-3 mb-3">
               <h2 className="text-white font-bold">手持ちピース（{currentPlayer.pieces.length}）</h2>
-              <button
-                onClick={handleGetLevel1Piece}
-                disabled={!isMyTurn || currentPlayer.remainingActions <= 0}
-                className={`flex items-center gap-1.5 px-2 py-1 border-2 border-yellow-500 rounded text-sm font-medium transition-colors ${
-                  isMyTurn && currentPlayer.remainingActions > 0
-                    ? 'hover:bg-yellow-500/20 text-yellow-400'
-                    : 'opacity-50 text-yellow-600 cursor-not-allowed'
-                }`}
-              >
-                <PieceDisplay type="dot" size="xs" />
-                <span>ゲット</span>
-              </button>
-              {/* マスターアクションボタン */}
-              {!masterActionMode && isMyTurn && !currentPlayer.usedMasterAction && currentPlayer.workingPuzzles.length > 0 && currentPlayer.remainingActions > 0 && (
-                <button
-                  onClick={handleStartMasterAction}
-                  className="px-2 py-1 bg-purple-600 hover:bg-purple-500 rounded text-white text-sm font-medium transition-colors"
-                >
-                  マスターアクション
-                </button>
-              )}
               {currentPlayer.usedMasterAction && (
                 <span className="text-purple-400/60 text-xs">マスター済</span>
               )}
             </div>
-
-            {/* マスターアクションモード */}
-            {masterActionMode && (
-              <div className="bg-purple-900/50 border border-purple-400 rounded-lg p-3 mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-white text-sm font-bold">マスターアクション中</div>
-                  <div className="text-purple-300 text-xs">
-                    配置済み: {masterActionPlacedPuzzles.size}/{currentPlayer.workingPuzzles.length}枚
-                  </div>
-                </div>
-                <div className="text-purple-200 text-xs mb-3">
-                  各パズルに1つずつピースを配置できます（0〜{currentPlayer.workingPuzzles.length}個）
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleCompleteMasterAction}
-                    className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-white text-sm font-medium"
-                  >
-                    完了（1アクション消費）
-                  </button>
-                  <button
-                    onClick={handleCancelMasterAction}
-                    className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded text-white text-sm"
-                  >
-                    中止
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* レベル変更選択モード */}
             {levelChangeMode && (
