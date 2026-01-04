@@ -54,16 +54,20 @@ export const PuzzleCardDisplay = ({
   const filledCells = placedCells.size;
   const isComplete = filledCells === totalCells;
 
+  // カード画像パス
+  const cardImage = card.type === 'white'
+    ? '/boards/images/cards/card_pf_front_w.png'
+    : '/boards/images/cards/card_pf_front_b.png';
+
   return (
     <div
       onClick={onClick}
-      className={`${cardSize} flex flex-col rounded-lg p-3 transition-all ${
-        card.type === 'white'
-          ? 'bg-slate-100 border-2 border-slate-300'
-          : 'bg-slate-800 border-2 border-slate-600'
-      } ${onClick ? 'cursor-pointer hover:scale-105' : ''} ${
-        selected ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-900' : ''
-      } ${isComplete ? 'ring-2 ring-yellow-400' : ''}`}
+      className={`${cardSize} flex flex-col rounded-lg p-3 transition-all bg-cover bg-center ${
+        onClick ? 'cursor-pointer hover:scale-105' : ''
+      } ${selected ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-900' : ''} ${
+        isComplete ? 'ring-2 ring-yellow-400' : ''
+      }`}
+      style={{ backgroundImage: `url(${cardImage})` }}
     >
       {/* カード情報ヘッダー（固定高さ） */}
       <div className="flex items-center justify-between h-6 mb-2">
@@ -96,16 +100,12 @@ export const PuzzleCardDisplay = ({
                 const placed = placedCells.get(key);
 
                 if (!isActive) {
-                  // 枠外は「・」で表示
+                  // 枠外は透明
                   return (
                     <div
                       key={x}
-                      className={`${cellSize} flex items-center justify-center ${
-                        card.type === 'white' ? 'bg-slate-100 text-slate-300' : 'bg-slate-800 text-slate-600'
-                      }`}
-                    >
-                      <div className="w-1 h-1 rounded-full bg-current" />
-                    </div>
+                      className={`${cellSize}`}
+                    />
                   );
                 }
 

@@ -59,6 +59,10 @@ export const GamePlayPhase = ({
     direction: 'up' | 'down';
   } | null>(null);
 
+  // リサイクルアニメーション状態
+  const [recyclingMarket, setRecyclingMarket] = useState<'white' | 'black' | null>(null);
+  const [recyclePhase, setRecyclePhase] = useState<'exit' | 'enter' | null>(null);
+
   // アニメーション用のRef
   const workingPuzzleSlotRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -123,6 +127,28 @@ export const GamePlayPhase = ({
     const timer = setTimeout(() => setAnnouncement(null), 2000);
     return () => clearTimeout(timer);
   }, [announcement]);
+
+  // リサイクルアニメーション処理
+  useEffect(() => {
+    if (!recyclePhase) return;
+
+    if (recyclePhase === 'exit') {
+      // 退出アニメーション完了後、状態更新＆入場フェーズへ
+      const timer = setTimeout(() => {
+        completeRecycleAnimation();
+      }, 400); // 右に消えるアニメーション時間
+      return () => clearTimeout(timer);
+    }
+
+    if (recyclePhase === 'enter') {
+      // 入場アニメーション完了後、リセット
+      const timer = setTimeout(() => {
+        setRecyclingMarket(null);
+        setRecyclePhase(null);
+      }, 500); // フリップアニメーション時間
+      return () => clearTimeout(timer);
+    }
+  }, [recyclePhase]);
 
   // 現在のプレイヤーを取得
   const currentPlayer = gameState.players.find((p) => p.id === currentPlayerId);
@@ -233,18 +259,30 @@ export const GamePlayPhase = ({
     console.log('山札から取得:', { drawnCardId, deckType });
   };
 
-  // リサイクル（場のカード4枚を山札の下に戻し、上から4枚補充）
+  // リサイクル開始（アニメーション）
   const handleRecycle = (marketType: 'white' | 'black') => {
-    if (!onUpdateGameState) return;
+    if (!onUpdateGameState || recyclingMarket) return;
 
-    const market = marketType === 'white' ? [...gameState.whitePuzzleMarket] : [...gameState.blackPuzzleMarket];
-    const deck = marketType === 'white' ? [...gameState.whitePuzzleDeck] : [...gameState.blackPuzzleDeck];
+    const market = marketType === 'white' ? gameState.whitePuzzleMarket : gameState.blackPuzzleMarket;
+    const deck = marketType === 'white' ? gameState.whitePuzzleDeck : gameState.blackPuzzleDeck;
 
     // 場のカードが4枚未満、または山札が4枚未満ならリサイクル不可
     if (market.length < 4 || deck.length < 4) {
       console.log('リサイクルできません（カードが足りません）');
       return;
     }
+
+    // アニメーション開始（退出フェーズ）
+    setRecyclingMarket(marketType);
+    setRecyclePhase('exit');
+  };
+
+  // リサイクルアニメーション完了処理
+  const completeRecycleAnimation = () => {
+    if (!recyclingMarket || !onUpdateGameState) return;
+
+    const market = recyclingMarket === 'white' ? [...gameState.whitePuzzleMarket] : [...gameState.blackPuzzleMarket];
+    const deck = recyclingMarket === 'white' ? [...gameState.whitePuzzleDeck] : [...gameState.blackPuzzleDeck];
 
     // 場のカードを山札の下に追加
     deck.push(...market);
@@ -254,7 +292,7 @@ export const GamePlayPhase = ({
 
     // ゲーム状態を更新
     const updates: Partial<GameState> = {};
-    if (marketType === 'white') {
+    if (recyclingMarket === 'white') {
       updates.whitePuzzleMarket = newMarket;
       updates.whitePuzzleDeck = deck;
     } else {
@@ -264,7 +302,10 @@ export const GamePlayPhase = ({
 
     onUpdateGameState(updates);
     setAnnouncement('リサイクル');
-    console.log('リサイクル:', { marketType, newMarket });
+
+    // 入場フェーズへ
+    setRecyclePhase('enter');
+    console.log('リサイクル:', { marketType: recyclingMarket, newMarket });
   };
 
   // アニメーション完了時の実際の状態更新
@@ -721,28 +762,32 @@ export const GamePlayPhase = ({
           {/* 白パズル */}
           <div className="mb-3">
             <div className="flex gap-2 items-start">
-              {whitePuzzles.map((card) => {
+              {whitePuzzles.map((card, index) => {
                 const isAnimating = animatingCard?.cardId === card.id;
                 const isNewCard = newCardId === card.id;
+                const isRecyclingExit = recyclingMarket === 'white' && recyclePhase === 'exit';
+                const isRecyclingEnter = recyclingMarket === 'white' && recyclePhase === 'enter';
 
                 return (
                   <motion.div
                     key={card.id}
-                    initial={isNewCard ? { rotateY: 90, opacity: 0 } : false}
+                    initial={isNewCard || isRecyclingEnter ? { rotateY: 90, opacity: 0 } : false}
                     animate={{
                       rotateY: 0,
                       opacity: isAnimating ? 0 : 1,
+                      x: isRecyclingExit ? 200 + index * 50 : 0,
                     }}
                     transition={{
-                      rotateY: { duration: 0.3, ease: 'easeOut' },
-                      opacity: { duration: 0.2 }
+                      rotateY: { duration: 0.4, ease: 'easeOut' },
+                      opacity: { duration: 0.2 },
+                      x: { duration: 0.35, delay: index * 0.05, ease: 'easeIn' },
                     }}
                     style={{ perspective: 1000 }}
                   >
                     <PuzzleCardDisplay
                       card={card}
                       size="md"
-                      onClick={() => handleTakePuzzle(card.id, 'white')}
+                      onClick={!isRecyclingExit && !isRecyclingEnter ? () => handleTakePuzzle(card.id, 'white') : undefined}
                     />
                   </motion.div>
                 );
@@ -756,11 +801,20 @@ export const GamePlayPhase = ({
                     onClick={() => canDraw && handleDrawFromDeck('white')}
                   >
                     {/* 背面カード（3枚重ね） */}
-                    <div className="absolute top-1.5 left-1.5 w-[180px] h-[225px] bg-slate-300 border-2 border-slate-400 rounded-lg" />
-                    <div className="absolute top-1 left-1 w-[180px] h-[225px] bg-slate-200 border-2 border-slate-400 rounded-lg" />
+                    <div
+                      className="absolute top-1.5 left-1.5 w-[180px] h-[225px] rounded-lg bg-cover bg-center"
+                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
+                    />
+                    <div
+                      className="absolute top-1 left-1 w-[180px] h-[225px] rounded-lg bg-cover bg-center"
+                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
+                    />
                     {/* 表面カード */}
-                    <div className={`absolute top-0 left-0 w-[180px] h-[225px] bg-slate-100 border-2 border-slate-400 rounded-lg flex flex-col items-center justify-center transition-all ${canDraw ? 'hover:border-teal-400 hover:shadow-lg hover:shadow-teal-400/30' : ''}`}>
-                      <div className="text-slate-500 text-xs mb-1">山札</div>
+                    <div
+                      className={`absolute top-0 left-0 w-[180px] h-[225px] rounded-lg bg-cover bg-center flex flex-col items-center justify-center transition-all ${canDraw ? 'hover:shadow-lg hover:shadow-teal-400/30' : ''}`}
+                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
+                    >
+                      <div className="text-slate-600 text-xs mb-1 font-medium">山札</div>
                       <div className="text-slate-800 text-4xl font-bold">{gameState.whitePuzzleDeck.length}</div>
                     </div>
                   </div>
@@ -768,7 +822,7 @@ export const GamePlayPhase = ({
               })()}
               {/* リサイクルボタン */}
               {(() => {
-                const canRecycle = gameState.whitePuzzleMarket.length >= 4 && gameState.whitePuzzleDeck.length >= 4 && !animatingCard;
+                const canRecycle = gameState.whitePuzzleMarket.length >= 4 && gameState.whitePuzzleDeck.length >= 4 && !animatingCard && !recyclingMarket;
                 return (
                   <button
                     onClick={() => canRecycle && handleRecycle('white')}
@@ -779,7 +833,7 @@ export const GamePlayPhase = ({
                     }`}
                     disabled={!canRecycle}
                   >
-                    <RefreshCw className="w-6 h-6 mb-1" />
+                    <RefreshCw className={`w-6 h-6 mb-1 ${recyclingMarket === 'white' ? 'animate-spin' : ''}`} />
                     <span className="text-xs font-medium">リサイクル</span>
                   </button>
                 );
@@ -790,28 +844,32 @@ export const GamePlayPhase = ({
           {/* 黒パズル */}
           <div>
             <div className="flex gap-2 items-start">
-              {blackPuzzles.map((card) => {
+              {blackPuzzles.map((card, index) => {
                 const isAnimating = animatingCard?.cardId === card.id;
                 const isNewCard = newCardId === card.id;
+                const isRecyclingExit = recyclingMarket === 'black' && recyclePhase === 'exit';
+                const isRecyclingEnter = recyclingMarket === 'black' && recyclePhase === 'enter';
 
                 return (
                   <motion.div
                     key={card.id}
-                    initial={isNewCard ? { rotateY: 90, opacity: 0 } : false}
+                    initial={isNewCard || isRecyclingEnter ? { rotateY: 90, opacity: 0 } : false}
                     animate={{
                       rotateY: 0,
                       opacity: isAnimating ? 0 : 1,
+                      x: isRecyclingExit ? 200 + index * 50 : 0,
                     }}
                     transition={{
-                      rotateY: { duration: 0.3, ease: 'easeOut' },
-                      opacity: { duration: 0.2 }
+                      rotateY: { duration: 0.4, ease: 'easeOut' },
+                      opacity: { duration: 0.2 },
+                      x: { duration: 0.35, delay: index * 0.05, ease: 'easeIn' },
                     }}
                     style={{ perspective: 1000 }}
                   >
                     <PuzzleCardDisplay
                       card={card}
                       size="md"
-                      onClick={() => handleTakePuzzle(card.id, 'black')}
+                      onClick={!isRecyclingExit && !isRecyclingEnter ? () => handleTakePuzzle(card.id, 'black') : undefined}
                     />
                   </motion.div>
                 );
@@ -825,11 +883,20 @@ export const GamePlayPhase = ({
                     onClick={() => canDraw && handleDrawFromDeck('black')}
                   >
                     {/* 背面カード（3枚重ね） */}
-                    <div className="absolute top-1.5 left-1.5 w-[180px] h-[225px] bg-slate-900 border-2 border-slate-600 rounded-lg" />
-                    <div className="absolute top-1 left-1 w-[180px] h-[225px] border-2 border-slate-600 rounded-lg" style={{ backgroundColor: '#1e293b' }} />
+                    <div
+                      className="absolute top-1.5 left-1.5 w-[180px] h-[225px] rounded-lg bg-cover bg-center"
+                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
+                    />
+                    <div
+                      className="absolute top-1 left-1 w-[180px] h-[225px] rounded-lg bg-cover bg-center"
+                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
+                    />
                     {/* 表面カード */}
-                    <div className={`absolute top-0 left-0 w-[180px] h-[225px] bg-slate-800 border-2 border-slate-600 rounded-lg flex flex-col items-center justify-center transition-all ${canDraw ? 'hover:border-teal-400 hover:shadow-lg hover:shadow-teal-400/30' : ''}`}>
-                      <div className="text-slate-400 text-xs mb-1">山札</div>
+                    <div
+                      className={`absolute top-0 left-0 w-[180px] h-[225px] rounded-lg bg-cover bg-center flex flex-col items-center justify-center transition-all ${canDraw ? 'hover:shadow-lg hover:shadow-teal-400/30' : ''}`}
+                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
+                    >
+                      <div className="text-slate-300 text-xs mb-1 font-medium">山札</div>
                       <div className="text-white text-4xl font-bold">{gameState.blackPuzzleDeck.length}</div>
                     </div>
                   </div>
@@ -837,7 +904,7 @@ export const GamePlayPhase = ({
               })()}
               {/* リサイクルボタン */}
               {(() => {
-                const canRecycle = gameState.blackPuzzleMarket.length >= 4 && gameState.blackPuzzleDeck.length >= 4 && !animatingCard;
+                const canRecycle = gameState.blackPuzzleMarket.length >= 4 && gameState.blackPuzzleDeck.length >= 4 && !animatingCard && !recyclingMarket;
                 return (
                   <button
                     onClick={() => canRecycle && handleRecycle('black')}
@@ -848,7 +915,7 @@ export const GamePlayPhase = ({
                     }`}
                     disabled={!canRecycle}
                   >
-                    <RefreshCw className="w-6 h-6 mb-1" />
+                    <RefreshCw className={`w-6 h-6 mb-1 ${recyclingMarket === 'black' ? 'animate-spin' : ''}`} />
                     <span className="text-xs font-medium">リサイクル</span>
                   </button>
                 );
