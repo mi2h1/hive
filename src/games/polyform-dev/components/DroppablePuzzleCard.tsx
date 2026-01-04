@@ -189,12 +189,7 @@ export const DroppablePuzzleCard = ({
           {card.points}pt
         </div>
         {card.rewardPieceType && (
-          <div className="flex items-center gap-1">
-            <span className={`text-xs ${card.type === 'white' ? 'text-slate-600' : 'text-slate-400'}`}>
-              +
-            </span>
-            <PieceDisplay type={card.rewardPieceType} size="sm" />
-          </div>
+          <PieceDisplay type={card.rewardPieceType} size="sm" />
         )}
       </div>
 
