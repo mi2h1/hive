@@ -178,7 +178,7 @@ export const DroppablePuzzleCard = ({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
-      className={`${cardSize} flex flex-col rounded-lg p-3 transition-all bg-cover bg-center ${
+      className={`${cardSize} flex flex-col rounded-lg p-4 transition-all bg-cover bg-center ${
         selected ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-900' : ''
       } ${completed ? 'ring-4 ring-green-400 shadow-lg shadow-green-400/50' : isComplete ? 'ring-2 ring-yellow-400' : ''} ${
         draggingPiece ? 'cursor-crosshair' : ''
@@ -201,9 +201,7 @@ export const DroppablePuzzleCard = ({
 
       {/* 5x5グリッド（下寄せ） */}
       <div className="flex-1 flex items-end justify-center">
-        <div ref={gridRef} className={`flex flex-col gap-px p-0.5 rounded border ${
-          card.type === 'white' ? 'border-slate-400' : 'border-slate-500'
-        }`}>
+        <div ref={gridRef} className="flex flex-col gap-px">
         {card.shape.map((row, y) => (
           <div key={y} className="flex gap-px">
             {row.map((isActive, x) => {

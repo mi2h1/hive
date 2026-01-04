@@ -62,7 +62,7 @@ export const PuzzleCardDisplay = ({
   return (
     <div
       onClick={onClick}
-      className={`${cardSize} flex flex-col rounded-lg p-3 transition-all bg-cover bg-center ${
+      className={`${cardSize} flex flex-col rounded-lg p-4 transition-all bg-cover bg-center ${
         onClick ? 'cursor-pointer hover:scale-105' : ''
       } ${selected ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-900' : ''} ${
         isComplete ? 'ring-2 ring-yellow-400' : ''
@@ -92,9 +92,7 @@ export const PuzzleCardDisplay = ({
 
       {/* 5x5グリッド（下寄せ） */}
       <div className="flex-1 flex items-end justify-center">
-        <div className={`flex flex-col gap-px p-0.5 rounded border ${
-          card.type === 'white' ? 'border-slate-400' : 'border-slate-500'
-        }`}>
+        <div className="flex flex-col gap-px">
           {card.shape.map((row, y) => (
             <div key={y} className="flex gap-px">
               {row.map((isActive, x) => {
