@@ -6,7 +6,7 @@ import { getTransformedShape } from './PieceDisplay';
 interface PuzzleCardDisplayProps {
   card: PuzzleCard;
   placedPieces?: PlacedPiece[];
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
   selected?: boolean;
   showReward?: boolean;
@@ -22,6 +22,7 @@ export const PuzzleCardDisplay = ({
 }: PuzzleCardDisplayProps) => {
   // セルサイズ（少し大きめに）
   const cellSize = {
+    xs: 'w-5 h-5',
     sm: 'w-6 h-6',
     md: 'w-7 h-7',
     lg: 'w-9 h-9',
@@ -29,6 +30,7 @@ export const PuzzleCardDisplay = ({
 
   // カード全体のサイズ
   const cardSize = {
+    xs: 'w-[120px] h-[150px]',
     sm: 'w-[140px] h-[175px]',
     md: 'w-[180px] h-[225px]',
     lg: 'w-[230px] h-[285px]',

@@ -7,7 +7,7 @@ import { PIECE_DEFINITIONS } from '../data/pieces';
 interface DroppablePuzzleCardProps {
   card: PuzzleCard;
   placedPieces?: PlacedPiece[];
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   selected?: boolean;
   completed?: boolean; // 完成ハイライト
   // ドラッグ中のピース情報
@@ -81,11 +81,12 @@ export const DroppablePuzzleCard = ({
   const gridRef = useRef<HTMLDivElement>(null);
 
   // セルサイズ（px）- PuzzleCardDisplayと同じ
-  const cellPx = { sm: 24, md: 28, lg: 36 }[size];
-  const cellSize = { sm: 'w-6 h-6', md: 'w-7 h-7', lg: 'w-9 h-9' }[size];
+  const cellPx = { xs: 20, sm: 24, md: 28, lg: 36 }[size];
+  const cellSize = { xs: 'w-5 h-5', sm: 'w-6 h-6', md: 'w-7 h-7', lg: 'w-9 h-9' }[size];
 
   // カード全体のサイズ - PuzzleCardDisplayと同じ
   const cardSize = {
+    xs: 'w-[120px] h-[150px]',
     sm: 'w-[140px] h-[175px]',
     md: 'w-[180px] h-[225px]',
     lg: 'w-[230px] h-[285px]',
