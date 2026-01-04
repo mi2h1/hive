@@ -212,40 +212,45 @@ export const GamePlayPhase = ({
           </div>
         </div>
 
-        {/* メインエリア */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* 左: 場のパズル */}
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h2 className="text-white font-bold mb-3">場のパズル</h2>
-
-            {/* 白パズル */}
-            <div className="mb-4">
-              <h3 className="text-slate-400 text-sm mb-2">白パズル（{gameState.whitePuzzleDeck.length}枚）</h3>
-              <div className="flex flex-wrap gap-2">
-                {whitePuzzles.map((card) => (
-                  <PuzzleCardDisplay
-                    key={card.id}
-                    card={card}
-                    size="sm"
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* 黒パズル */}
-            <div>
-              <h3 className="text-slate-400 text-sm mb-2">黒パズル（{gameState.blackPuzzleDeck.length}枚）</h3>
-              <div className="flex flex-wrap gap-2">
-                {blackPuzzles.map((card) => (
-                  <PuzzleCardDisplay
-                    key={card.id}
-                    card={card}
-                    size="sm"
-                  />
-                ))}
+        {/* 場のパズル（横長エリア） */}
+        <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
+          {/* 白パズル */}
+          <div className="mb-4">
+            <h3 className="text-slate-300 text-sm font-bold mb-2">白パズル</h3>
+            <div className="flex gap-2 items-stretch">
+              {whitePuzzles.map((card) => (
+                <div key={card.id} className="w-28 flex-shrink-0">
+                  <PuzzleCardDisplay card={card} size="sm" />
+                </div>
+              ))}
+              {/* 山札 */}
+              <div className="w-28 flex-shrink-0 bg-slate-200 border-2 border-slate-400 rounded-lg flex flex-col items-center justify-center p-2">
+                <div className="text-slate-600 text-xs mb-1">山札</div>
+                <div className="text-slate-800 text-2xl font-bold">{gameState.whitePuzzleDeck.length}</div>
               </div>
             </div>
           </div>
+
+          {/* 黒パズル */}
+          <div>
+            <h3 className="text-slate-300 text-sm font-bold mb-2">黒パズル</h3>
+            <div className="flex gap-2 items-stretch">
+              {blackPuzzles.map((card) => (
+                <div key={card.id} className="w-28 flex-shrink-0">
+                  <PuzzleCardDisplay card={card} size="sm" />
+                </div>
+              ))}
+              {/* 山札 */}
+              <div className="w-28 flex-shrink-0 bg-slate-700 border-2 border-slate-500 rounded-lg flex flex-col items-center justify-center p-2">
+                <div className="text-slate-400 text-xs mb-1">山札</div>
+                <div className="text-white text-2xl font-bold">{gameState.blackPuzzleDeck.length}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 下部エリア */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
           {/* 中央: 作業中パズル */}
           <div className="bg-slate-800/50 rounded-lg p-4">
