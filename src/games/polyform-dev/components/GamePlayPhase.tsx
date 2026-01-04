@@ -1177,19 +1177,22 @@ export const GamePlayPhase = ({
                     }`}>{gameState.players.find(p => p.id === activePlayerId)?.remainingActions ?? 0}</span>
                   </span>
                 </div>
-                <AnimatePresence mode="wait">
-                  {announcement && (
-                    <motion.div
-                      key={announcement}
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      className="bg-teal-600 text-white px-3 py-1 rounded-full text-sm font-medium"
-                    >
-                      {announcement}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* 自分のターン時のみ上段にアナウンス表示 */}
+                {isMyTurn && (
+                  <AnimatePresence mode="wait">
+                    {announcement && (
+                      <motion.div
+                        key={announcement}
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        className="bg-teal-600 text-white px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {announcement}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                )}
               </div>
 
               {/* 下段：アクション選択 or ガイド表示 */}
@@ -1349,8 +1352,26 @@ export const GamePlayPhase = ({
 
               {/* ターン外 or アクション無しの表示 */}
               {(!isMyTurn || currentPlayer.remainingActions <= 0) && !masterActionMode && (
-                <div className="text-center text-slate-500 text-sm">
-                  {currentPlayer.remainingActions <= 0 && isMyTurn ? 'アクションを使い切りました' : '相手のアクションを待っています...'}
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-slate-500 text-sm">
+                    {currentPlayer.remainingActions <= 0 && isMyTurn ? 'アクションを使い切りました' : '相手のアクションを待っています...'}
+                  </span>
+                  {/* 他人のターン時は下段にアナウンス表示 */}
+                  {!isMyTurn && (
+                    <AnimatePresence mode="wait">
+                      {announcement && (
+                        <motion.div
+                          key={announcement}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          className="bg-amber-600 text-white px-3 py-1 rounded-full text-sm font-medium"
+                        >
+                          {announcement}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  )}
                 </div>
               )}
             </div>
