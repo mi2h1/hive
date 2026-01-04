@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RotateCw, FlipHorizontal } from 'lucide-react';
 import { PieceDisplay } from './PieceDisplay';
 import { PuzzleCardDisplay } from './PuzzleCardDisplay';
+import { DroppablePuzzleCard, isValidPlacement } from './DroppablePuzzleCard';
+import { DragOverlay } from './DraggablePiece';
 import { ALL_PUZZLES } from '../data/puzzles';
 import type { GameState, WorkingPuzzle, PlacedPiece, PuzzleCard } from '../types/game';
 
@@ -9,20 +11,25 @@ interface GamePlayPhaseProps {
   gameState: GameState;
   currentPlayerId: string;
   onLeaveRoom: () => void;
-  // 将来のアクション用
-  onPlacePiece?: (puzzleId: string, piece: PlacedPiece) => void;
-  onRemovePiece?: (puzzleId: string, pieceId: string) => void;
+  onUpdatePlayer?: (updates: Partial<GameState['players'][0]>) => void;
 }
 
 export const GamePlayPhase = ({
   gameState,
   currentPlayerId,
   onLeaveRoom,
+  onUpdatePlayer,
 }: GamePlayPhaseProps) => {
+  // 選択状態
   const [selectedPieceId, setSelectedPieceId] = useState<string | null>(null);
-  const [selectedPuzzleId, setSelectedPuzzleId] = useState<string | null>(null);
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipped, setFlipped] = useState(false);
+
+  // ドラッグ状態
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const [hoverPuzzleId, setHoverPuzzleId] = useState<string | null>(null);
+  const [hoverGridPosition, setHoverGridPosition] = useState<{ x: number; y: number } | null>(null);
 
   // 現在のプレイヤーを取得
   const currentPlayer = gameState.players.find((p) => p.id === currentPlayerId);
@@ -54,6 +61,120 @@ export const GamePlayPhase = ({
   // 選択中のピース
   const selectedPiece = currentPlayer.pieces.find((p) => p.id === selectedPieceId);
 
+  // マウス移動の追跡
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setDragPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setHoverPuzzleId(null);
+      setHoverGridPosition(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  // タッチ移動の追跡
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        setDragPosition({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      }
+    };
+
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+      setHoverPuzzleId(null);
+      setHoverGridPosition(null);
+    };
+
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isDragging]);
+
+  // ドラッグ開始
+  const handleDragStart = (pieceId: string, e: React.MouseEvent | React.TouchEvent) => {
+    setSelectedPieceId(pieceId);
+    setIsDragging(true);
+
+    if ('touches' in e && e.touches.length > 0) {
+      setDragPosition({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    } else if ('clientX' in e) {
+      setDragPosition({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  // パズルへのドロップ
+  const handleDrop = (puzzleId: string, position: { x: number; y: number }) => {
+    if (!selectedPiece) return;
+
+    const workingPuzzle = currentPlayer.workingPuzzles.find((wp) => wp.cardId === puzzleId);
+    if (!workingPuzzle) return;
+
+    const card = ALL_PUZZLES.find((p) => p.id === puzzleId);
+    if (!card) return;
+
+    // 配置が有効かチェック
+    if (!isValidPlacement(card, workingPuzzle.placedPieces, selectedPiece.type, rotation, flipped, position)) {
+      return;
+    }
+
+    // 新しい配置ピース
+    const newPlacedPiece: PlacedPiece = {
+      pieceId: selectedPiece.id,
+      type: selectedPiece.type,
+      rotation,
+      position,
+    };
+
+    // 状態を更新（ローカルのみ、Firebaseへの同期は後で実装）
+    const updatedWorkingPuzzles = currentPlayer.workingPuzzles.map((wp) => {
+      if (wp.cardId === puzzleId) {
+        return {
+          ...wp,
+          placedPieces: [...wp.placedPieces, newPlacedPiece],
+        };
+      }
+      return wp;
+    });
+
+    // 手持ちからピースを削除
+    const updatedPieces = currentPlayer.pieces.filter((p) => p.id !== selectedPiece.id);
+
+    // 選択解除
+    setSelectedPieceId(null);
+    setRotation(0);
+    setFlipped(false);
+    setIsDragging(false);
+
+    // 親に通知
+    if (onUpdatePlayer) {
+      onUpdatePlayer({
+        pieces: updatedPieces,
+        workingPuzzles: updatedWorkingPuzzles,
+      });
+    }
+
+    console.log('ピース配置:', { puzzleId, position, piece: selectedPiece.type });
+  };
+
   // 回転
   const handleRotate = () => {
     setRotation((prev) => ((prev + 90) % 360) as 0 | 90 | 180 | 270);
@@ -63,6 +184,11 @@ export const GamePlayPhase = ({
   const handleFlip = () => {
     setFlipped((prev) => !prev);
   };
+
+  // ドラッグ中のピース情報
+  const draggingPiece = isDragging && selectedPiece
+    ? { type: selectedPiece.type, rotation, flipped }
+    : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900">
@@ -101,8 +227,6 @@ export const GamePlayPhase = ({
                     key={card.id}
                     card={card}
                     size="sm"
-                    onClick={() => setSelectedPuzzleId(card.id)}
-                    selected={selectedPuzzleId === card.id}
                   />
                 ))}
               </div>
@@ -117,8 +241,6 @@ export const GamePlayPhase = ({
                     key={card.id}
                     card={card}
                     size="sm"
-                    onClick={() => setSelectedPuzzleId(card.id)}
-                    selected={selectedPuzzleId === card.id}
                   />
                 ))}
               </div>
@@ -130,13 +252,18 @@ export const GamePlayPhase = ({
             <h2 className="text-white font-bold mb-3">作業中パズル（{workingPuzzles.length}/4）</h2>
             <div className="grid grid-cols-2 gap-3">
               {workingPuzzles.map((wp) => (
-                <PuzzleCardDisplay
+                <DroppablePuzzleCard
                   key={wp.cardId}
                   card={wp.card}
                   placedPieces={wp.placedPieces}
                   size="md"
-                  onClick={() => setSelectedPuzzleId(wp.cardId)}
-                  selected={selectedPuzzleId === wp.cardId}
+                  draggingPiece={draggingPiece}
+                  hoverPosition={hoverPuzzleId === wp.cardId ? hoverGridPosition : null}
+                  onHover={(pos) => {
+                    setHoverPuzzleId(pos ? wp.cardId : null);
+                    setHoverGridPosition(pos);
+                  }}
+                  onDrop={(pos) => handleDrop(wp.cardId, pos)}
                 />
               ))}
               {/* 空きスロット */}
@@ -168,6 +295,9 @@ export const GamePlayPhase = ({
                       flipped={flipped}
                       size="md"
                     />
+                    <span className="text-white/60 text-sm">
+                      ドラッグして配置
+                    </span>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -194,23 +324,24 @@ export const GamePlayPhase = ({
             {/* ピース一覧 */}
             <div className="flex flex-wrap gap-2">
               {currentPlayer.pieces.map((piece) => (
-                <PieceDisplay
+                <div
                   key={piece.id}
-                  type={piece.type}
-                  size="md"
-                  onClick={() => {
-                    if (selectedPieceId === piece.id) {
-                      setSelectedPieceId(null);
-                      setRotation(0);
-                      setFlipped(false);
-                    } else {
-                      setSelectedPieceId(piece.id);
-                      setRotation(0);
-                      setFlipped(false);
-                    }
-                  }}
-                  selected={selectedPieceId === piece.id}
-                />
+                  onMouseDown={(e) => handleDragStart(piece.id, e)}
+                  onTouchStart={(e) => handleDragStart(piece.id, e)}
+                  className={`inline-block p-1 rounded transition-all cursor-grab active:cursor-grabbing select-none ${
+                    selectedPieceId === piece.id
+                      ? 'ring-2 ring-white bg-white/20'
+                      : 'hover:bg-white/10'
+                  }`}
+                  style={{ touchAction: 'none' }}
+                >
+                  <PieceDisplay
+                    type={piece.type}
+                    rotation={selectedPieceId === piece.id ? rotation : 0}
+                    flipped={selectedPieceId === piece.id ? flipped : false}
+                    size="md"
+                  />
+                </div>
               ))}
               {currentPlayer.pieces.length === 0 && (
                 <div className="text-slate-500">ピースがありません</div>
@@ -230,6 +361,16 @@ export const GamePlayPhase = ({
           </div>
         </div>
       </div>
+
+      {/* ドラッグオーバーレイ */}
+      {isDragging && selectedPiece && (
+        <DragOverlay
+          type={selectedPiece.type}
+          rotation={rotation}
+          flipped={flipped}
+          position={dragPosition}
+        />
+      )}
     </div>
   );
 };

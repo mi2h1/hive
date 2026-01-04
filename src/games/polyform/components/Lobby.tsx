@@ -66,7 +66,11 @@ export const Lobby = ({
               >
                 <HelpCircle className="w-5 h-5" />
               </button>
-              <h1 className="text-3xl font-bold text-white tracking-wider">POLYFORM</h1>
+              <img
+                src="/boards/images/vec_logo_polyform.svg"
+                alt="POLYFORM"
+                className="h-10 mx-auto filter brightness-0 invert"
+              />
               <p className="text-white/60 text-sm mt-2">パズル × 拡大再生産</p>
               {debugMode && (
                 <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2">
@@ -185,7 +189,11 @@ export const Lobby = ({
             >
               <HelpCircle className="w-5 h-5" />
             </button>
-            <h1 className="text-4xl font-bold text-white text-center tracking-wider">POLYFORM</h1>
+            <img
+              src="/boards/images/vec_logo_polyform.svg"
+              alt="POLYFORM"
+              className="h-12 mx-auto filter brightness-0 invert"
+            />
             {debugMode && (
               <div className="text-center mt-2">
                 <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded inline-flex items-center gap-1">

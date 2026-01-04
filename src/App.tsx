@@ -349,6 +349,33 @@ function App() {
             </div>
           </div>
 
+          {/* Polyform */}
+          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-teal-500 transition-all">
+            <div className="h-40 bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center">
+              <img
+                src="/boards/images/vec_logo_polyform.svg"
+                alt="Polyform"
+                className="h-12"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+            </div>
+            <div className="p-4">
+              <h2 className="text-lg font-bold text-white mb-2">Polyform</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                パズルとピースの拡大再生産ゲーム。パズルを完成させて報酬を獲得！
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => selectGame('polyform')}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500
+                    hover:from-teal-600 hover:to-emerald-600 rounded-lg text-white font-bold transition-all"
+                >
+                  遊ぶ
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

@@ -1,0 +1,269 @@
+import { useRef, useCallback } from 'react';
+import { PieceDisplay } from './PieceDisplay';
+import { getTransformedShape } from './PieceDisplay';
+import type { PuzzleCard, PlacedPiece, PieceType } from '../types/game';
+import { PIECE_DEFINITIONS } from '../data/pieces';
+
+interface DroppablePuzzleCardProps {
+  card: PuzzleCard;
+  placedPieces?: PlacedPiece[];
+  size?: 'sm' | 'md' | 'lg';
+  selected?: boolean;
+  // ドラッグ中のピース情報
+  draggingPiece?: {
+    type: PieceType;
+    rotation: 0 | 90 | 180 | 270;
+    flipped: boolean;
+  } | null;
+  hoverPosition?: { x: number; y: number } | null;
+  onDrop?: (position: { x: number; y: number }) => void;
+  onHover?: (position: { x: number; y: number } | null) => void;
+  onClick?: () => void;
+}
+
+// 配置が有効かどうかをチェック
+export function isValidPlacement(
+  card: PuzzleCard,
+  placedPieces: PlacedPiece[],
+  pieceType: PieceType,
+  rotation: 0 | 90 | 180 | 270,
+  flipped: boolean,
+  position: { x: number; y: number }
+): boolean {
+  const shape = getTransformedShape(pieceType, rotation, flipped);
+
+  // 配置済みピースのセルを計算
+  const occupiedCells = new Set<string>();
+  placedPieces.forEach((placed) => {
+    const placedShape = getTransformedShape(placed.type, placed.rotation, false);
+    placedShape.forEach(([dx, dy]) => {
+      occupiedCells.add(`${placed.position.x + dx},${placed.position.y + dy}`);
+    });
+  });
+
+  // 新しいピースの各セルをチェック
+  for (const [dx, dy] of shape) {
+    const x = position.x + dx;
+    const y = position.y + dy;
+
+    // 範囲外チェック
+    if (x < 0 || x >= 5 || y < 0 || y >= 5) {
+      return false;
+    }
+
+    // パズルの有効マスかチェック
+    if (!card.shape[y][x]) {
+      return false;
+    }
+
+    // 既に配置済みのセルかチェック
+    if (occupiedCells.has(`${x},${y}`)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export const DroppablePuzzleCard = ({
+  card,
+  placedPieces = [],
+  size = 'md',
+  selected = false,
+  draggingPiece,
+  hoverPosition,
+  onDrop,
+  onHover,
+  onClick,
+}: DroppablePuzzleCardProps) => {
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // セルサイズ（px）
+  const cellPx = { sm: 16, md: 24, lg: 32 }[size];
+  const cellSize = { sm: 'w-4 h-4', md: 'w-6 h-6', lg: 'w-8 h-8' }[size];
+
+  // 配置済みピースのセル情報を計算
+  const placedCells: Map<string, { color: string; pieceId: string }> = new Map();
+  placedPieces.forEach((placed) => {
+    const definition = PIECE_DEFINITIONS[placed.type];
+    if (!definition) return;
+
+    const shape = getTransformedShape(placed.type, placed.rotation, false);
+    shape.forEach(([dx, dy]) => {
+      const x = placed.position.x + dx;
+      const y = placed.position.y + dy;
+      placedCells.set(`${x},${y}`, { color: definition.color, pieceId: placed.pieceId });
+    });
+  });
+
+  // ホバー中のプレビューセルを計算
+  const previewCells = new Set<string>();
+  let isValidHover = false;
+  if (draggingPiece && hoverPosition) {
+    isValidHover = isValidPlacement(
+      card,
+      placedPieces,
+      draggingPiece.type,
+      draggingPiece.rotation,
+      draggingPiece.flipped,
+      hoverPosition
+    );
+
+    const shape = getTransformedShape(
+      draggingPiece.type,
+      draggingPiece.rotation,
+      draggingPiece.flipped
+    );
+    shape.forEach(([dx, dy]) => {
+      previewCells.add(`${hoverPosition.x + dx},${hoverPosition.y + dy}`);
+    });
+  }
+
+  // マウス位置からグリッド座標を計算
+  const getGridPosition = useCallback(
+    (clientX: number, clientY: number): { x: number; y: number } | null => {
+      if (!gridRef.current) return null;
+
+      const rect = gridRef.current.getBoundingClientRect();
+      const x = Math.floor((clientX - rect.left) / (cellPx + 2)); // gap考慮
+      const y = Math.floor((clientY - rect.top) / (cellPx + 2));
+
+      if (x < 0 || x >= 5 || y < 0 || y >= 5) return null;
+      return { x, y };
+    },
+    [cellPx]
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!draggingPiece || !onHover) return;
+      const pos = getGridPosition(e.clientX, e.clientY);
+      onHover(pos);
+    },
+    [draggingPiece, onHover, getGridPosition]
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    onHover?.(null);
+  }, [onHover]);
+
+  const handleMouseUp = useCallback(() => {
+    if (hoverPosition && isValidHover && onDrop) {
+      onDrop(hoverPosition);
+    }
+  }, [hoverPosition, isValidHover, onDrop]);
+
+  // 埋まっているマス数を計算
+  const totalCells = card.shape.flat().filter(Boolean).length;
+  const filledCells = placedCells.size;
+  const isComplete = filledCells === totalCells;
+
+  return (
+    <div
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onMouseUp={handleMouseUp}
+      className={`inline-block rounded-lg p-2 transition-all ${
+        card.type === 'white'
+          ? 'bg-slate-100 border-2 border-slate-300'
+          : 'bg-slate-800 border-2 border-slate-600'
+      } ${selected ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-900' : ''} ${
+        isComplete ? 'ring-2 ring-yellow-400' : ''
+      } ${draggingPiece ? 'cursor-crosshair' : ''}`}
+    >
+      {/* カード情報ヘッダー */}
+      <div className="flex items-center justify-between mb-1 gap-2">
+        <div
+          className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+            card.type === 'white' ? 'bg-slate-700 text-white' : 'bg-yellow-500 text-black'
+          }`}
+        >
+          {card.points}pt
+        </div>
+        {card.rewardPieceType && (
+          <div className="flex items-center gap-1">
+            <span className={`text-xs ${card.type === 'white' ? 'text-slate-600' : 'text-slate-400'}`}>
+              +
+            </span>
+            <PieceDisplay type={card.rewardPieceType} size="sm" />
+          </div>
+        )}
+      </div>
+
+      {/* 5x5グリッド */}
+      <div ref={gridRef} className="flex flex-col gap-0.5">
+        {card.shape.map((row, y) => (
+          <div key={y} className="flex gap-0.5">
+            {row.map((isActive, x) => {
+              const key = `${x},${y}`;
+              const placed = placedCells.get(key);
+              const isPreview = previewCells.has(key);
+
+              if (!isActive) {
+                // 枠外は「・」で表示
+                return (
+                  <div
+                    key={x}
+                    className={`${cellSize} flex items-center justify-center ${
+                      card.type === 'white' ? 'bg-slate-100 text-slate-300' : 'bg-slate-800 text-slate-600'
+                    }`}
+                  >
+                    <div className="w-1 h-1 rounded-full bg-current" />
+                  </div>
+                );
+              }
+
+              if (placed) {
+                return (
+                  <div
+                    key={x}
+                    className={`${cellSize} ${placed.color} rounded-sm border border-black/20`}
+                  />
+                );
+              }
+
+              if (isPreview) {
+                const previewColor = draggingPiece
+                  ? PIECE_DEFINITIONS[draggingPiece.type]?.color
+                  : '';
+                return (
+                  <div
+                    key={x}
+                    className={`${cellSize} rounded-sm border-2 ${
+                      isValidHover
+                        ? `${previewColor} opacity-50 border-white`
+                        : 'bg-red-500/30 border-red-500'
+                    }`}
+                  />
+                );
+              }
+
+              return (
+                <div
+                  key={x}
+                  className={`${cellSize} rounded-sm border-2 border-dashed ${
+                    card.type === 'white'
+                      ? 'bg-white border-slate-400'
+                      : 'bg-slate-700 border-slate-500'
+                  }`}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* 進捗表示 */}
+      {placedPieces.length > 0 && (
+        <div
+          className={`text-xs text-center mt-1 ${
+            card.type === 'white' ? 'text-slate-600' : 'text-slate-400'
+          }`}
+        >
+          {filledCells}/{totalCells}
+        </div>
+      )}
+    </div>
+  );
+};

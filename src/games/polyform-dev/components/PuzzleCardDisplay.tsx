@@ -95,14 +95,16 @@ export const PuzzleCardDisplay = ({
               const placed = placedCells.get(key);
 
               if (!isActive) {
-                // パズルの範囲外
+                // 枠外は「・」で表示
                 return (
                   <div
                     key={x}
-                    className={`${cellSize} ${
-                      card.type === 'white' ? 'bg-slate-100' : 'bg-slate-800'
+                    className={`${cellSize} flex items-center justify-center ${
+                      card.type === 'white' ? 'bg-slate-100 text-slate-300' : 'bg-slate-800 text-slate-600'
                     }`}
-                  />
+                  >
+                    <div className="w-1 h-1 rounded-full bg-current" />
+                  </div>
                 );
               }
 
