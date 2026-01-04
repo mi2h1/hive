@@ -76,6 +76,9 @@ export const GamePlayPhase = ({
   type CardSize = 'xs' | 'sm' | 'md' | 'lg';
   const [cardSize, setCardSize] = useState<CardSize>('sm');
 
+  // デバッグ用：操作対象プレイヤー（他プレイヤーの操作を可能にする）
+  const [debugControlPlayerId, setDebugControlPlayerId] = useState<string>(currentPlayerId);
+
   // ウィンドウサイズに応じてカードサイズを変更
   useEffect(() => {
     const updateCardSize = () => {
@@ -119,7 +122,7 @@ export const GamePlayPhase = ({
       const { puzzleId, puzzleType, points, rewardPieceType } = pendingCompletion;
 
       // スコア加算、報酬ピース付与、パズル削除、完成枚数カウント
-      const player = gameState.players.find((p) => p.id === currentPlayerId);
+      const player = gameState.players.find((p) => p.id === debugControlPlayerId);
       if (!player) return;
 
       let updatedPieces = [...player.pieces];
@@ -132,7 +135,7 @@ export const GamePlayPhase = ({
       }
 
       const updatedPlayers = gameState.players.map((p) => {
-        if (p.id === currentPlayerId) {
+        if (p.id === debugControlPlayerId) {
           return {
             ...p,
             score: p.score + points,
@@ -183,9 +186,9 @@ export const GamePlayPhase = ({
     }
   }, [recyclePhase]);
 
-  // 現在のプレイヤーを取得
-  const currentPlayer = gameState.players.find((p) => p.id === currentPlayerId);
-  if (!currentPlayer) {
+  // 実際のプレイヤーを取得
+  const realPlayer = gameState.players.find((p) => p.id === debugControlPlayerId);
+  if (!realPlayer) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900 flex items-center justify-center">
         <div className="text-white">プレイヤーが見つかりません</div>
@@ -193,9 +196,14 @@ export const GamePlayPhase = ({
     );
   }
 
-  // 自分のターンかどうか
+  // デバッグ用：操作対象プレイヤーを取得（存在しない場合は実プレイヤーにフォールバック）
+  const controlledPlayer = gameState.players.find((p) => p.id === debugControlPlayerId) || realPlayer;
+  // 互換性のため currentPlayer は controlledPlayer を参照
+  const currentPlayer = controlledPlayer;
+
+  // 自分のターンかどうか（デバッグモードでは操作対象プレイヤーのターンかどうか）
   const activePlayerId = gameState.playerOrder[gameState.currentPlayerIndex];
-  const isMyTurn = activePlayerId === currentPlayerId;
+  const isMyTurn = activePlayerId === debugControlPlayerId;
 
   // ターン終了処理
   const endTurn = () => {
@@ -213,7 +221,7 @@ export const GamePlayPhase = ({
     // 現在のプレイヤーのアクションを0にし、次のプレイヤーのアクションを3にリセット
     // 次のプレイヤーのusedMasterActionもリセット
     const updatedPlayers = gameState.players.map((p) => {
-      if (p.id === currentPlayerId) {
+      if (p.id === debugControlPlayerId) {
         return { ...p, remainingActions: 0 };
       }
       if (p.id === nextPlayerId) {
@@ -337,7 +345,7 @@ export const GamePlayPhase = ({
     };
 
     const updatedPlayers = gameState.players.map((p) => {
-      if (p.id === currentPlayerId) {
+      if (p.id === debugControlPlayerId) {
         return {
           ...p,
           workingPuzzles: [...p.workingPuzzles, newWorkingPuzzle],
@@ -427,7 +435,7 @@ export const GamePlayPhase = ({
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
 
     const updatedPlayers = gameState.players.map((p) => {
-      if (p.id === currentPlayerId) {
+      if (p.id === debugControlPlayerId) {
         return { ...p, remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions };
       }
       if (newRemainingActions <= 0 && p.id === nextPlayerId) {
@@ -499,7 +507,7 @@ export const GamePlayPhase = ({
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
 
     const updatedPlayers = gameState.players.map((p) => {
-      if (p.id === currentPlayerId) {
+      if (p.id === debugControlPlayerId) {
         return {
           ...p,
           workingPuzzles: [...p.workingPuzzles, newWorkingPuzzle],
@@ -677,7 +685,7 @@ export const GamePlayPhase = ({
       // Firebaseに同期（アクション消費なし）
       if (onUpdateGameState) {
         const updatedPlayers = gameState.players.map((p) => {
-          if (p.id === currentPlayerId) {
+          if (p.id === debugControlPlayerId) {
             return {
               ...p,
               pieces: updatedPieces,
@@ -713,7 +721,7 @@ export const GamePlayPhase = ({
     // Firebaseに同期
     if (onUpdateGameState) {
       const updatedPlayers = gameState.players.map((p) => {
-        if (p.id === currentPlayerId) {
+        if (p.id === debugControlPlayerId) {
           return {
             ...p,
             pieces: updatedPieces,
@@ -774,7 +782,7 @@ export const GamePlayPhase = ({
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
 
     const updatedPlayers = gameState.players.map((p) => {
-      if (p.id === currentPlayerId) {
+      if (p.id === debugControlPlayerId) {
         return {
           ...p,
           remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
@@ -835,7 +843,7 @@ export const GamePlayPhase = ({
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
 
     const updatedPlayers = gameState.players.map((p) => {
-      if (p.id === currentPlayerId) {
+      if (p.id === debugControlPlayerId) {
         return {
           ...p,
           pieces: [...p.pieces, newPiece],
@@ -916,7 +924,7 @@ export const GamePlayPhase = ({
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
 
     const updatedPlayers = gameState.players.map((p) => {
-      if (p.id === currentPlayerId) {
+      if (p.id === debugControlPlayerId) {
         return {
           ...p,
           pieces: updatedPieces,
@@ -942,7 +950,7 @@ export const GamePlayPhase = ({
     : null;
 
   // 他のプレイヤーを取得
-  const otherPlayers = gameState.players.filter((p) => p.id !== currentPlayerId);
+  const otherPlayers = gameState.players.filter((p) => p.id !== debugControlPlayerId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900">
@@ -966,6 +974,22 @@ export const GamePlayPhase = ({
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* デバッグ用：操作プレイヤー切り替え */}
+            <select
+              value={debugControlPlayerId}
+              onChange={(e) => {
+                setDebugControlPlayerId(e.target.value);
+                setSelectedPieceId(null);
+                setActionMode('none');
+              }}
+              className="px-2 py-1 bg-orange-600 text-white text-xs rounded font-medium"
+            >
+              {gameState.players.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}を操作
+                </option>
+              ))}
+            </select>
             {isMyTurn && (
               <span className="text-white/60 text-sm">
                 アクション残り: {currentPlayer.remainingActions}
@@ -979,6 +1003,16 @@ export const GamePlayPhase = ({
                 ターン終了
               </button>
             )}
+            <button
+              onClick={() => {
+                if (onUpdateGameState) {
+                  onUpdateGameState({ phase: 'ended' });
+                }
+              }}
+              className="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-white text-sm"
+            >
+              即終了
+            </button>
             <button
               onClick={onLeaveRoom}
               className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm"
@@ -1106,8 +1140,8 @@ export const GamePlayPhase = ({
 
           {/* 右カラム: メインコンテンツ */}
           <div className="flex-1 min-w-0">
-            {/* インフォボード */}
-            <div className="bg-slate-800/50 rounded-lg p-3 mb-4">
+            {/* インフォボード（高さ固定） */}
+            <div className="bg-slate-800/50 rounded-lg p-3 mb-4 h-[88px]">
               {/* 上段：ターン情報＋アナウンス */}
               <div className="flex items-center justify-center gap-4 mb-3">
                 <div className="flex items-center gap-3">
@@ -1666,7 +1700,7 @@ export const GamePlayPhase = ({
                         rotation: 0 as const,
                       };
                       const updatedPlayers = gameState.players.map((p) => {
-                        if (p.id === currentPlayerId) {
+                        if (p.id === debugControlPlayerId) {
                           return { ...p, pieces: [...p.pieces, newPiece] };
                         }
                         return p;
