@@ -99,17 +99,17 @@ export const GamePlayPhase = ({
   useEffect(() => {
     const updateCardSize = () => {
       const width = window.innerWidth;
-      if (width >= 1800) {
+      if (width >= 1850) {
         setCardSize('xxl');
-      } else if (width >= 1600) {
+      } else if (width >= 1650) {
         setCardSize('xl');
-      } else if (width >= 1400) {
+      } else if (width >= 1500) {
         setCardSize('lg');
-      } else if (width >= 1200) {
+      } else if (width >= 1300) {
         setCardSize('md');
-      } else if (width >= 1000) {
+      } else if (width >= 1100) {
         setCardSize('sm');
-      } else if (width >= 800) {
+      } else if (width >= 900) {
         setCardSize('xs');
       } else {
         setCardSize('xxs');
