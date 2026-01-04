@@ -1165,9 +1165,9 @@ export const GamePlayPhase = ({
           {/* 右カラム: メインコンテンツ */}
           <div className="flex-1 min-w-0">
             {/* インフォボード（高さ固定） */}
-            <div className="bg-slate-800/50 rounded-lg p-3 mb-4 h-[88px]">
-              {/* 上段：ターン情報＋アナウンス */}
-              <div className="flex items-center justify-center gap-4 mb-3">
+            <div className="bg-slate-800/50 rounded-lg p-3 mb-4 h-[100px]">
+              {/* 上段：ターン情報＋アナウンス（高さ固定） */}
+              <div className="flex items-center justify-center gap-4 mb-3 h-8">
                 <div className="flex items-center gap-3">
                   <span className={`text-sm font-medium ${isMyTurn ? 'text-teal-400' : 'text-slate-400'}`}>
                     {isMyTurn ? 'あなたのターン' : `${gameState.players.find(p => p.id === activePlayerId)?.name}のターン`}
@@ -1369,7 +1369,7 @@ export const GamePlayPhase = ({
                 }`}>場</span>
           {/* 白パズル */}
           <div className="mb-3">
-            <div className="flex gap-2 items-start">
+            <div className="flex gap-2 items-start justify-center">
               {whitePuzzles.map((card, index) => {
                 const isAnimating = animatingCard?.cardId === card.id;
                 const isNewCard = newCardId === card.id;
@@ -1435,7 +1435,7 @@ export const GamePlayPhase = ({
 
           {/* 黒パズル */}
           <div>
-            <div className="flex gap-2 items-start">
+            <div className="flex gap-2 items-start justify-center">
               {blackPuzzles.map((card, index) => {
                 const isAnimating = animatingCard?.cardId === card.id;
                 const isNewCard = newCardId === card.id;
@@ -1501,7 +1501,7 @@ export const GamePlayPhase = ({
               </div>
 
               {/* ピース一覧 */}
-              <div className="relative flex-shrink-0 w-48 bg-slate-800/50 border border-slate-600 rounded-lg p-3 pt-5">
+              <div className="relative flex-shrink-0 w-36 bg-slate-800/50 border border-slate-600 rounded-lg p-3 pt-5">
                 <span className="absolute -top-5 left-3 z-10 px-2 text-sm font-medium text-slate-400">ピース一覧</span>
                 <div className="space-y-3">
                   {[1, 2, 3, 4].map((level) => (
