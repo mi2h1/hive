@@ -196,6 +196,28 @@ export const GamePlayPhase = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900">
       <div className="min-h-screen bg-black/20 p-4">
+        {/* ヘッダー（全幅） */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <img src="/boards/images/vec_logo_polyform.svg" alt="POLYFORM" className="h-6" style={{ filter: 'brightness(0) invert(1)' }} />
+            <div className="text-white">
+              <span className="font-bold">{currentPlayer.name}</span>
+              <span className="text-white/60 ml-2">スコア: {currentPlayer.score}pt</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-white/60 text-sm">
+              アクション残り: {currentPlayer.remainingActions}
+            </span>
+            <button
+              onClick={onLeaveRoom}
+              className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm"
+            >
+              退出
+            </button>
+          </div>
+        </div>
+
         {/* 2カラムレイアウト */}
         <div className="flex gap-4 items-start">
           {/* 左カラム: 他プレイヤー情報 */}
@@ -225,28 +247,6 @@ export const GamePlayPhase = ({
 
           {/* 右カラム: メインコンテンツ */}
           <div className="flex-1 min-w-0">
-            {/* ヘッダー */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <img src="/boards/images/vec_logo_polyform.svg" alt="POLYFORM" className="h-6" style={{ filter: 'brightness(0) invert(1)' }} />
-                <div className="text-white">
-                  <span className="font-bold">{currentPlayer.name}</span>
-                  <span className="text-white/60 ml-2">スコア: {currentPlayer.score}pt</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-white/60 text-sm">
-                  アクション残り: {currentPlayer.remainingActions}
-                </span>
-                <button
-                  onClick={onLeaveRoom}
-                  className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm"
-                >
-                  退出
-                </button>
-              </div>
-            </div>
-
             {/* 場のパズル（横長エリア） */}
             <div className="bg-slate-800/50 rounded-lg p-4 mb-4 overflow-x-auto">
           {/* 白パズル */}
