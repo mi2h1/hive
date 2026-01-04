@@ -114,7 +114,7 @@ export const PuzzleCardDisplay = ({
                   return (
                     <div
                       key={x}
-                      className={`${cellSize} ${placed.color} rounded-sm border border-black/20`}
+                      className={`${cellSize} ${placed.color} rounded-[2px] border border-black/20`}
                     />
                   );
                 }
@@ -123,7 +123,7 @@ export const PuzzleCardDisplay = ({
                 return (
                   <div
                     key={x}
-                    className={`${cellSize} rounded-sm border-2 border-dashed ${
+                    className={`${cellSize} rounded-[2px] border-2 border-dashed ${
                       card.type === 'white'
                         ? 'bg-white border-slate-400'
                         : 'bg-slate-700 border-slate-500'

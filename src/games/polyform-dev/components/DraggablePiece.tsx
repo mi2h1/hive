@@ -39,6 +39,9 @@ export const DraggablePiece = ({
   // セルサイズ
   const cellSize = { sm: 'w-3 h-3', md: 'w-5 h-5', lg: 'w-7 h-7' }[size];
 
+  // 角丸
+  const cellRounded = { sm: 'rounded-[1px]', md: 'rounded-[2px]', lg: 'rounded-sm' }[size];
+
   // グリッドを生成
   const grid: boolean[][] = Array(height)
     .fill(null)
@@ -78,7 +81,7 @@ export const DraggablePiece = ({
             {row.map((filled, x) => (
               <div
                 key={x}
-                className={`${cellSize} rounded-sm ${
+                className={`${cellSize} ${cellRounded} ${
                   filled ? definition.color : 'bg-transparent'
                 }`}
               />
@@ -146,7 +149,7 @@ export const DragOverlay = ({
             {row.map((filled, x) => (
               <div
                 key={x}
-                className={`rounded-sm ${filled ? definition.color : 'bg-transparent'}`}
+                className={`rounded-[2px] ${filled ? definition.color : 'bg-transparent'}`}
                 style={{ width: cellSize, height: cellSize }}
               />
             ))}

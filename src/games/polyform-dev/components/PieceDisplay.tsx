@@ -88,7 +88,7 @@ export const PieceDisplay = ({
   const cellRounded = {
     xs: '',
     sm: 'rounded-[1px]',
-    md: 'rounded-sm',
+    md: 'rounded-[2px]',
     lg: 'rounded-sm',
   }[size];
 

@@ -223,7 +223,7 @@ export const DroppablePuzzleCard = ({
                 return (
                   <div
                     key={x}
-                    className={`${cellSize} ${placed.color} rounded-sm border border-black/20`}
+                    className={`${cellSize} ${placed.color} rounded-[2px] border border-black/20`}
                   />
                 );
               }
@@ -235,7 +235,7 @@ export const DroppablePuzzleCard = ({
                 return (
                   <div
                     key={x}
-                    className={`${cellSize} rounded-sm ${
+                    className={`${cellSize} rounded-[2px] ${
                       isValidHover
                         ? `${previewColor} opacity-70 border border-white/50 shadow-sm`
                         : 'bg-red-500/50 border border-red-400'
@@ -247,7 +247,7 @@ export const DroppablePuzzleCard = ({
               return (
                 <div
                   key={x}
-                  className={`${cellSize} rounded-sm border-2 border-dashed ${
+                  className={`${cellSize} rounded-[2px] border-2 border-dashed ${
                     card.type === 'white'
                       ? 'bg-white border-slate-400'
                       : 'bg-slate-700 border-slate-500'
