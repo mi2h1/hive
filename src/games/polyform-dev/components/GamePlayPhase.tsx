@@ -43,7 +43,6 @@ export const GamePlayPhase = ({
 
   // アニメーション用のRef
   const workingPuzzleSlotRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const marketCardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // 現在のプレイヤーを取得
   const currentPlayer = gameState.players.find((p) => p.id === currentPlayerId);
@@ -425,35 +424,19 @@ export const GamePlayPhase = ({
           {/* 白パズル */}
           <div className="mb-3">
             <div className="flex gap-2 items-start">
-              <AnimatePresence mode="popLayout">
+              <AnimatePresence mode="sync" onExitComplete={() => {
+                if (animatingCard?.type === 'white') completeCardAnimation();
+              }}>
                 {whitePuzzles.map((card) => {
-                  const isAnimating = animatingCard?.cardId === card.id;
                   const isNewCard = newCardId === card.id;
 
                   return (
                     <motion.div
                       key={card.id}
-                      ref={(el) => {
-                        if (el) marketCardRefs.current.set(card.id, el);
-                      }}
-                      layout
-                      initial={isNewCard ? { rotateY: 180, opacity: 0 } : false}
+                      initial={isNewCard ? { rotateY: 90, opacity: 0 } : false}
                       animate={{ rotateY: 0, opacity: 1 }}
-                      exit={isAnimating ? {
-                        y: 300,
-                        x: -100 * (whitePuzzles.indexOf(card)),
-                        opacity: 0.8,
-                        transition: { duration: 0.4, ease: 'easeInOut' }
-                      } : { opacity: 0, scale: 0.8 }}
-                      transition={{
-                        layout: { duration: 0.3, ease: 'easeOut' },
-                        rotateY: { duration: 0.4, ease: 'easeOut' }
-                      }}
-                      onAnimationComplete={(definition) => {
-                        if (isAnimating && definition === 'exit') {
-                          // スライドアニメーション完了
-                        }
-                      }}
+                      exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                      transition={{ rotateY: { duration: 0.3, ease: 'easeOut' } }}
                       style={{ perspective: 1000 }}
                     >
                       <PuzzleCardDisplay
@@ -465,16 +448,6 @@ export const GamePlayPhase = ({
                   );
                 })}
               </AnimatePresence>
-              {/* アニメーション中の空きスロット */}
-              {animatingCard?.type === 'white' && (
-                <motion.div
-                  initial={{ width: 180, opacity: 1 }}
-                  animate={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                  className="h-[225px] overflow-hidden"
-                  onAnimationComplete={() => completeCardAnimation()}
-                />
-              )}
               {/* 山札（重なったカード風） */}
               <div className="relative w-[180px] h-[225px] flex-shrink-0">
                 {/* 背面カード（3枚重ね） */}
@@ -492,30 +465,19 @@ export const GamePlayPhase = ({
           {/* 黒パズル */}
           <div>
             <div className="flex gap-2 items-start">
-              <AnimatePresence mode="popLayout">
+              <AnimatePresence mode="sync" onExitComplete={() => {
+                if (animatingCard?.type === 'black') completeCardAnimation();
+              }}>
                 {blackPuzzles.map((card) => {
-                  const isAnimating = animatingCard?.cardId === card.id;
                   const isNewCard = newCardId === card.id;
 
                   return (
                     <motion.div
                       key={card.id}
-                      ref={(el) => {
-                        if (el) marketCardRefs.current.set(card.id, el);
-                      }}
-                      layout
-                      initial={isNewCard ? { rotateY: 180, opacity: 0 } : false}
+                      initial={isNewCard ? { rotateY: 90, opacity: 0 } : false}
                       animate={{ rotateY: 0, opacity: 1 }}
-                      exit={isAnimating ? {
-                        y: 300,
-                        x: -100 * (blackPuzzles.indexOf(card)),
-                        opacity: 0.8,
-                        transition: { duration: 0.4, ease: 'easeInOut' }
-                      } : { opacity: 0, scale: 0.8 }}
-                      transition={{
-                        layout: { duration: 0.3, ease: 'easeOut' },
-                        rotateY: { duration: 0.4, ease: 'easeOut' }
-                      }}
+                      exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                      transition={{ rotateY: { duration: 0.3, ease: 'easeOut' } }}
                       style={{ perspective: 1000 }}
                     >
                       <PuzzleCardDisplay
@@ -527,16 +489,6 @@ export const GamePlayPhase = ({
                   );
                 })}
               </AnimatePresence>
-              {/* アニメーション中の空きスロット */}
-              {animatingCard?.type === 'black' && (
-                <motion.div
-                  initial={{ width: 180, opacity: 1 }}
-                  animate={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                  className="h-[225px] overflow-hidden"
-                  onAnimationComplete={() => completeCardAnimation()}
-                />
-              )}
               {/* 山札（重なったカード風） */}
               <div className="relative w-[180px] h-[225px] flex-shrink-0">
                 {/* 背面カード（3枚重ね） */}
