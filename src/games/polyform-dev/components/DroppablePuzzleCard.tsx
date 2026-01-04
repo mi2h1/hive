@@ -78,9 +78,16 @@ export const DroppablePuzzleCard = ({
 }: DroppablePuzzleCardProps) => {
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // セルサイズ（px）
-  const cellPx = { sm: 16, md: 24, lg: 32 }[size];
-  const cellSize = { sm: 'w-4 h-4', md: 'w-6 h-6', lg: 'w-8 h-8' }[size];
+  // セルサイズ（px）- PuzzleCardDisplayと同じ
+  const cellPx = { sm: 20, md: 24, lg: 32 }[size];
+  const cellSize = { sm: 'w-5 h-5', md: 'w-6 h-6', lg: 'w-8 h-8' }[size];
+
+  // カード全体のサイズ - PuzzleCardDisplayと同じ
+  const cardSize = {
+    sm: 'w-[140px] h-[175px]',
+    md: 'w-[180px] h-[225px]',
+    lg: 'w-[230px] h-[285px]',
+  }[size];
 
   // 配置済みピースのセル情報を計算
   const placedCells: Map<string, { color: string; pieceId: string }> = new Map();
@@ -164,7 +171,7 @@ export const DroppablePuzzleCard = ({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
-      className={`inline-block rounded-lg p-2 transition-all ${
+      className={`${cardSize} flex flex-col rounded-lg p-3 transition-all ${
         card.type === 'white'
           ? 'bg-slate-100 border-2 border-slate-300'
           : 'bg-slate-800 border-2 border-slate-600'
@@ -172,8 +179,8 @@ export const DroppablePuzzleCard = ({
         isComplete ? 'ring-2 ring-yellow-400' : ''
       } ${draggingPiece ? 'cursor-crosshair' : ''}`}
     >
-      {/* カード情報ヘッダー */}
-      <div className="flex items-center justify-between mb-1 gap-2">
+      {/* カード情報ヘッダー（固定高さ） */}
+      <div className="flex items-center justify-between h-6 mb-2">
         <div
           className={`text-xs font-bold px-1.5 py-0.5 rounded ${
             card.type === 'white' ? 'bg-slate-700 text-white' : 'bg-yellow-500 text-black'
@@ -191,8 +198,9 @@ export const DroppablePuzzleCard = ({
         )}
       </div>
 
-      {/* 5x5グリッド */}
-      <div ref={gridRef} className="flex flex-col gap-0.5">
+      {/* 5x5グリッド（下寄せ） */}
+      <div className="flex-1 flex items-end justify-center">
+        <div ref={gridRef} className="flex flex-col gap-0.5">
         {card.shape.map((row, y) => (
           <div key={y} className="flex gap-0.5">
             {row.map((isActive, x) => {
@@ -252,18 +260,8 @@ export const DroppablePuzzleCard = ({
             })}
           </div>
         ))}
-      </div>
-
-      {/* 進捗表示 */}
-      {placedPieces.length > 0 && (
-        <div
-          className={`text-xs text-center mt-1 ${
-            card.type === 'white' ? 'text-slate-600' : 'text-slate-400'
-          }`}
-        >
-          {filledCells}/{totalCells}
         </div>
-      )}
+      </div>
     </div>
   );
 };
