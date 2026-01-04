@@ -153,49 +153,49 @@ export const JudgmentPhase = ({
 
         {/* ジャッカル宣言（横並び） */}
         <div className={`text-center mb-8 ${fadeIn}`}>
-          <div className="flex items-center justify-center gap-3">
-            <span className="text-3xl font-bold text-orange-400">
+          <div className="flex items-center justify-center gap-2 md:gap-3">
+            <span className="text-xl md:text-3xl font-bold text-orange-400">
               {jackalCallerName} が
             </span>
-            <span className="text-5xl font-bold text-white">
+            <span className="text-3xl md:text-5xl font-bold text-white">
               ジャッカル！
             </span>
           </div>
         </div>
 
         {/* 宣言数字 + 場の合計（横並び、別々にフェードイン） */}
-        <div className="flex justify-center gap-4 mb-6">
+        <div className="flex justify-center gap-3 md:gap-4 mb-6">
           {/* 宣言された数字 */}
-          <div className={`rounded-xl p-4 flex-1 max-w-48 transition-all duration-300 ${
+          <div className={`rounded-xl p-3 md:p-4 flex-1 max-w-40 md:max-w-48 transition-all duration-300 ${
             stage === 'jackal' ? hidden : fadeIn
           } ${getDeclaredHighlight() || 'bg-slate-800/80'}`}>
-            <div className="text-slate-400 text-sm mb-1 text-center">
+            <div className="text-slate-400 text-xs md:text-sm mb-1 text-center">
               {declarerName}の宣言
             </div>
-            <div className="text-4xl font-bold text-white text-center">
+            <div className="text-2xl md:text-4xl font-bold text-white text-center">
               {declaredValue}
             </div>
           </div>
 
           {/* 場の合計 */}
-          <div className={`bg-slate-800/80 rounded-xl p-4 flex-1 max-w-48 ${
+          <div className={`bg-slate-800/80 rounded-xl p-3 md:p-4 flex-1 max-w-40 md:max-w-48 ${
             ['jackal', 'declared'].includes(stage) ? hidden : fadeIn
           }`}>
-            <div className="text-slate-400 text-sm mb-1 text-center">場の合計</div>
-            <div className="text-4xl font-bold text-white text-center">
+            <div className="text-slate-400 text-xs md:text-sm mb-1 text-center">場の合計</div>
+            <div className="text-2xl md:text-4xl font-bold text-white text-center">
               {totalValue}
-              {hasDouble && <span className="text-pink-400 text-base ml-2">(×2)</span>}
-              {hasMaxZero && <span className="text-emerald-400 text-base ml-2">(MAX→0)</span>}
+              {hasDouble && <span className="text-pink-400 text-xs md:text-base ml-1 md:ml-2">(×2)</span>}
+              {hasMaxZero && <span className="text-emerald-400 text-xs md:text-base ml-1 md:ml-2">(MAX→0)</span>}
             </div>
           </div>
         </div>
 
         {/* 判定インフォボード */}
         <div className={`text-center mb-6 ${['jackal', 'declared', 'total'].includes(stage) ? hidden : fadeIn}`}>
-          <div className={`rounded-xl p-4 inline-block ${
+          <div className={`rounded-xl p-3 md:p-4 inline-block ${
             isJackalSuccess ? 'bg-green-900/60' : 'bg-red-900/60'
           }`}>
-            <div className="text-2xl font-bold">
+            <div className="text-lg md:text-2xl font-bold">
               {isJackalSuccess ? (
                 <span className="text-green-300">ジャッカル成功！</span>
               ) : (
@@ -289,12 +289,12 @@ export const JudgmentPhase = ({
 
         {/* 敗者表示 */}
         <div className={`text-center mb-6 ${['jackal', 'declared', 'total', 'result'].includes(stage) ? hidden : fadeIn}`}>
-          <div className={`rounded-xl p-4 ${isLoserMe ? 'bg-red-900/50' : 'bg-slate-800/80'}`}>
-            <div className={`text-xl font-bold ${isLoserMe ? 'text-red-300' : 'text-white'}`}>
+          <div className={`rounded-xl p-3 md:p-4 ${isLoserMe ? 'bg-red-900/50' : 'bg-slate-800/80'}`}>
+            <div className={`text-base md:text-xl font-bold ${isLoserMe ? 'text-red-300' : 'text-white'}`}>
               {loserName} がライフ -1
             </div>
             {loser && loser.life === 0 && (
-              <div className="text-red-400 font-bold mt-1">脱落！</div>
+              <div className="text-red-400 font-bold text-sm md:text-base mt-1">脱落！</div>
             )}
           </div>
         </div>
