@@ -550,8 +550,8 @@ export const GamePlayPhase = ({
         {/* 2カラムレイアウト終了 */}
       </div>
 
-      {/* ドラッグオーバーレイ */}
-      {isDragging && selectedPiece && (
+      {/* ドラッグオーバーレイ（パズル上でプレビュー中は非表示） */}
+      {isDragging && selectedPiece && !hoverPuzzleId && (
         <DragOverlay
           type={selectedPiece.type}
           rotation={rotation}
