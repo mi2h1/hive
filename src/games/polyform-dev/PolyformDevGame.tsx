@@ -20,6 +20,7 @@ export const PolyformDevGame = ({ onBack }: PolyformDevGameProps) => {
     joinRoom,
     leaveRoom,
     startGame,
+    updateGameState,
     addTestPlayer,
   } = useRoom(playerId, playerName);
 
@@ -41,6 +42,7 @@ export const PolyformDevGame = ({ onBack }: PolyformDevGameProps) => {
         gameState={gameState}
         currentPlayerId={playerId}
         onLeaveRoom={leaveRoom}
+        onUpdateGameState={updateGameState}
       />
     );
   }
