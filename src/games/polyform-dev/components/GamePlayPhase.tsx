@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { RotateCw, FlipHorizontal } from 'lucide-react';
+import { RotateCw, FlipHorizontal, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieceDisplay, getTransformedShape } from './PieceDisplay';
 import { PuzzleCardDisplay } from './PuzzleCardDisplay';
@@ -231,6 +231,40 @@ export const GamePlayPhase = ({
     onUpdateGameState(updates);
     setAnnouncement('山札からカードを引いた');
     console.log('山札から取得:', { drawnCardId, deckType });
+  };
+
+  // リサイクル（場のカード4枚を山札の下に戻し、上から4枚補充）
+  const handleRecycle = (marketType: 'white' | 'black') => {
+    if (!onUpdateGameState) return;
+
+    const market = marketType === 'white' ? [...gameState.whitePuzzleMarket] : [...gameState.blackPuzzleMarket];
+    const deck = marketType === 'white' ? [...gameState.whitePuzzleDeck] : [...gameState.blackPuzzleDeck];
+
+    // 場のカードが4枚未満、または山札が4枚未満ならリサイクル不可
+    if (market.length < 4 || deck.length < 4) {
+      console.log('リサイクルできません（カードが足りません）');
+      return;
+    }
+
+    // 場のカードを山札の下に追加
+    deck.push(...market);
+
+    // 山札の上から4枚を新しい場に
+    const newMarket = deck.splice(0, 4);
+
+    // ゲーム状態を更新
+    const updates: Partial<GameState> = {};
+    if (marketType === 'white') {
+      updates.whitePuzzleMarket = newMarket;
+      updates.whitePuzzleDeck = deck;
+    } else {
+      updates.blackPuzzleMarket = newMarket;
+      updates.blackPuzzleDeck = deck;
+    }
+
+    onUpdateGameState(updates);
+    setAnnouncement('リサイクル');
+    console.log('リサイクル:', { marketType, newMarket });
   };
 
   // アニメーション完了時の実際の状態更新
@@ -732,6 +766,24 @@ export const GamePlayPhase = ({
                   </div>
                 );
               })()}
+              {/* リサイクルボタン */}
+              {(() => {
+                const canRecycle = gameState.whitePuzzleMarket.length >= 4 && gameState.whitePuzzleDeck.length >= 4 && !animatingCard;
+                return (
+                  <button
+                    onClick={() => canRecycle && handleRecycle('white')}
+                    className={`flex flex-col items-center justify-center w-16 h-[225px] rounded-lg border-2 border-dashed transition-all ${
+                      canRecycle
+                        ? 'border-slate-400 text-slate-600 hover:border-teal-400 hover:text-teal-500 hover:bg-teal-50 cursor-pointer'
+                        : 'border-slate-300 text-slate-400 opacity-50 cursor-not-allowed'
+                    }`}
+                    disabled={!canRecycle}
+                  >
+                    <RefreshCw className="w-6 h-6 mb-1" />
+                    <span className="text-xs font-medium">リサイクル</span>
+                  </button>
+                );
+              })()}
             </div>
           </div>
 
@@ -781,6 +833,24 @@ export const GamePlayPhase = ({
                       <div className="text-white text-4xl font-bold">{gameState.blackPuzzleDeck.length}</div>
                     </div>
                   </div>
+                );
+              })()}
+              {/* リサイクルボタン */}
+              {(() => {
+                const canRecycle = gameState.blackPuzzleMarket.length >= 4 && gameState.blackPuzzleDeck.length >= 4 && !animatingCard;
+                return (
+                  <button
+                    onClick={() => canRecycle && handleRecycle('black')}
+                    className={`flex flex-col items-center justify-center w-16 h-[225px] rounded-lg border-2 border-dashed transition-all ${
+                      canRecycle
+                        ? 'border-slate-600 text-slate-400 hover:border-teal-400 hover:text-teal-400 hover:bg-teal-900/20 cursor-pointer'
+                        : 'border-slate-700 text-slate-600 opacity-50 cursor-not-allowed'
+                    }`}
+                    disabled={!canRecycle}
+                  >
+                    <RefreshCw className="w-6 h-6 mb-1" />
+                    <span className="text-xs font-medium">リサイクル</span>
+                  </button>
                 );
               })()}
             </div>
