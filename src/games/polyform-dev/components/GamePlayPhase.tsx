@@ -799,23 +799,23 @@ export const GamePlayPhase = ({
                 <div className="text-white text-sm mb-2">
                   レベル{levelChangeMode.targetLevel}のピースを選択：
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {PIECES_BY_LEVEL[levelChangeMode.targetLevel].map((type) => (
                     <button
                       key={type}
                       onClick={() => handleConfirmLevelChange(type)}
-                      className={`p-2 rounded ${
+                      className={`p-1.5 rounded ${
                         levelChangeMode.direction === 'up'
                           ? 'bg-green-700 hover:bg-green-600'
                           : 'bg-red-700 hover:bg-red-600'
                       }`}
                     >
-                      <PieceDisplay type={type} size="sm" />
+                      <PieceDisplay type={type} size="xs" />
                     </button>
                   ))}
                   <button
                     onClick={() => setLevelChangeMode(null)}
-                    className="px-3 py-1 bg-slate-600 hover:bg-slate-500 rounded text-white text-sm"
+                    className="px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded text-white text-xs"
                   >
                     キャンセル
                   </button>
