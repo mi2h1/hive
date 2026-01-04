@@ -20,6 +20,8 @@ interface LobbyProps {
   // デバッグ用
   debugMode?: boolean;
   onAddTestPlayer?: () => void;
+  // フェードアウト中
+  isFadingOut?: boolean;
 }
 
 export const Lobby = ({
@@ -39,6 +41,7 @@ export const Lobby = ({
   onBack,
   debugMode = false,
   onAddTestPlayer,
+  isFadingOut = false,
 }: LobbyProps) => {
   const [showCopiedToast, setShowCopiedToast] = useState(false);
   const roomCodeInputRef = useRef<HTMLInputElement>(null);
@@ -58,7 +61,7 @@ export const Lobby = ({
   // ルーム待機画面
   if (roomCode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900">
+      <div className={`min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900 transition-opacity duration-300 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
         <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
           <div className="bg-slate-800/95 rounded-xl p-6 max-w-3xl w-full">
             {/* タイトル */}

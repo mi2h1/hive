@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
 import { Lobby } from './components/Lobby';
 import { GamePlayPhase } from './components/GamePlayPhase';
+import { GameStartTransition } from './components/GameStartTransition';
 
 interface PolyformDevGameProps {
   onBack?: () => void;
@@ -33,40 +34,92 @@ export const PolyformDevGame = ({ onBack }: PolyformDevGameProps) => {
     };
   }, []);
 
+  // トランジション状態
+  const [showTransition, setShowTransition] = useState(false);
+  const [isStartingGame, setIsStartingGame] = useState(false);
+  const prevPhaseRef = useRef<string | null>(null);
+
   const gameState = roomData?.gameState;
   const players = gameState?.players ?? [];
+  const phase = gameState?.phase ?? 'waiting';
+
+  // フェーズ変更を監視（他プレイヤー用）
+  useEffect(() => {
+    // 他プレイヤーが waiting → playing の遷移を検知した時
+    if (prevPhaseRef.current === 'waiting' && phase === 'playing' && !showTransition) {
+      setShowTransition(true);
+    }
+    prevPhaseRef.current = phase;
+  }, [phase, showTransition]);
+
+  // ゲーム開始処理（トランジション付き）
+  const handleStartGame = () => {
+    if (!isHost) return;
+
+    // トランジションを表示
+    setShowTransition(true);
+    setIsStartingGame(true);
+
+    // 少し待ってからゲーム開始
+    setTimeout(() => {
+      startGame();
+    }, 300);
+  };
 
   // ゲームプレイ中
   if (gameState && gameState.phase !== 'waiting' && playerId) {
     return (
-      <GamePlayPhase
-        gameState={gameState}
-        currentPlayerId={playerId}
-        onLeaveRoom={leaveRoom}
-        onUpdateGameState={updateGameState}
-      />
+      <>
+        {/* ゲーム開始トランジション */}
+        {showTransition && (
+          <GameStartTransition
+            onComplete={() => {
+              setShowTransition(false);
+              setIsStartingGame(false);
+            }}
+          />
+        )}
+        <GamePlayPhase
+          gameState={gameState}
+          currentPlayerId={playerId}
+          onLeaveRoom={leaveRoom}
+          onUpdateGameState={updateGameState}
+        />
+      </>
     );
   }
 
   // ロビー画面（デバッグモード有効）
   return (
-    <Lobby
-      roomCode={roomCode}
-      players={players}
-      isHost={isHost}
-      isLoading={isLoading}
-      error={error}
-      hostId={roomData?.hostId ?? ''}
-      playerName={playerName}
-      settings={gameState?.settings}
-      onCreateRoom={createRoom}
-      onJoinRoom={joinRoom}
-      onLeaveRoom={leaveRoom}
-      onStartGame={startGame}
-      onUpdateSettings={updateSettings}
-      onBack={onBack}
-      debugMode={true}
-      onAddTestPlayer={addTestPlayer}
-    />
+    <>
+      {/* ゲーム開始トランジション（ロビーの上に表示） */}
+      {showTransition && (
+        <GameStartTransition
+          onComplete={() => {
+            setShowTransition(false);
+            setIsStartingGame(false);
+          }}
+        />
+      )}
+      <Lobby
+        roomCode={roomCode}
+        players={players}
+        isHost={isHost}
+        isLoading={isLoading}
+        error={error}
+        hostId={roomData?.hostId ?? ''}
+        playerName={playerName}
+        settings={gameState?.settings}
+        onCreateRoom={createRoom}
+        onJoinRoom={joinRoom}
+        onLeaveRoom={leaveRoom}
+        onStartGame={handleStartGame}
+        onUpdateSettings={updateSettings}
+        onBack={onBack}
+        debugMode={true}
+        onAddTestPlayer={addTestPlayer}
+        isFadingOut={isStartingGame}
+      />
+    </>
   );
 };
