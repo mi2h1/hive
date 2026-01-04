@@ -81,8 +81,8 @@ export const DroppablePuzzleCard = ({
   const gridRef = useRef<HTMLDivElement>(null);
 
   // セルサイズ（px）- PuzzleCardDisplayと同じ
-  const cellPx = { sm: 20, md: 24, lg: 32 }[size];
-  const cellSize = { sm: 'w-5 h-5', md: 'w-6 h-6', lg: 'w-8 h-8' }[size];
+  const cellPx = { sm: 24, md: 28, lg: 36 }[size];
+  const cellSize = { sm: 'w-6 h-6', md: 'w-7 h-7', lg: 'w-9 h-9' }[size];
 
   // カード全体のサイズ - PuzzleCardDisplayと同じ
   const cardSize = {
@@ -201,7 +201,9 @@ export const DroppablePuzzleCard = ({
 
       {/* 5x5グリッド（下寄せ） */}
       <div className="flex-1 flex items-end justify-center">
-        <div ref={gridRef} className="flex flex-col gap-px">
+        <div ref={gridRef} className={`flex flex-col gap-px p-0.5 rounded border ${
+          card.type === 'white' ? 'border-slate-400' : 'border-slate-500'
+        }`}>
         {card.shape.map((row, y) => (
           <div key={y} className="flex gap-px">
             {row.map((isActive, x) => {
