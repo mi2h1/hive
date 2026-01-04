@@ -826,19 +826,16 @@ export const GamePlayPhase = ({
             {/* 選択中のピースのコントロール */}
             {selectedPiece && !levelChangeMode && (
               <div className="bg-slate-700/50 rounded-lg p-3 mb-4">
+                <div className="text-white/60 text-sm mb-2">
+                  Lv.{PIECE_DEFINITIONS[selectedPiece.type].level} ドラッグして配置
+                </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <PieceDisplay
-                      type={selectedPiece.type}
-                      rotation={rotation}
-                      flipped={flipped}
-                      size="md"
-                    />
-                    <div className="text-white/60 text-sm">
-                      <div>Lv.{PIECE_DEFINITIONS[selectedPiece.type].level}</div>
-                      <div>ドラッグして配置</div>
-                    </div>
-                  </div>
+                  <PieceDisplay
+                    type={selectedPiece.type}
+                    rotation={rotation}
+                    flipped={flipped}
+                    size="md"
+                  />
                   <div className="flex gap-2">
                     <button
                       onClick={handleRotate}
