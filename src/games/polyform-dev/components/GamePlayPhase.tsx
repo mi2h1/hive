@@ -44,6 +44,17 @@ export const GamePlayPhase = ({
   // アニメーション用のRef
   const workingPuzzleSlotRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // カードアニメーション完了タイマー
+  useEffect(() => {
+    if (!animatingCard) return;
+
+    const timer = setTimeout(() => {
+      completeCardAnimation();
+    }, 250); // フェードアウト時間
+
+    return () => clearTimeout(timer);
+  }, [animatingCard]);
+
   // 現在のプレイヤーを取得
   const currentPlayer = gameState.players.find((p) => p.id === currentPlayerId);
   if (!currentPlayer) {
@@ -424,30 +435,32 @@ export const GamePlayPhase = ({
           {/* 白パズル */}
           <div className="mb-3">
             <div className="flex gap-2 items-start">
-              <AnimatePresence mode="sync" onExitComplete={() => {
-                if (animatingCard?.type === 'white') completeCardAnimation();
-              }}>
-                {whitePuzzles.map((card) => {
-                  const isNewCard = newCardId === card.id;
+              {whitePuzzles.map((card) => {
+                const isAnimating = animatingCard?.cardId === card.id;
+                const isNewCard = newCardId === card.id;
 
-                  return (
-                    <motion.div
-                      key={card.id}
-                      initial={isNewCard ? { rotateY: 90, opacity: 0 } : false}
-                      animate={{ rotateY: 0, opacity: 1 }}
-                      exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                      transition={{ rotateY: { duration: 0.3, ease: 'easeOut' } }}
-                      style={{ perspective: 1000 }}
-                    >
-                      <PuzzleCardDisplay
-                        card={card}
-                        size="md"
-                        onClick={() => handleTakePuzzle(card.id, 'white')}
-                      />
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+                return (
+                  <motion.div
+                    key={card.id}
+                    initial={isNewCard ? { rotateY: 90, opacity: 0 } : false}
+                    animate={{
+                      rotateY: 0,
+                      opacity: isAnimating ? 0 : 1,
+                    }}
+                    transition={{
+                      rotateY: { duration: 0.3, ease: 'easeOut' },
+                      opacity: { duration: 0.2 }
+                    }}
+                    style={{ perspective: 1000 }}
+                  >
+                    <PuzzleCardDisplay
+                      card={card}
+                      size="md"
+                      onClick={() => handleTakePuzzle(card.id, 'white')}
+                    />
+                  </motion.div>
+                );
+              })}
               {/* 山札（重なったカード風） */}
               <div className="relative w-[180px] h-[225px] flex-shrink-0">
                 {/* 背面カード（3枚重ね） */}
@@ -465,30 +478,32 @@ export const GamePlayPhase = ({
           {/* 黒パズル */}
           <div>
             <div className="flex gap-2 items-start">
-              <AnimatePresence mode="sync" onExitComplete={() => {
-                if (animatingCard?.type === 'black') completeCardAnimation();
-              }}>
-                {blackPuzzles.map((card) => {
-                  const isNewCard = newCardId === card.id;
+              {blackPuzzles.map((card) => {
+                const isAnimating = animatingCard?.cardId === card.id;
+                const isNewCard = newCardId === card.id;
 
-                  return (
-                    <motion.div
-                      key={card.id}
-                      initial={isNewCard ? { rotateY: 90, opacity: 0 } : false}
-                      animate={{ rotateY: 0, opacity: 1 }}
-                      exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                      transition={{ rotateY: { duration: 0.3, ease: 'easeOut' } }}
-                      style={{ perspective: 1000 }}
-                    >
-                      <PuzzleCardDisplay
-                        card={card}
-                        size="md"
-                        onClick={() => handleTakePuzzle(card.id, 'black')}
-                      />
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+                return (
+                  <motion.div
+                    key={card.id}
+                    initial={isNewCard ? { rotateY: 90, opacity: 0 } : false}
+                    animate={{
+                      rotateY: 0,
+                      opacity: isAnimating ? 0 : 1,
+                    }}
+                    transition={{
+                      rotateY: { duration: 0.3, ease: 'easeOut' },
+                      opacity: { duration: 0.2 }
+                    }}
+                    style={{ perspective: 1000 }}
+                  >
+                    <PuzzleCardDisplay
+                      card={card}
+                      size="md"
+                      onClick={() => handleTakePuzzle(card.id, 'black')}
+                    />
+                  </motion.div>
+                );
+              })}
               {/* 山札（重なったカード風） */}
               <div className="relative w-[180px] h-[225px] flex-shrink-0">
                 {/* 背面カード（3枚重ね） */}
