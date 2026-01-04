@@ -69,7 +69,7 @@ export const Lobby = ({
               <img
                 src="/boards/images/vec_logo_polyform.svg"
                 alt="POLYFORM"
-                className="h-10 mx-auto filter brightness-0 invert"
+                className="h-7 mx-auto filter brightness-0 invert"
               />
               <p className="text-white/60 text-sm mt-2">パズル × 拡大再生産</p>
               {debugMode && (
@@ -192,7 +192,7 @@ export const Lobby = ({
             <img
               src="/boards/images/vec_logo_polyform.svg"
               alt="POLYFORM"
-              className="h-12 mx-auto filter brightness-0 invert"
+              className="h-8 mx-auto filter brightness-0 invert"
             />
             {debugMode && (
               <div className="text-center mt-2">

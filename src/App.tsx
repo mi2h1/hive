@@ -221,7 +221,7 @@ function App() {
             {/* PolyformDEV */}
             <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
               <div className="h-32 bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white">Polyform DEV</span>
+                <span className="text-3xl font-bold text-white">POLYFORM DEV</span>
               </div>
               <div className="p-4">
                 <button
@@ -354,8 +354,8 @@ function App() {
             <div className="h-40 bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center relative">
               <img
                 src="/boards/images/vec_logo_polyform.svg"
-                alt="Polyform"
-                className="h-12"
+                alt="POLYFORM"
+                className="h-8"
                 style={{ filter: 'brightness(0) invert(1)' }}
               />
               <div className="absolute top-2 right-2 bg-amber-500 text-black text-xs font-bold px-2 py-1 rounded">
@@ -363,7 +363,7 @@ function App() {
               </div>
             </div>
             <div className="p-4">
-              <h2 className="text-lg font-bold text-white mb-2">Polyform</h2>
+              <h2 className="text-lg font-bold text-white mb-2">POLYFORM</h2>
               <p className="text-slate-400 text-sm mb-4">
                 パズルとピースの拡大再生産ゲーム。パズルを完成させて報酬を獲得！
               </p>
