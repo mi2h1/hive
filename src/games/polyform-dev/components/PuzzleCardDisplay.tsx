@@ -3,10 +3,23 @@ import type { PuzzleCard, PlacedPiece } from '../types/game';
 import { PIECE_DEFINITIONS } from '../data/pieces';
 import { getTransformedShape } from './PieceDisplay';
 
+// カードサイズ定義（7段階）
+export type CardSizeType = 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
+
+export const CARD_SIZES: Record<CardSizeType, { width: number; height: number; cell: string; cellPx: number }> = {
+  xxs: { width: 100, height: 125, cell: 'w-4 h-4', cellPx: 16 },
+  xs: { width: 115, height: 144, cell: 'w-[18px] h-[18px]', cellPx: 18 },
+  sm: { width: 130, height: 163, cell: 'w-[21px] h-[21px]', cellPx: 21 },
+  md: { width: 150, height: 188, cell: 'w-6 h-6', cellPx: 24 },
+  lg: { width: 170, height: 213, cell: 'w-7 h-7', cellPx: 28 },
+  xl: { width: 195, height: 244, cell: 'w-8 h-8', cellPx: 32 },
+  xxl: { width: 225, height: 281, cell: 'w-9 h-9', cellPx: 36 },
+};
+
 interface PuzzleCardDisplayProps {
   card: PuzzleCard;
   placedPieces?: PlacedPiece[];
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: CardSizeType;
   onClick?: () => void;
   selected?: boolean;
   showReward?: boolean;
@@ -20,21 +33,9 @@ export const PuzzleCardDisplay = ({
   selected = false,
   showReward = true,
 }: PuzzleCardDisplayProps) => {
-  // セルサイズ（少し大きめに）
-  const cellSize = {
-    xs: 'w-5 h-5',
-    sm: 'w-6 h-6',
-    md: 'w-7 h-7',
-    lg: 'w-9 h-9',
-  }[size];
-
-  // カード全体のサイズ
-  const cardSize = {
-    xs: 'w-[120px] h-[150px]',
-    sm: 'w-[140px] h-[175px]',
-    md: 'w-[180px] h-[225px]',
-    lg: 'w-[230px] h-[285px]',
-  }[size];
+  const sizeConfig = CARD_SIZES[size];
+  const cellSize = sizeConfig.cell;
+  const cardSize = `w-[${sizeConfig.width}px] h-[${sizeConfig.height}px]`;
 
   // 配置済みピースのセル情報を計算
   const placedCells: Map<string, { color: string; pieceId: string }> = new Map();

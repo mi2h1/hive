@@ -1,13 +1,14 @@
 import { useRef, useCallback } from 'react';
 import { PieceDisplay } from './PieceDisplay';
 import { getTransformedShape } from './PieceDisplay';
+import { CARD_SIZES, type CardSizeType } from './PuzzleCardDisplay';
 import type { PuzzleCard, PlacedPiece, PieceType } from '../types/game';
 import { PIECE_DEFINITIONS } from '../data/pieces';
 
 interface DroppablePuzzleCardProps {
   card: PuzzleCard;
   placedPieces?: PlacedPiece[];
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: CardSizeType;
   selected?: boolean;
   completed?: boolean; // 完成ハイライト
   // ドラッグ中のピース情報
@@ -80,17 +81,11 @@ export const DroppablePuzzleCard = ({
 }: DroppablePuzzleCardProps) => {
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // セルサイズ（px）- PuzzleCardDisplayと同じ
-  const cellPx = { xs: 20, sm: 24, md: 28, lg: 36 }[size];
-  const cellSize = { xs: 'w-5 h-5', sm: 'w-6 h-6', md: 'w-7 h-7', lg: 'w-9 h-9' }[size];
-
-  // カード全体のサイズ - PuzzleCardDisplayと同じ
-  const cardSize = {
-    xs: 'w-[120px] h-[150px]',
-    sm: 'w-[140px] h-[175px]',
-    md: 'w-[180px] h-[225px]',
-    lg: 'w-[230px] h-[285px]',
-  }[size];
+  // CARD_SIZESからサイズ情報を取得
+  const sizeConfig = CARD_SIZES[size];
+  const cellPx = sizeConfig.cellPx;
+  const cellSize = sizeConfig.cell;
+  const cardSize = `w-[${sizeConfig.width}px] h-[${sizeConfig.height}px]`;
 
   // 配置済みピースのセル情報を計算
   const placedCells: Map<string, { color: string; pieceId: string }> = new Map();

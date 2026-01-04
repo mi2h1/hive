@@ -2,12 +2,29 @@ import { useState, useEffect, useRef } from 'react';
 import { RotateCw, FlipHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieceDisplay, getTransformedShape } from './PieceDisplay';
-import { PuzzleCardDisplay } from './PuzzleCardDisplay';
+import { PuzzleCardDisplay, CARD_SIZES, type CardSizeType } from './PuzzleCardDisplay';
 import { DroppablePuzzleCard, isValidPlacement } from './DroppablePuzzleCard';
 import { DragOverlay } from './DraggablePiece';
 import { ALL_PUZZLES } from '../data/puzzles';
 import { PIECE_DEFINITIONS, PIECES_BY_LEVEL } from '../data/pieces';
 import type { GameState, WorkingPuzzle, PlacedPiece, PuzzleCard, PieceType } from '../types/game';
+
+// CardSizeType → PieceDisplay用サイズへのマッピング
+const toPieceSize = (cardSize: CardSizeType): 'xs' | 'sm' | 'md' | 'lg' => {
+  switch (cardSize) {
+    case 'xxs':
+    case 'xs':
+      return 'xs';
+    case 'sm':
+    case 'md':
+      return 'sm';
+    case 'lg':
+    case 'xl':
+      return 'md';
+    case 'xxl':
+      return 'lg';
+  }
+};
 
 interface GamePlayPhaseProps {
   gameState: GameState;
@@ -72,23 +89,30 @@ export const GamePlayPhase = ({
   type ActionMode = 'none' | 'takePuzzle' | 'placePiece' | 'levelChange' | 'recycle' | 'masterAction';
   const [actionMode, setActionMode] = useState<ActionMode>('none');
 
-  // レスポンシブカードサイズ
-  type CardSize = 'xs' | 'sm' | 'md' | 'lg';
-  const [cardSize, setCardSize] = useState<CardSize>('sm');
+  // レスポンシブカードサイズ（7段階）
+  const [cardSize, setCardSize] = useState<CardSizeType>('md');
 
   // デバッグ用：操作対象プレイヤー（他プレイヤーの操作を可能にする）
   const [debugControlPlayerId, setDebugControlPlayerId] = useState<string>(currentPlayerId);
 
-  // ウィンドウサイズに応じてカードサイズを変更
+  // ウィンドウサイズに応じてカードサイズを変更（7段階）
   useEffect(() => {
     const updateCardSize = () => {
       const width = window.innerWidth;
-      if (width >= 1600) {
-        setCardSize('md');
+      if (width >= 1800) {
+        setCardSize('xxl');
+      } else if (width >= 1600) {
+        setCardSize('xl');
+      } else if (width >= 1400) {
+        setCardSize('lg');
       } else if (width >= 1200) {
+        setCardSize('md');
+      } else if (width >= 1000) {
         setCardSize('sm');
-      } else {
+      } else if (width >= 800) {
         setCardSize('xs');
+      } else {
+        setCardSize('xxs');
       }
     };
 
@@ -1379,28 +1403,29 @@ export const GamePlayPhase = ({
               {/* 山札（重なったカード風） */}
               {(() => {
                 const canDraw = currentPlayer.workingPuzzles.length < 4 && gameState.whitePuzzleDeck.length > 0 && !animatingCard;
-                const deckSizeClass = cardSize === 'xs' ? 'w-[120px] h-[150px]' : cardSize === 'sm' ? 'w-[140px] h-[175px]' : cardSize === 'md' ? 'w-[180px] h-[225px]' : 'w-[230px] h-[285px]';
+                const deckSize = { width: CARD_SIZES[cardSize].width, height: CARD_SIZES[cardSize].height };
                 return (
                   <div
-                    className={`relative ${deckSizeClass} flex-shrink-0 ${canDraw ? 'cursor-pointer' : 'opacity-60'}`}
+                    className={`relative flex-shrink-0 ${canDraw ? 'cursor-pointer' : 'opacity-60'}`}
+                    style={deckSize}
                     onClick={() => canDraw && handleDrawFromDeck('white')}
                   >
                     {/* 背面カード（3枚重ね） */}
                     <div
-                      className={`absolute top-1.5 left-1.5 ${deckSizeClass} rounded-lg bg-cover bg-center`}
-                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
+                      className="absolute top-1.5 left-1.5 rounded-lg bg-cover bg-center"
+                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
                     />
                     <div
-                      className={`absolute top-1 left-1 ${deckSizeClass} rounded-lg bg-cover bg-center`}
-                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
+                      className="absolute top-1 left-1 rounded-lg bg-cover bg-center"
+                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
                     />
                     {/* 表面カード */}
                     <div
-                      className={`absolute top-0 left-0 ${deckSizeClass} rounded-lg bg-cover bg-center flex flex-col items-center justify-center transition-all ${canDraw ? 'hover:shadow-lg hover:shadow-teal-400/30' : ''}`}
-                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
+                      className={`absolute top-0 left-0 rounded-lg bg-cover bg-center flex flex-col items-center justify-center transition-all ${canDraw ? 'hover:shadow-lg hover:shadow-teal-400/30' : ''}`}
+                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
                     >
                       <div className="text-slate-600 text-xs mb-1 font-medium">山札</div>
-                      <div className={`text-slate-800 font-bold ${cardSize === 'xs' ? 'text-2xl' : 'text-4xl'}`}>{gameState.whitePuzzleDeck.length}</div>
+                      <div className={`text-slate-800 font-bold ${CARD_SIZES[cardSize].width < 130 ? 'text-xl' : 'text-3xl'}`}>{gameState.whitePuzzleDeck.length}</div>
                     </div>
                   </div>
                 );
@@ -1444,28 +1469,29 @@ export const GamePlayPhase = ({
               {/* 山札（重なったカード風） */}
               {(() => {
                 const canDraw = currentPlayer.workingPuzzles.length < 4 && gameState.blackPuzzleDeck.length > 0 && !animatingCard;
-                const deckSizeClass = cardSize === 'xs' ? 'w-[120px] h-[150px]' : cardSize === 'sm' ? 'w-[140px] h-[175px]' : cardSize === 'md' ? 'w-[180px] h-[225px]' : 'w-[230px] h-[285px]';
+                const deckSize = { width: CARD_SIZES[cardSize].width, height: CARD_SIZES[cardSize].height };
                 return (
                   <div
-                    className={`relative ${deckSizeClass} flex-shrink-0 ${canDraw ? 'cursor-pointer' : 'opacity-60'}`}
+                    className={`relative flex-shrink-0 ${canDraw ? 'cursor-pointer' : 'opacity-60'}`}
+                    style={deckSize}
                     onClick={() => canDraw && handleDrawFromDeck('black')}
                   >
                     {/* 背面カード（3枚重ね） */}
                     <div
-                      className={`absolute top-1.5 left-1.5 ${deckSizeClass} rounded-lg bg-cover bg-center`}
-                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
+                      className="absolute top-1.5 left-1.5 rounded-lg bg-cover bg-center"
+                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
                     />
                     <div
-                      className={`absolute top-1 left-1 ${deckSizeClass} rounded-lg bg-cover bg-center`}
-                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
+                      className="absolute top-1 left-1 rounded-lg bg-cover bg-center"
+                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
                     />
                     {/* 表面カード */}
                     <div
-                      className={`absolute top-0 left-0 ${deckSizeClass} rounded-lg bg-cover bg-center flex flex-col items-center justify-center transition-all ${canDraw ? 'hover:shadow-lg hover:shadow-teal-400/30' : ''}`}
-                      style={{ backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
+                      className={`absolute top-0 left-0 rounded-lg bg-cover bg-center flex flex-col items-center justify-center transition-all ${canDraw ? 'hover:shadow-lg hover:shadow-teal-400/30' : ''}`}
+                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
                     >
                       <div className="text-slate-300 text-xs mb-1 font-medium">山札</div>
-                      <div className={`text-white font-bold ${cardSize === 'xs' ? 'text-2xl' : 'text-4xl'}`}>{gameState.blackPuzzleDeck.length}</div>
+                      <div className={`text-white font-bold ${CARD_SIZES[cardSize].width < 130 ? 'text-xl' : 'text-3xl'}`}>{gameState.blackPuzzleDeck.length}</div>
                     </div>
                   </div>
                 );
@@ -1496,13 +1522,14 @@ export const GamePlayPhase = ({
         <div className="flex flex-col lg:flex-row gap-4">
 
           {/* 手持ちパズル（4枚並ぶ幅で固定） */}
-          <div className={`relative rounded-lg p-4 pt-5 flex-shrink-0 transition-all border ${
-            cardSize === 'xs' ? 'w-[536px]' : cardSize === 'sm' ? 'w-[616px]' : cardSize === 'md' ? 'w-[776px]' : 'w-[976px]'
-          } ${
-            actionMode === 'placePiece' || masterActionMode
-              ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
-              : 'bg-slate-800/50 border-slate-600'
-          }`}>
+          <div
+            className={`relative rounded-lg p-4 pt-5 flex-shrink-0 transition-all border ${
+              actionMode === 'placePiece' || masterActionMode
+                ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
+                : 'bg-slate-800/50 border-slate-600'
+            }`}
+            style={{ width: CARD_SIZES[cardSize].width * 4 + 56 }}
+          >
             <span className={`absolute -top-5 left-3 z-10 px-2 text-sm font-medium ${
               actionMode === 'placePiece' || masterActionMode ? 'text-teal-300' : 'text-slate-400'
             }`}>手持ちパズル（{workingPuzzles.length}/4）</span>
@@ -1550,9 +1577,11 @@ export const GamePlayPhase = ({
                     ref={(el) => {
                       workingPuzzleSlotRefs.current[workingPuzzles.length + i] = el;
                     }}
-                    className={`border-2 border-dashed border-slate-600 rounded-lg flex items-center justify-center text-slate-500 ${
-                      cardSize === 'xs' ? 'w-[120px] h-[150px]' : cardSize === 'sm' ? 'w-[140px] h-[175px]' : cardSize === 'md' ? 'w-[180px] h-[225px]' : 'w-[230px] h-[285px]'
-                    }`}
+                    className="border-2 border-dashed border-slate-600 rounded-lg flex items-center justify-center text-slate-500"
+                    style={{
+                      width: CARD_SIZES[cardSize].width,
+                      height: CARD_SIZES[cardSize].height,
+                    }}
                   >
                     空き
                   </div>
@@ -1618,7 +1647,7 @@ export const GamePlayPhase = ({
                     type={selectedPiece.type}
                     rotation={rotation}
                     flipped={flipped}
-                    size={cardSize}
+                    size={toPieceSize(cardSize)}
                   />
                   <div className="flex gap-2">
                     <button
@@ -1676,7 +1705,7 @@ export const GamePlayPhase = ({
                     type={piece.type}
                     rotation={selectedPieceId === piece.id ? rotation : 0}
                     flipped={selectedPieceId === piece.id ? flipped : false}
-                    size={cardSize}
+                    size={toPieceSize(cardSize)}
                   />
                 </div>
               ))}
