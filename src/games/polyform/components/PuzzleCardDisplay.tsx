@@ -87,7 +87,7 @@ export const PuzzleCardDisplay = ({
       </div>
 
       {/* 5x5グリッド（下寄せ） */}
-      <div className="flex-1 flex items-end justify-center pb-1">
+      <div className="flex-1 flex items-end justify-center">
         <div className="flex flex-col gap-0.5">
           {card.shape.map((row, y) => (
             <div key={y} className="flex gap-0.5">
@@ -136,18 +136,6 @@ export const PuzzleCardDisplay = ({
         </div>
       </div>
 
-      {/* 進捗表示（固定位置） */}
-      <div className="h-4 flex items-center justify-center">
-        {placedPieces.length > 0 && (
-          <span
-            className={`text-xs ${
-              card.type === 'white' ? 'text-slate-600' : 'text-slate-400'
-            }`}
-          >
-            {filledCells}/{totalCells}
-          </span>
-        )}
-      </div>
     </div>
   );
 };
