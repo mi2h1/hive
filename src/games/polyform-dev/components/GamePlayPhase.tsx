@@ -1094,7 +1094,7 @@ export const GamePlayPhase = ({
                     </div>
                   </div>
                   {/* 所持ピース */}
-                  <div className="flex flex-wrap gap-0.5">
+                  <div className="flex flex-wrap gap-0.5 items-start">
                     {currentPlayer.pieces.map((piece) => (
                       <PieceDisplay key={piece.id} type={piece.type} size="xs" />
                     ))}
@@ -1146,7 +1146,7 @@ export const GamePlayPhase = ({
                       </div>
                     </div>
                     {/* 所持ピース */}
-                    <div className="flex flex-wrap gap-0.5">
+                    <div className="flex flex-wrap gap-0.5 items-start">
                       {player.pieces.map((piece) => (
                         <PieceDisplay key={piece.id} type={piece.type} size="xs" />
                       ))}
@@ -1684,7 +1684,7 @@ export const GamePlayPhase = ({
             )}
 
             {/* ピース一覧 */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-start">
               {(() => {
                 const canInteract = actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode;
                 return currentPlayer.pieces.map((piece) => (
