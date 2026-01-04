@@ -5,7 +5,8 @@ import { PuzzleCardDisplay } from './PuzzleCardDisplay';
 import { DroppablePuzzleCard, isValidPlacement } from './DroppablePuzzleCard';
 import { DragOverlay } from './DraggablePiece';
 import { ALL_PUZZLES } from '../data/puzzles';
-import type { GameState, WorkingPuzzle, PlacedPiece, PuzzleCard } from '../types/game';
+import { PIECE_DEFINITIONS } from '../data/pieces';
+import type { GameState, WorkingPuzzle, PlacedPiece, PuzzleCard, PieceType } from '../types/game';
 
 interface GamePlayPhaseProps {
   gameState: GameState;
@@ -293,7 +294,7 @@ export const GamePlayPhase = ({
         {/* 2カラムレイアウト */}
         <div className="flex gap-4 items-start">
           {/* 左カラム: 他プレイヤー情報 */}
-          <div className="w-80 flex-shrink-0">
+          <div className="w-64 flex-shrink-0">
             <div className="bg-slate-800/50 rounded-lg p-3">
               <h3 className="text-white font-bold text-sm mb-3">プレイヤー</h3>
               {/* デバッグ: 自分の情報も表示 */}
@@ -384,17 +385,17 @@ export const GamePlayPhase = ({
                 <PuzzleCardDisplay
                   key={card.id}
                   card={card}
-                  size="sm"
+                  size="md"
                   onClick={() => handleTakePuzzle(card.id, 'white')}
                 />
               ))}
               {/* 山札（重なったカード風） */}
-              <div className="relative w-[140px] h-[175px] flex-shrink-0">
+              <div className="relative w-[180px] h-[225px] flex-shrink-0">
                 {/* 背面カード（3枚重ね） */}
-                <div className="absolute top-1.5 left-1.5 w-[140px] h-[175px] bg-slate-300 border-2 border-slate-400 rounded-lg" />
-                <div className="absolute top-1 left-1 w-[140px] h-[175px] bg-slate-200 border-2 border-slate-400 rounded-lg" />
+                <div className="absolute top-1.5 left-1.5 w-[180px] h-[225px] bg-slate-300 border-2 border-slate-400 rounded-lg" />
+                <div className="absolute top-1 left-1 w-[180px] h-[225px] bg-slate-200 border-2 border-slate-400 rounded-lg" />
                 {/* 表面カード */}
-                <div className="absolute top-0 left-0 w-[140px] h-[175px] bg-slate-100 border-2 border-slate-400 rounded-lg flex flex-col items-center justify-center">
+                <div className="absolute top-0 left-0 w-[180px] h-[225px] bg-slate-100 border-2 border-slate-400 rounded-lg flex flex-col items-center justify-center">
                   <div className="text-slate-500 text-xs mb-1">山札</div>
                   <div className="text-slate-800 text-4xl font-bold">{gameState.whitePuzzleDeck.length}</div>
                 </div>
@@ -409,17 +410,17 @@ export const GamePlayPhase = ({
                 <PuzzleCardDisplay
                   key={card.id}
                   card={card}
-                  size="sm"
+                  size="md"
                   onClick={() => handleTakePuzzle(card.id, 'black')}
                 />
               ))}
               {/* 山札（重なったカード風） */}
-              <div className="relative w-[140px] h-[175px] flex-shrink-0">
+              <div className="relative w-[180px] h-[225px] flex-shrink-0">
                 {/* 背面カード（3枚重ね） */}
-                <div className="absolute top-1.5 left-1.5 w-[140px] h-[175px] bg-slate-900 border-2 border-slate-600 rounded-lg" />
-                <div className="absolute top-1 left-1 w-[140px] h-[175px] border-2 border-slate-600 rounded-lg" style={{ backgroundColor: '#1e293b' }} />
+                <div className="absolute top-1.5 left-1.5 w-[180px] h-[225px] bg-slate-900 border-2 border-slate-600 rounded-lg" />
+                <div className="absolute top-1 left-1 w-[180px] h-[225px] border-2 border-slate-600 rounded-lg" style={{ backgroundColor: '#1e293b' }} />
                 {/* 表面カード */}
-                <div className="absolute top-0 left-0 w-[140px] h-[175px] bg-slate-800 border-2 border-slate-600 rounded-lg flex flex-col items-center justify-center">
+                <div className="absolute top-0 left-0 w-[180px] h-[225px] bg-slate-800 border-2 border-slate-600 rounded-lg flex flex-col items-center justify-center">
                   <div className="text-slate-400 text-xs mb-1">山札</div>
                   <div className="text-white text-4xl font-bold">{gameState.blackPuzzleDeck.length}</div>
                 </div>
@@ -432,7 +433,7 @@ export const GamePlayPhase = ({
         <div className="flex flex-col lg:flex-row gap-4">
 
           {/* 所持パズル（4枚並ぶ幅で固定） */}
-          <div className="bg-slate-800/50 rounded-lg p-4 flex-shrink-0 w-[616px]">
+          <div className="bg-slate-800/50 rounded-lg p-4 flex-shrink-0 w-[776px]">
             <h2 className="text-white font-bold mb-3">所持パズル（{workingPuzzles.length}/4）</h2>
             <div className="flex gap-2">
               {workingPuzzles.map((wp) => (
@@ -440,7 +441,7 @@ export const GamePlayPhase = ({
                   key={wp.cardId}
                   card={wp.card}
                   placedPieces={wp.placedPieces}
-                  size="sm"
+                  size="md"
                   draggingPiece={draggingPiece}
                   hoverPosition={hoverPuzzleId === wp.cardId ? hoverGridPosition : null}
                   onHover={(pos) => {
@@ -456,7 +457,7 @@ export const GamePlayPhase = ({
                 .map((_, i) => (
                   <div
                     key={`empty-${i}`}
-                    className="w-[140px] h-[175px] border-2 border-dashed border-slate-600 rounded-lg flex items-center justify-center text-slate-500"
+                    className="w-[180px] h-[225px] border-2 border-dashed border-slate-600 rounded-lg flex items-center justify-center text-slate-500"
                   >
                     空き
                   </div>
@@ -530,6 +531,37 @@ export const GamePlayPhase = ({
               {currentPlayer.pieces.length === 0 && (
                 <div className="text-slate-500">ピースがありません</div>
               )}
+            </div>
+
+            {/* デバッグ: 全ピース追加 */}
+            <div className="mt-4 pt-4 border-t border-slate-600">
+              <h3 className="text-white/60 text-sm mb-2">デバッグ: ピース追加</h3>
+              <div className="flex flex-wrap gap-1">
+                {Object.keys(PIECE_DEFINITIONS).map((pieceType) => (
+                  <button
+                    key={pieceType}
+                    onClick={() => {
+                      if (!onUpdateGameState) return;
+                      const newPiece = {
+                        id: `debug-${Date.now()}-${pieceType}`,
+                        type: pieceType as PieceType,
+                        rotation: 0 as const,
+                      };
+                      const updatedPlayers = gameState.players.map((p) => {
+                        if (p.id === currentPlayerId) {
+                          return { ...p, pieces: [...p.pieces, newPiece] };
+                        }
+                        return p;
+                      });
+                      onUpdateGameState({ players: updatedPlayers });
+                    }}
+                    className="p-1 bg-slate-700/50 hover:bg-slate-600/50 rounded"
+                    title={`${pieceType}を追加`}
+                  >
+                    <PieceDisplay type={pieceType as PieceType} size="sm" />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
