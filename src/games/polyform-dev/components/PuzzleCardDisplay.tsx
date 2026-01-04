@@ -29,9 +29,9 @@ export const PuzzleCardDisplay = ({
 
   // カード全体のサイズ
   const cardSize = {
-    sm: 'w-[106px] h-[140px]',
-    md: 'w-[158px] h-[200px]',
-    lg: 'w-[210px] h-[260px]',
+    sm: 'w-[130px] h-[165px]',
+    md: 'w-[170px] h-[215px]',
+    lg: 'w-[220px] h-[275px]',
   }[size];
 
   // 配置済みピースのセル情報を計算
@@ -57,7 +57,7 @@ export const PuzzleCardDisplay = ({
   return (
     <div
       onClick={onClick}
-      className={`${cardSize} flex flex-col rounded-lg p-2 transition-all ${
+      className={`${cardSize} flex flex-col rounded-lg p-3 transition-all ${
         card.type === 'white'
           ? 'bg-slate-100 border-2 border-slate-300'
           : 'bg-slate-800 border-2 border-slate-600'
@@ -66,7 +66,7 @@ export const PuzzleCardDisplay = ({
       } ${isComplete ? 'ring-2 ring-yellow-400' : ''}`}
     >
       {/* カード情報ヘッダー（固定高さ） */}
-      <div className="flex items-center justify-between h-6 mb-1">
+      <div className="flex items-center justify-between h-6 mb-2">
         {/* ポイント */}
         <div
           className={`text-xs font-bold px-1.5 py-0.5 rounded ${
@@ -81,16 +81,7 @@ export const PuzzleCardDisplay = ({
         {/* 報酬ピース */}
         <div className="h-5 flex items-center">
           {showReward && card.rewardPieceType && (
-            <div className="flex items-center gap-0.5">
-              <span
-                className={`text-xs ${
-                  card.type === 'white' ? 'text-slate-600' : 'text-slate-400'
-                }`}
-              >
-                +
-              </span>
-              <PieceDisplay type={card.rewardPieceType} size="sm" />
-            </div>
+            <PieceDisplay type={card.rewardPieceType} size="sm" />
           )}
         </div>
       </div>
