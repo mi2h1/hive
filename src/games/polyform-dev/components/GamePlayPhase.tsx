@@ -258,16 +258,16 @@ export const GamePlayPhase = ({
         {/* 下部エリア */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-          {/* 中央: 作業中パズル */}
+          {/* 所持パズル */}
           <div className="bg-slate-800/50 rounded-lg p-4">
-            <h2 className="text-white font-bold mb-3">作業中パズル（{workingPuzzles.length}/4）</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <h2 className="text-white font-bold mb-3">所持パズル（{workingPuzzles.length}/4）</h2>
+            <div className="flex gap-2 flex-wrap">
               {workingPuzzles.map((wp) => (
                 <DroppablePuzzleCard
                   key={wp.cardId}
                   card={wp.card}
                   placedPieces={wp.placedPieces}
-                  size="md"
+                  size="sm"
                   draggingPiece={draggingPiece}
                   hoverPosition={hoverPuzzleId === wp.cardId ? hoverGridPosition : null}
                   onHover={(pos) => {
@@ -283,7 +283,7 @@ export const GamePlayPhase = ({
                 .map((_, i) => (
                   <div
                     key={`empty-${i}`}
-                    className="border-2 border-dashed border-slate-600 rounded-lg aspect-square flex items-center justify-center text-slate-500"
+                    className="w-[140px] h-[175px] border-2 border-dashed border-slate-600 rounded-lg flex items-center justify-center text-slate-500"
                   >
                     空き
                   </div>
