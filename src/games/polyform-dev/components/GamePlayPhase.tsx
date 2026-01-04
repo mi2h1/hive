@@ -60,6 +60,10 @@ export const GamePlayPhase = ({
     direction: 'up' | 'down';
   } | null>(null);
 
+  // マスターアクションモード
+  const [masterActionMode, setMasterActionMode] = useState(false);
+  const [masterActionPlacedPuzzles, setMasterActionPlacedPuzzles] = useState<Set<string>>(new Set());
+
   // リサイクルアニメーション状態
   const [recyclingMarket, setRecyclingMarket] = useState<'white' | 'black' | null>(null);
   const [recyclePhase, setRecyclePhase] = useState<'exit' | 'enter' | null>(null);
@@ -163,6 +167,49 @@ export const GamePlayPhase = ({
     );
   }
 
+  // 自分のターンかどうか
+  const activePlayerId = gameState.playerOrder[gameState.currentPlayerIndex];
+  const isMyTurn = activePlayerId === currentPlayerId;
+
+  // ターン終了処理
+  const endTurn = () => {
+    if (!onUpdateGameState) return;
+
+    // マスターアクション中なら終了させる
+    if (masterActionMode) {
+      setMasterActionMode(false);
+      setMasterActionPlacedPuzzles(new Set());
+    }
+
+    const nextPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length;
+    const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
+
+    // 現在のプレイヤーのアクションを0にし、次のプレイヤーのアクションを3にリセット
+    // 次のプレイヤーのusedMasterActionもリセット
+    const updatedPlayers = gameState.players.map((p) => {
+      if (p.id === currentPlayerId) {
+        return { ...p, remainingActions: 0 };
+      }
+      if (p.id === nextPlayerId) {
+        return { ...p, remainingActions: 3, usedMasterAction: false };
+      }
+      return p;
+    });
+
+    onUpdateGameState({
+      players: updatedPlayers,
+      currentPlayerIndex: nextPlayerIndex,
+    });
+
+    setAnnouncement('ターン終了');
+  };
+
+  // 手動でターン終了
+  const handleEndTurn = () => {
+    if (!isMyTurn || !onUpdateGameState) return;
+    endTurn();
+  };
+
   // 場のパズルカードを取得
   const whitePuzzles = gameState.whitePuzzleMarket
     .map((id) => ALL_PUZZLES.find((p) => p.id === id))
@@ -192,6 +239,18 @@ export const GamePlayPhase = ({
       return;
     }
 
+    // 自分のターンでない場合は無視
+    if (!isMyTurn) {
+      console.log('自分のターンではありません');
+      return;
+    }
+
+    // アクションが残っていない場合は無視
+    if (currentPlayer.remainingActions <= 0) {
+      console.log('アクションが残っていません');
+      return;
+    }
+
     // アニメーション中は無視
     if (animatingCard) {
       console.log('アニメーション中です');
@@ -212,6 +271,12 @@ export const GamePlayPhase = ({
   // 山札から直接カードを引く
   const handleDrawFromDeck = (deckType: 'white' | 'black') => {
     if (!onUpdateGameState) return;
+
+    // 自分のターンでない場合は無視
+    if (!isMyTurn) return;
+
+    // アクションが残っていない場合は無視
+    if (currentPlayer.remainingActions <= 0) return;
 
     // 所持パズルが4枚以上なら取得不可
     if (currentPlayer.workingPuzzles.length >= 4) {
@@ -241,14 +306,33 @@ export const GamePlayPhase = ({
         return {
           ...p,
           workingPuzzles: [...p.workingPuzzles, newWorkingPuzzle],
+          remainingActions: p.remainingActions - 1,
         };
       }
       return p;
     });
 
+    // アクション消費後にターン終了判定
+    const newRemainingActions = currentPlayer.remainingActions - 1;
+    let finalPlayers = updatedPlayers;
+    let nextPlayerIndex = gameState.currentPlayerIndex;
+
+    if (newRemainingActions <= 0) {
+      // ターン終了：次のプレイヤーへ
+      nextPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length;
+      const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
+      finalPlayers = updatedPlayers.map((p) => {
+        if (p.id === nextPlayerId) {
+          return { ...p, remainingActions: 3 };
+        }
+        return p;
+      });
+    }
+
     // ゲーム状態を更新
     const updates: Partial<GameState> = {
-      players: updatedPlayers,
+      players: finalPlayers,
+      currentPlayerIndex: nextPlayerIndex,
     };
 
     if (deckType === 'white') {
@@ -265,6 +349,12 @@ export const GamePlayPhase = ({
   // リサイクル開始（アニメーション）
   const handleRecycle = (marketType: 'white' | 'black') => {
     if (!onUpdateGameState || recyclingMarket) return;
+
+    // 自分のターンでない場合は無視
+    if (!isMyTurn) return;
+
+    // アクションが残っていない場合は無視
+    if (currentPlayer.remainingActions <= 0) return;
 
     const market = marketType === 'white' ? gameState.whitePuzzleMarket : gameState.blackPuzzleMarket;
     const deck = marketType === 'white' ? gameState.whitePuzzleDeck : gameState.blackPuzzleDeck;
@@ -293,8 +383,28 @@ export const GamePlayPhase = ({
     // 山札の上から4枚を新しい場に
     const newMarket = deck.splice(0, 4);
 
+    // アクション消費とターン終了判定
+    const newRemainingActions = currentPlayer.remainingActions - 1;
+    const nextPlayerIndex = newRemainingActions <= 0
+      ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
+      : gameState.currentPlayerIndex;
+    const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
+
+    const updatedPlayers = gameState.players.map((p) => {
+      if (p.id === currentPlayerId) {
+        return { ...p, remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions };
+      }
+      if (newRemainingActions <= 0 && p.id === nextPlayerId) {
+        return { ...p, remainingActions: 3 };
+      }
+      return p;
+    });
+
     // ゲーム状態を更新
-    const updates: Partial<GameState> = {};
+    const updates: Partial<GameState> = {
+      players: updatedPlayers,
+      currentPlayerIndex: nextPlayerIndex,
+    };
     if (recyclingMarket === 'white') {
       updates.whitePuzzleMarket = newMarket;
       updates.whitePuzzleDeck = deck;
@@ -339,18 +449,29 @@ export const GamePlayPhase = ({
       }
     }
 
-    // プレイヤーの所持パズルに追加
+    // プレイヤーの所持パズルに追加＆アクション消費
     const newWorkingPuzzle: WorkingPuzzle = {
       cardId: puzzleId,
       placedPieces: [],
     };
+
+    // アクション消費とターン終了判定
+    const newRemainingActions = currentPlayer.remainingActions - 1;
+    const nextPlayerIndex = newRemainingActions <= 0
+      ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
+      : gameState.currentPlayerIndex;
+    const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
 
     const updatedPlayers = gameState.players.map((p) => {
       if (p.id === currentPlayerId) {
         return {
           ...p,
           workingPuzzles: [...p.workingPuzzles, newWorkingPuzzle],
+          remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
         };
+      }
+      if (newRemainingActions <= 0 && p.id === nextPlayerId) {
+        return { ...p, remainingActions: 3 };
       }
       return p;
     });
@@ -358,6 +479,7 @@ export const GamePlayPhase = ({
     // ゲーム状態を更新
     const updates: Partial<GameState> = {
       players: updatedPlayers,
+      currentPlayerIndex: nextPlayerIndex,
     };
 
     if (puzzleType === 'white') {
@@ -446,11 +568,22 @@ export const GamePlayPhase = ({
   const handleDrop = (puzzleId: string, position: { x: number; y: number }) => {
     if (!selectedPiece) return;
 
+    // 自分のターンでない場合は無視
+    if (!isMyTurn) return;
+
+    // アクションが残っていない場合は無視（マスターアクション中は除く）
+    if (currentPlayer.remainingActions <= 0 && !masterActionMode) return;
+
     const workingPuzzle = currentPlayer.workingPuzzles.find((wp) => wp.cardId === puzzleId);
     if (!workingPuzzle) return;
 
     const card = ALL_PUZZLES.find((p) => p.id === puzzleId);
     if (!card) return;
+
+    // マスターアクション中：このパズルに既に置いた場合は無視
+    if (masterActionMode && masterActionPlacedPuzzles.has(puzzleId)) {
+      return;
+    }
 
     // 配置が有効かチェック
     if (!isValidPlacement(card, workingPuzzle.placedPieces, selectedPiece.type, rotation, flipped, position)) {
@@ -493,7 +626,48 @@ export const GamePlayPhase = ({
     setFlipped(false);
     setIsDragging(false);
 
-    // Firebaseに同期（ピース配置のみ）
+    // マスターアクション中の処理
+    if (masterActionMode) {
+      // このパズルに配置済みとしてマーク
+      setMasterActionPlacedPuzzles((prev) => new Set(prev).add(puzzleId));
+
+      // Firebaseに同期（アクション消費なし）
+      if (onUpdateGameState) {
+        const updatedPlayers = gameState.players.map((p) => {
+          if (p.id === currentPlayerId) {
+            return {
+              ...p,
+              pieces: updatedPieces,
+              workingPuzzles: updatedWorkingPuzzles,
+            };
+          }
+          return p;
+        });
+        onUpdateGameState({ players: updatedPlayers });
+      }
+
+      // 完成時は遅延処理をセット
+      if (isCompleted) {
+        setPendingCompletion({
+          puzzleId,
+          puzzleType: card.type,
+          points: card.points,
+          rewardPieceType: card.rewardPieceType || null,
+        });
+      } else {
+        setAnnouncement('マスターアクション中');
+      }
+      return;
+    }
+
+    // 通常のピース配置：アクション消費
+    const newRemainingActions = currentPlayer.remainingActions - 1;
+    const nextPlayerIndex = newRemainingActions <= 0
+      ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
+      : gameState.currentPlayerIndex;
+    const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
+
+    // Firebaseに同期
     if (onUpdateGameState) {
       const updatedPlayers = gameState.players.map((p) => {
         if (p.id === currentPlayerId) {
@@ -501,11 +675,15 @@ export const GamePlayPhase = ({
             ...p,
             pieces: updatedPieces,
             workingPuzzles: updatedWorkingPuzzles,
+            remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
           };
+        }
+        if (newRemainingActions <= 0 && p.id === nextPlayerId) {
+          return { ...p, remainingActions: 3 };
         }
         return p;
       });
-      onUpdateGameState({ players: updatedPlayers });
+      onUpdateGameState({ players: updatedPlayers, currentPlayerIndex: nextPlayerIndex });
     }
 
     // 完成時は遅延処理をセット
@@ -524,6 +702,57 @@ export const GamePlayPhase = ({
     console.log('ピース配置:', { puzzleId, position, piece: selectedPiece.type, completed: isCompleted });
   };
 
+  // マスターアクション開始
+  const handleStartMasterAction = () => {
+    if (!isMyTurn || !onUpdateGameState) return;
+    if (currentPlayer.remainingActions <= 0) return;
+    if (currentPlayer.usedMasterAction) return;
+    if (currentPlayer.workingPuzzles.length === 0) return;
+
+    setMasterActionMode(true);
+    setMasterActionPlacedPuzzles(new Set());
+    setAnnouncement('マスターアクション開始');
+  };
+
+  // マスターアクション完了
+  const handleCompleteMasterAction = () => {
+    if (!masterActionMode || !onUpdateGameState) return;
+
+    // 1アクション消費＆usedMasterActionをtrueに
+    const newRemainingActions = currentPlayer.remainingActions - 1;
+    const nextPlayerIndex = newRemainingActions <= 0
+      ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
+      : gameState.currentPlayerIndex;
+    const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
+
+    const updatedPlayers = gameState.players.map((p) => {
+      if (p.id === currentPlayerId) {
+        return {
+          ...p,
+          remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
+          usedMasterAction: true,
+        };
+      }
+      if (newRemainingActions <= 0 && p.id === nextPlayerId) {
+        return { ...p, remainingActions: 3, usedMasterAction: false };
+      }
+      return p;
+    });
+
+    onUpdateGameState({ players: updatedPlayers, currentPlayerIndex: nextPlayerIndex });
+
+    setMasterActionMode(false);
+    setMasterActionPlacedPuzzles(new Set());
+    setAnnouncement(`マスターアクション完了（${masterActionPlacedPuzzles.size}枚に配置）`);
+  };
+
+  // マスターアクションキャンセル
+  const handleCancelMasterAction = () => {
+    setMasterActionMode(false);
+    setMasterActionPlacedPuzzles(new Set());
+    setAnnouncement('マスターアクション中止');
+  };
+
   // 回転
   const handleRotate = () => {
     setRotation((prev) => ((prev + 90) % 360) as 0 | 90 | 180 | 270);
@@ -538,20 +767,40 @@ export const GamePlayPhase = ({
   const handleGetLevel1Piece = () => {
     if (!onUpdateGameState) return;
 
+    // 自分のターンでない場合は無視
+    if (!isMyTurn) return;
+
+    // アクションが残っていない場合は無視
+    if (currentPlayer.remainingActions <= 0) return;
+
     const newPiece = {
       id: `piece-${Date.now()}-dot`,
       type: 'dot' as PieceType,
       rotation: 0 as const,
     };
 
+    // アクション消費とターン終了判定
+    const newRemainingActions = currentPlayer.remainingActions - 1;
+    const nextPlayerIndex = newRemainingActions <= 0
+      ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
+      : gameState.currentPlayerIndex;
+    const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
+
     const updatedPlayers = gameState.players.map((p) => {
       if (p.id === currentPlayerId) {
-        return { ...p, pieces: [...p.pieces, newPiece] };
+        return {
+          ...p,
+          pieces: [...p.pieces, newPiece],
+          remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
+        };
+      }
+      if (newRemainingActions <= 0 && p.id === nextPlayerId) {
+        return { ...p, remainingActions: 3 };
       }
       return p;
     });
 
-    onUpdateGameState({ players: updatedPlayers });
+    onUpdateGameState({ players: updatedPlayers, currentPlayerIndex: nextPlayerIndex });
     setAnnouncement('レベル1ピースを獲得');
   };
 
@@ -594,6 +843,12 @@ export const GamePlayPhase = ({
     const pieceId = levelChangeMode?.pieceId ?? selectedPiece?.id;
     if (!pieceId || !onUpdateGameState) return;
 
+    // 自分のターンでない場合は無視
+    if (!isMyTurn) return;
+
+    // アクションが残っていない場合は無視
+    if (currentPlayer.remainingActions <= 0) return;
+
     const targetLevel = levelChangeMode?.targetLevel ?? PIECE_DEFINITIONS[newType].level;
     const direction = levelChangeMode?.direction ?? 'down';
 
@@ -605,14 +860,28 @@ export const GamePlayPhase = ({
         rotation: 0 as const,
       });
 
+    // アクション消費とターン終了判定
+    const newRemainingActions = currentPlayer.remainingActions - 1;
+    const nextPlayerIndex = newRemainingActions <= 0
+      ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
+      : gameState.currentPlayerIndex;
+    const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
+
     const updatedPlayers = gameState.players.map((p) => {
       if (p.id === currentPlayerId) {
-        return { ...p, pieces: updatedPieces };
+        return {
+          ...p,
+          pieces: updatedPieces,
+          remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
+        };
+      }
+      if (newRemainingActions <= 0 && p.id === nextPlayerId) {
+        return { ...p, remainingActions: 3 };
       }
       return p;
     });
 
-    onUpdateGameState({ players: updatedPlayers });
+    onUpdateGameState({ players: updatedPlayers, currentPlayerIndex: nextPlayerIndex });
     setLevelChangeMode(null);
     setSelectedPieceId(null);
     setAnnouncement(`レベル${targetLevel}に${direction === 'up' ? 'アップ' : 'ダウン'}`);
@@ -637,11 +906,30 @@ export const GamePlayPhase = ({
               <span className="font-bold">{currentPlayer.name}</span>
               <span className="text-white/60 ml-2">スコア: {currentPlayer.score}pt</span>
             </div>
+            {isMyTurn ? (
+              <span className="bg-teal-500 text-white text-xs px-2 py-1 rounded font-bold">
+                あなたのターン
+              </span>
+            ) : (
+              <span className="bg-slate-600 text-slate-300 text-xs px-2 py-1 rounded">
+                {gameState.players.find(p => p.id === activePlayerId)?.name}のターン
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-white/60 text-sm">
-              アクション残り: {currentPlayer.remainingActions}
-            </span>
+            {isMyTurn && (
+              <span className="text-white/60 text-sm">
+                アクション残り: {currentPlayer.remainingActions}
+              </span>
+            )}
+            {isMyTurn && (
+              <button
+                onClick={handleEndTurn}
+                className="px-3 py-1 bg-amber-600 hover:bg-amber-500 rounded text-white text-sm font-medium"
+              >
+                ターン終了
+              </button>
+            )}
             <button
               onClick={onLeaveRoom}
               className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm"
@@ -657,11 +945,18 @@ export const GamePlayPhase = ({
           <div className="w-64 flex-shrink-0">
             <div className="bg-slate-800/50 rounded-lg p-3">
               <h3 className="text-white font-bold text-sm mb-3">プレイヤー</h3>
-              {/* デバッグ: 自分の情報も表示 */}
+              {/* プレイヤー一覧 */}
               <div className="space-y-3">
-                <div className="bg-teal-700/50 rounded-lg p-2 border border-teal-500/50">
+                <div className={`rounded-lg p-2 border ${
+                  isMyTurn
+                    ? 'bg-teal-700/50 border-teal-400 ring-2 ring-teal-400/50'
+                    : 'bg-teal-700/30 border-teal-500/50'
+                }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <div className="text-white text-sm font-medium truncate">{currentPlayer.name}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-white text-sm font-medium truncate">{currentPlayer.name}</div>
+                      {isMyTurn && <span className="text-[10px] bg-teal-500 text-white px-1 rounded">ターン中</span>}
+                    </div>
                     <div className="text-white/60 text-xs">{currentPlayer.score}pt</div>
                   </div>
                   {/* 所持パズル＆完成枚数 */}
@@ -699,10 +994,19 @@ export const GamePlayPhase = ({
                     ))}
                   </div>
                 </div>
-                {otherPlayers.map((player) => (
-                  <div key={player.id} className="bg-slate-700/50 rounded-lg p-2">
+                {otherPlayers.map((player) => {
+                  const isActivePlayer = player.id === activePlayerId;
+                  return (
+                  <div key={player.id} className={`rounded-lg p-2 border ${
+                    isActivePlayer
+                      ? 'bg-amber-700/50 border-amber-400 ring-2 ring-amber-400/50'
+                      : 'bg-slate-700/50 border-slate-600'
+                  }`}>
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-white text-sm font-medium truncate">{player.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-white text-sm font-medium truncate">{player.name}</div>
+                        {isActivePlayer && <span className="text-[10px] bg-amber-500 text-white px-1 rounded">ターン中</span>}
+                      </div>
                       <div className="text-white/60 text-xs">
                         {gameState.settings?.scoreVisibility === 'hidden' ? '???pt' : `${player.score}pt`}
                       </div>
@@ -742,7 +1046,8 @@ export const GamePlayPhase = ({
                       ))}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
                 {otherPlayers.length === 0 && (
                   <div className="text-slate-500 text-xs">他のプレイヤーはいません</div>
                 )}
@@ -1008,12 +1313,58 @@ export const GamePlayPhase = ({
               <h2 className="text-white font-bold">手持ちピース（{currentPlayer.pieces.length}）</h2>
               <button
                 onClick={handleGetLevel1Piece}
-                className="flex items-center gap-1.5 px-2 py-1 border-2 border-yellow-500 hover:bg-yellow-500/20 rounded text-yellow-400 text-sm font-medium transition-colors"
+                disabled={!isMyTurn || currentPlayer.remainingActions <= 0}
+                className={`flex items-center gap-1.5 px-2 py-1 border-2 border-yellow-500 rounded text-sm font-medium transition-colors ${
+                  isMyTurn && currentPlayer.remainingActions > 0
+                    ? 'hover:bg-yellow-500/20 text-yellow-400'
+                    : 'opacity-50 text-yellow-600 cursor-not-allowed'
+                }`}
               >
                 <PieceDisplay type="dot" size="xs" />
                 <span>ゲット</span>
               </button>
+              {/* マスターアクションボタン */}
+              {!masterActionMode && isMyTurn && !currentPlayer.usedMasterAction && currentPlayer.workingPuzzles.length > 0 && currentPlayer.remainingActions > 0 && (
+                <button
+                  onClick={handleStartMasterAction}
+                  className="px-2 py-1 bg-purple-600 hover:bg-purple-500 rounded text-white text-sm font-medium transition-colors"
+                >
+                  マスターアクション
+                </button>
+              )}
+              {currentPlayer.usedMasterAction && (
+                <span className="text-purple-400/60 text-xs">マスター済</span>
+              )}
             </div>
+
+            {/* マスターアクションモード */}
+            {masterActionMode && (
+              <div className="bg-purple-900/50 border border-purple-400 rounded-lg p-3 mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-white text-sm font-bold">マスターアクション中</div>
+                  <div className="text-purple-300 text-xs">
+                    配置済み: {masterActionPlacedPuzzles.size}/{currentPlayer.workingPuzzles.length}枚
+                  </div>
+                </div>
+                <div className="text-purple-200 text-xs mb-3">
+                  各パズルに1つずつピースを配置できます（0〜{currentPlayer.workingPuzzles.length}個）
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCompleteMasterAction}
+                    className="flex-1 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-white text-sm font-medium"
+                  >
+                    完了（1アクション消費）
+                  </button>
+                  <button
+                    onClick={handleCancelMasterAction}
+                    className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded text-white text-sm"
+                  >
+                    中止
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* レベル変更選択モード */}
             {levelChangeMode && (
