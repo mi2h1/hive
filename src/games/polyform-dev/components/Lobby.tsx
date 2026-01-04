@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Crown, FlaskConical, HelpCircle } from 'lucide-react';
-import type { Player } from '../types/game';
+import type { Player, GameSettings } from '../types/game';
 
 interface LobbyProps {
   roomCode: string | null;
@@ -10,10 +10,12 @@ interface LobbyProps {
   error: string | null;
   hostId: string;
   playerName: string | null;
+  settings?: GameSettings;
   onCreateRoom: () => void;
   onJoinRoom: (code: string) => void;
   onLeaveRoom: () => void;
   onStartGame: () => void;
+  onUpdateSettings?: (settings: Partial<GameSettings>) => void;
   onBack?: () => void;
   // デバッグ用
   debugMode?: boolean;
@@ -28,10 +30,12 @@ export const Lobby = ({
   error,
   hostId,
   playerName,
+  settings,
   onCreateRoom,
   onJoinRoom,
   onLeaveRoom,
   onStartGame,
+  onUpdateSettings,
   onBack,
   debugMode = false,
   onAddTestPlayer,
@@ -56,7 +60,7 @@ export const Lobby = ({
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900">
         <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
-          <div className="bg-slate-800/95 rounded-xl p-6 max-w-2xl w-full">
+          <div className="bg-slate-800/95 rounded-xl p-6 max-w-3xl w-full">
             {/* タイトル */}
             <div className="text-center mb-4 relative">
               <button
@@ -100,37 +104,89 @@ export const Lobby = ({
               )}
             </div>
 
-            {/* プレイヤー一覧 */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-white font-bold">プレイヤー ({players.length}/4)</span>
-                {debugMode && onAddTestPlayer && players.length < 4 && (
-                  <button
-                    onClick={onAddTestPlayer}
-                    className="text-xs bg-orange-600 hover:bg-orange-700 text-white px-2 py-1 rounded transition-colors"
-                  >
-                    + テストプレイヤー
-                  </button>
-                )}
+            {/* 2カラムレイアウト */}
+            <div className="flex gap-6 mb-6">
+              {/* 左カラム: プレイヤー一覧 */}
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-bold">プレイヤー ({players.length}/4)</span>
+                  {debugMode && onAddTestPlayer && players.length < 4 && (
+                    <button
+                      onClick={onAddTestPlayer}
+                      className="text-xs bg-orange-600 hover:bg-orange-700 text-white px-2 py-1 rounded transition-colors"
+                    >
+                      + テストプレイヤー
+                    </button>
+                  )}
+                </div>
+                <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 max-h-60 overflow-y-auto">
+                  {players.map((player) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-3 p-2 bg-slate-800/50 rounded"
+                    >
+                      {player.id === hostId && (
+                        <Crown className="w-4 h-4 text-yellow-400" />
+                      )}
+                      <span className="text-white flex-1">{player.name}</span>
+                      <div className="flex items-center gap-1 text-slate-400 text-sm">
+                        ピース: {player.pieces.length}
+                      </div>
+                    </div>
+                  ))}
+                  {players.length === 0 && (
+                    <div className="text-slate-400 text-center py-4">
+                      プレイヤーがいません
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 max-h-60 overflow-y-auto">
-                {players.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center gap-3 p-2 bg-slate-800/50 rounded"
-                  >
-                    {player.id === hostId && (
-                      <Crown className="w-4 h-4 text-yellow-400" />
-                    )}
-                    <span className="text-white flex-1">{player.name}</span>
-                    <div className="flex items-center gap-1 text-slate-400 text-sm">
-                      ピース: {player.pieces.length}
+
+              {/* 右カラム: ルールオプション */}
+              <div className="w-56">
+                <div className="text-white font-bold mb-2">ルールオプション</div>
+                <div className="bg-slate-700/50 rounded-lg p-3 space-y-3">
+                  {/* スコア公開設定 */}
+                  <div>
+                    <div className="text-slate-300 text-sm mb-2">他プレイヤーの得点</div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => onUpdateSettings?.({ scoreVisibility: 'public' })}
+                        disabled={!isHost}
+                        className={`flex-1 py-1.5 px-2 rounded text-sm font-medium transition-all ${
+                          settings?.scoreVisibility === 'public'
+                            ? 'bg-teal-500 text-white'
+                            : isHost
+                              ? 'bg-slate-600 text-slate-300 hover:bg-slate-500'
+                              : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                        }`}
+                      >
+                        公開
+                      </button>
+                      <button
+                        onClick={() => onUpdateSettings?.({ scoreVisibility: 'hidden' })}
+                        disabled={!isHost}
+                        className={`flex-1 py-1.5 px-2 rounded text-sm font-medium transition-all ${
+                          settings?.scoreVisibility === 'hidden'
+                            ? 'bg-teal-500 text-white'
+                            : isHost
+                              ? 'bg-slate-600 text-slate-300 hover:bg-slate-500'
+                              : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                        }`}
+                      >
+                        非公開
+                      </button>
+                    </div>
+                    <div className="text-slate-400 text-xs mt-1">
+                      {settings?.scoreVisibility === 'hidden'
+                        ? 'ゲーム終了まで非表示'
+                        : '常に表示'}
                     </div>
                   </div>
-                ))}
-                {players.length === 0 && (
-                  <div className="text-slate-400 text-center py-4">
-                    プレイヤーがいません
+                </div>
+                {!isHost && (
+                  <div className="text-slate-500 text-xs mt-2 text-center">
+                    ホストのみ変更可能
                   </div>
                 )}
               </div>

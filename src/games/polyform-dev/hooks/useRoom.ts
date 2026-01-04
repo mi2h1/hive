@@ -16,7 +16,9 @@ export interface RoomData {
 }
 
 // デフォルト設定
-export const DEFAULT_SETTINGS: GameSettings = {};
+export const DEFAULT_SETTINGS: GameSettings = {
+  scoreVisibility: 'public', // デフォルトは公開
+};
 
 // 古いルームを削除（24時間以上前のルーム）
 const cleanupOldRooms = async () => {
@@ -97,6 +99,8 @@ export const createInitialPlayer = (id: string, name: string): Player => {
     pieces: initialPieces,
     workingPuzzles: [],
     completedPuzzleIds: [],
+    completedWhite: 0,
+    completedBlack: 0,
     score: 0,
     remainingActions: 3,
     usedMasterAction: false,
@@ -472,6 +476,22 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     }
   }, [roomCode]);
 
+  // 設定を更新
+  const updateSettings = useCallback(async (newSettings: Partial<GameSettings>) => {
+    if (!roomCode || !roomData) return;
+
+    try {
+      const currentSettings = roomData.gameState.settings ?? DEFAULT_SETTINGS;
+      await update(ref(db, `${FIREBASE_PATH}/${roomCode}/gameState`), {
+        settings: { ...currentSettings, ...newSettings },
+        updatedAt: Date.now(),
+      });
+    } catch (err) {
+      console.error('Update settings error:', err);
+      setError('設定の更新に失敗しました');
+    }
+  }, [roomCode, roomData]);
+
   // デバッグ用: テストプレイヤーを追加
   const addTestPlayer = useCallback(async () => {
     if (!roomCode || !roomData) return;
@@ -511,6 +531,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     leaveRoom,
     startGame,
     updateGameState,
+    updateSettings,
     addTestPlayer,
   };
 };
