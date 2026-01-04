@@ -190,30 +190,62 @@ export const GamePlayPhase = ({
     ? { type: selectedPiece.type, rotation, flipped }
     : null;
 
+  // 他のプレイヤーを取得
+  const otherPlayers = gameState.players.filter((p) => p.id !== currentPlayerId);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900">
       <div className="min-h-screen bg-black/20 p-4">
-        {/* ヘッダー */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-white">
-            <span className="font-bold">{currentPlayer.name}</span>
-            <span className="text-white/60 ml-2">スコア: {currentPlayer.score}pt</span>
+        {/* 2カラムレイアウト */}
+        <div className="flex gap-4">
+          {/* 左カラム: 他プレイヤー情報 */}
+          <div className="w-48 flex-shrink-0">
+            <div className="bg-slate-800/50 rounded-lg p-3 sticky top-4">
+              <h3 className="text-white font-bold text-sm mb-3">他プレイヤー</h3>
+              {otherPlayers.length > 0 ? (
+                <div className="space-y-3">
+                  {otherPlayers.map((player) => (
+                    <div key={player.id} className="bg-slate-700/50 rounded-lg p-2">
+                      <div className="text-white text-sm font-medium truncate">{player.name}</div>
+                      <div className="text-white/60 text-xs mt-1">{player.score}pt</div>
+                      <div className="text-white/40 text-xs">
+                        パズル: {player.workingPuzzles.length}/4
+                      </div>
+                      <div className="text-white/40 text-xs">
+                        ピース: {player.pieces.length}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-slate-500 text-xs">他のプレイヤーはいません</div>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-white/60 text-sm">
-              アクション残り: {currentPlayer.remainingActions}
-            </span>
-            <button
-              onClick={onLeaveRoom}
-              className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm"
-            >
-              退出
-            </button>
-          </div>
-        </div>
 
-        {/* 場のパズル（横長エリア） */}
-        <div className="bg-slate-800/50 rounded-lg p-4 mb-4 overflow-x-auto">
+          {/* 右カラム: メインコンテンツ */}
+          <div className="flex-1 min-w-0">
+            {/* ヘッダー */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-white">
+                <span className="font-bold">{currentPlayer.name}</span>
+                <span className="text-white/60 ml-2">スコア: {currentPlayer.score}pt</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-white/60 text-sm">
+                  アクション残り: {currentPlayer.remainingActions}
+                </span>
+                <button
+                  onClick={onLeaveRoom}
+                  className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm"
+                >
+                  退出
+                </button>
+              </div>
+            </div>
+
+            {/* 場のパズル（横長エリア） */}
+            <div className="bg-slate-800/50 rounded-lg p-4 mb-4 overflow-x-auto">
           {/* 白パズル */}
           <div className="mb-3">
             <div className="flex gap-2 items-start">
@@ -361,16 +393,20 @@ export const GamePlayPhase = ({
           </div>
         </div>
 
-        {/* デバッグ情報 */}
-        <div className="mt-4 bg-slate-800/50 rounded-lg p-4">
-          <h2 className="text-white font-bold mb-2">ゲーム情報</h2>
-          <div className="text-slate-400 text-sm grid grid-cols-2 md:grid-cols-4 gap-2">
-            <div>フェーズ: {gameState.phase}</div>
-            <div>プレイヤー数: {gameState.players.length}</div>
-            <div>現在のターン: {gameState.players[gameState.currentPlayerIndex]?.name}</div>
-            <div>最終ラウンド: {gameState.finalRound ? 'はい' : 'いいえ'}</div>
+            {/* デバッグ情報 */}
+            <div className="mt-4 bg-slate-800/50 rounded-lg p-4">
+              <h2 className="text-white font-bold mb-2">ゲーム情報</h2>
+              <div className="text-slate-400 text-sm grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div>フェーズ: {gameState.phase}</div>
+                <div>プレイヤー数: {gameState.players.length}</div>
+                <div>現在のターン: {gameState.players[gameState.currentPlayerIndex]?.name}</div>
+                <div>最終ラウンド: {gameState.finalRound ? 'はい' : 'いいえ'}</div>
+              </div>
+            </div>
           </div>
+          {/* 右カラム終了 */}
         </div>
+        {/* 2カラムレイアウト終了 */}
       </div>
 
       {/* ドラッグオーバーレイ */}
