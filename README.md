@@ -16,11 +16,23 @@
 - **本番版**: `/boards/moji-hunt`
 - **開発版**: `/boards/moji-hunt-dev`（デバッグ機能付き）
 
+### ジャッカル (Jackal)
+ブラフ＆心理戦カードゲーム（2〜10人）。自分のカードだけ見えない状態で、場の合計値を推理する。
+
+- **本番版**: `/boards/jackal`
+- **開発版**: `/boards/jackal-dev`（デバッグ機能付き）
+
+### POLYFORM
+パズルピースを集めて配置し、パズルカードを完成させる拡大再生産パズルゲーム（2〜4人）。
+
+- **開発版**: `/boards/polyform-dev`（デバッグ機能付き）
+- **本番版**: 未実装
+
 ## 管理画面
 
 `/boards/admin` で全ゲームの部屋をリアルタイム監視できる。
 
-- 部屋一覧（AOA / もじはんと / もじはんとDEV）
+- 部屋一覧（AOA / もじはんと / ジャッカル / POLYFORM + 各DEV版）
 - プレイヤー情報、ゲームフェーズ、お題表示
 - もじはんとの文字パネル状況（50音グリッド）
 - 古い部屋の一括削除
@@ -54,6 +66,8 @@ npm run build
 
 - `CLAUDE.md` - 開発ポリシー・プロジェクト概要
 - `docs/moji-hunt-spec.md` - もじはんと仕様書
+- `docs/jackal-spec.md` - ジャッカル仕様書
+- `docs/polyform-spec.md` - POLYFORM仕様書
 - `src/games/aoa/README.md` - AOA詳細
 
 ## ライセンス

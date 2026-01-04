@@ -64,8 +64,14 @@ src/
 │   │   │   └── cards.ts
 │   │   └── types/
 │   │       └── game.ts
-│   └── jackal-dev/            # ジャッカル（開発版）
-│       └── ...                # 本番と同構造 + デバッグ機能
+│   ├── jackal-dev/            # ジャッカル（開発版）
+│   │   └── ...                # 本番と同構造 + デバッグ機能
+│   └── polyform-dev/          # POLYFORM（開発版）
+│       ├── PolyformDevGame.tsx
+│       ├── components/
+│       ├── hooks/
+│       ├── data/
+│       └── types/
 └── shared/
     └── hooks/
         └── usePlayer.ts       # プレイヤー名管理（共用）
@@ -92,11 +98,18 @@ src/
 - 仕様: `docs/jackal-spec.md` 参照
 - 特徴: 自分のカードだけ見えない状態で場の合計値を推理
 
+### POLYFORM (polyform)
+- パス: `/boards/polyform-dev`（開発版）
+- 状態: 開発中
+- 概要: パズル × 拡大再生産ゲーム（2〜4人）
+- 仕様: `docs/polyform-spec.md` 参照
+- 特徴: ピースを集めてパズルカードを完成させる
+
 ### 管理画面 (admin)
 - パス: `/boards/admin`
 - 概要: 全ゲームの部屋をリアルタイム監視
 - 機能:
-  - 部屋一覧表示（AOA / もじはんと / ジャッカル + 各DEV版）
+  - 部屋一覧表示（AOA / もじはんと / ジャッカル / POLYFORM + 各DEV版）
   - 部屋の詳細情報（プレイヤー、フェーズ、お題等）
   - もじはんとの文字パネル状況表示（50音グリッド）
   - 古い部屋の一括削除
@@ -110,6 +123,7 @@ src/
 - `/boards/moji-hunt-dev` → もじはんと（開発版・デバッグ機能付き）
 - `/boards/jackal` → ジャッカル（本番）
 - `/boards/jackal-dev` → ジャッカル（開発版・デバッグ機能付き）
+- `/boards/polyform-dev` → POLYFORM（開発版・デバッグ機能付き）
 - `/boards/admin` → 管理画面
 
 GitHub Pagesでは404.htmlによるSPAリダイレクトを使用。
@@ -127,6 +141,7 @@ GitHub Pagesでは404.htmlによるSPAリダイレクトを使用。
 | もじはんとDEV | もじはんとDEV |
 | ジャッカル | ジャッカル |
 | ジャッカルDEV | ジャッカルDEV |
+| PolyformDEV | PolyformDEV |
 | 管理画面 | Game Board - Admin Dashboard |
 
 ## 部屋の自動削除
