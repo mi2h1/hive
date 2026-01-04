@@ -993,7 +993,7 @@ export const GamePlayPhase = ({
           {/* 左カラム: 他プレイヤー情報 */}
           <div className="w-64 flex-shrink-0">
             <div className="relative bg-slate-800/50 border border-slate-600 rounded-lg p-3 pt-5">
-              <span className="absolute -top-2.5 left-3 bg-slate-800 px-2 text-xs font-medium text-slate-400">プレイヤー</span>
+              <span className="absolute -top-3 left-3 z-10 px-2 text-sm font-medium text-slate-400">プレイヤー</span>
               {/* プレイヤー一覧 */}
               <div className="space-y-3">
                 <div className={`rounded-lg p-2 border ${
@@ -1109,7 +1109,7 @@ export const GamePlayPhase = ({
             {/* インフォボード */}
             <div className="bg-slate-800/50 rounded-lg p-3 mb-4">
               {/* 上段：ターン情報＋アナウンス */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-center gap-4 mb-3">
                 <div className="flex items-center gap-3">
                   <span className={`text-sm font-medium ${isMyTurn ? 'text-teal-400' : 'text-slate-400'}`}>
                     {isMyTurn ? 'あなたのターン' : `${gameState.players.find(p => p.id === activePlayerId)?.name}のターン`}
@@ -1306,8 +1306,8 @@ export const GamePlayPhase = ({
                   ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
                   : 'bg-slate-800/50 border-slate-600'
               }`}>
-                <span className={`absolute -top-2.5 left-3 px-2 text-xs font-medium ${
-                  actionMode === 'takePuzzle' ? 'bg-teal-900 text-teal-300' : 'bg-slate-800 text-slate-400'
+                <span className={`absolute -top-3 left-3 z-10 px-2 text-sm font-medium ${
+                  actionMode === 'takePuzzle' ? 'text-teal-300' : 'text-slate-400'
                 }`}>場</span>
           {/* 白パズル */}
           <div className="mb-3">
@@ -1442,7 +1442,7 @@ export const GamePlayPhase = ({
 
               {/* ピース一覧 */}
               <div className="relative flex-shrink-0 w-48 bg-slate-800/50 border border-slate-600 rounded-lg p-3 pt-5">
-                <span className="absolute -top-2.5 left-3 bg-slate-800 px-2 text-xs font-medium text-slate-400">ピース一覧</span>
+                <span className="absolute -top-3 left-3 z-10 px-2 text-sm font-medium text-slate-400">ピース一覧</span>
                 <div className="space-y-3">
                   {[1, 2, 3, 4].map((level) => (
                     <div key={level}>
@@ -1469,8 +1469,8 @@ export const GamePlayPhase = ({
               ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
               : 'bg-slate-800/50 border-slate-600'
           }`}>
-            <span className={`absolute -top-2.5 left-3 px-2 text-xs font-medium ${
-              actionMode === 'placePiece' || masterActionMode ? 'bg-teal-900 text-teal-300' : 'bg-slate-800 text-slate-400'
+            <span className={`absolute -top-3 left-3 z-10 px-2 text-sm font-medium ${
+              actionMode === 'placePiece' || masterActionMode ? 'text-teal-300' : 'text-slate-400'
             }`}>手持ちパズル（{workingPuzzles.length}/4）</span>
             <div className="flex gap-2">
               <AnimatePresence mode="popLayout">
@@ -1532,8 +1532,8 @@ export const GamePlayPhase = ({
               ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
               : 'bg-slate-800/50 border-slate-600'
           }`}>
-            <span className={`absolute -top-2.5 left-3 px-2 text-xs font-medium ${
-              actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode ? 'bg-teal-900 text-teal-300' : 'bg-slate-800 text-slate-400'
+            <span className={`absolute -top-3 left-3 z-10 px-2 text-sm font-medium ${
+              actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode ? 'text-teal-300' : 'text-slate-400'
             }`}>
               手持ちピース（{currentPlayer.pieces.length}）
               {currentPlayer.usedMasterAction && <span className="text-purple-400/60 ml-2">マスター済</span>}
