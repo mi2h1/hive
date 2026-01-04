@@ -22,16 +22,16 @@ export const PuzzleCardDisplay = ({
 }: PuzzleCardDisplayProps) => {
   // セルサイズ
   const cellSize = {
-    sm: 'w-4 h-4',
+    sm: 'w-5 h-5',
     md: 'w-6 h-6',
     lg: 'w-8 h-8',
   }[size];
 
   // カード全体のサイズ
   const cardSize = {
-    sm: 'w-[130px] h-[165px]',
-    md: 'w-[170px] h-[215px]',
-    lg: 'w-[220px] h-[275px]',
+    sm: 'w-[140px] h-[175px]',
+    md: 'w-[180px] h-[225px]',
+    lg: 'w-[230px] h-[285px]',
   }[size];
 
   // 配置済みピースのセル情報を計算
@@ -86,8 +86,8 @@ export const PuzzleCardDisplay = ({
         </div>
       </div>
 
-      {/* 5x5グリッド（中央配置） */}
-      <div className="flex-1 flex items-center justify-center">
+      {/* 5x5グリッド（下寄せ） */}
+      <div className="flex-1 flex items-end justify-center pb-1">
         <div className="flex flex-col gap-0.5">
           {card.shape.map((row, y) => (
             <div key={y} className="flex gap-0.5">

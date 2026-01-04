@@ -221,12 +221,12 @@ export const GamePlayPhase = ({
                 <PuzzleCardDisplay key={card.id} card={card} size="sm" />
               ))}
               {/* 山札（重なったカード風） */}
-              <div className="relative w-[130px] h-[165px] flex-shrink-0">
+              <div className="relative w-[140px] h-[175px] flex-shrink-0">
                 {/* 背面カード（3枚重ね） */}
-                <div className="absolute top-1.5 left-1.5 w-[130px] h-[165px] bg-slate-300 border-2 border-slate-400 rounded-lg" />
-                <div className="absolute top-1 left-1 w-[130px] h-[165px] bg-slate-200 border-2 border-slate-400 rounded-lg" />
+                <div className="absolute top-1.5 left-1.5 w-[140px] h-[175px] bg-slate-300 border-2 border-slate-400 rounded-lg" />
+                <div className="absolute top-1 left-1 w-[140px] h-[175px] bg-slate-200 border-2 border-slate-400 rounded-lg" />
                 {/* 表面カード */}
-                <div className="absolute top-0 left-0 w-[130px] h-[165px] bg-slate-100 border-2 border-slate-400 rounded-lg flex flex-col items-center justify-center">
+                <div className="absolute top-0 left-0 w-[140px] h-[175px] bg-slate-100 border-2 border-slate-400 rounded-lg flex flex-col items-center justify-center">
                   <div className="text-slate-500 text-xs mb-1">山札</div>
                   <div className="text-slate-800 text-4xl font-bold">{gameState.whitePuzzleDeck.length}</div>
                 </div>
@@ -241,12 +241,12 @@ export const GamePlayPhase = ({
                 <PuzzleCardDisplay key={card.id} card={card} size="sm" />
               ))}
               {/* 山札（重なったカード風） */}
-              <div className="relative w-[130px] h-[165px] flex-shrink-0">
+              <div className="relative w-[140px] h-[175px] flex-shrink-0">
                 {/* 背面カード（3枚重ね） */}
-                <div className="absolute top-1.5 left-1.5 w-[130px] h-[165px] bg-slate-900 border-2 border-slate-600 rounded-lg" />
-                <div className="absolute top-1 left-1 w-[130px] h-[165px] border-2 border-slate-600 rounded-lg" style={{ backgroundColor: '#1e293b' }} />
+                <div className="absolute top-1.5 left-1.5 w-[140px] h-[175px] bg-slate-900 border-2 border-slate-600 rounded-lg" />
+                <div className="absolute top-1 left-1 w-[140px] h-[175px] border-2 border-slate-600 rounded-lg" style={{ backgroundColor: '#1e293b' }} />
                 {/* 表面カード */}
-                <div className="absolute top-0 left-0 w-[130px] h-[165px] bg-slate-800 border-2 border-slate-600 rounded-lg flex flex-col items-center justify-center">
+                <div className="absolute top-0 left-0 w-[140px] h-[175px] bg-slate-800 border-2 border-slate-600 rounded-lg flex flex-col items-center justify-center">
                   <div className="text-slate-400 text-xs mb-1">山札</div>
                   <div className="text-white text-4xl font-bold">{gameState.blackPuzzleDeck.length}</div>
                 </div>
