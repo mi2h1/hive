@@ -1212,7 +1212,7 @@ export const GamePlayPhase = ({
                       </button>
                       <button
                         onClick={handleGetLevel1Piece}
-                        className="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 rounded text-white text-sm font-medium transition-all flex items-center gap-1"
+                        className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm font-medium transition-all flex items-center gap-1"
                       >
                         <PieceDisplay type="dot" size="xs" />
                         <span>ピース獲得</span>
@@ -1395,18 +1395,18 @@ export const GamePlayPhase = ({
                     <PuzzleCardDisplay
                       card={card}
                       size={cardSize}
-                      onClick={!isRecyclingExit && !isRecyclingEnter ? () => handleTakePuzzle(card.id, 'white') : undefined}
+                      onClick={actionMode === 'takePuzzle' && !isRecyclingExit && !isRecyclingEnter ? () => handleTakePuzzle(card.id, 'white') : undefined}
                     />
                   </motion.div>
                 );
               })}
               {/* 山札（重なったカード風） */}
               {(() => {
-                const canDraw = currentPlayer.workingPuzzles.length < 4 && gameState.whitePuzzleDeck.length > 0 && !animatingCard;
+                const canDraw = actionMode === 'takePuzzle' && currentPlayer.workingPuzzles.length < 4 && gameState.whitePuzzleDeck.length > 0 && !animatingCard;
                 const deckSize = { width: CARD_SIZES[cardSize].width, height: CARD_SIZES[cardSize].height };
                 return (
                   <div
-                    className={`relative flex-shrink-0 ${canDraw ? 'cursor-pointer' : 'opacity-60'}`}
+                    className={`relative flex-shrink-0 ${canDraw ? 'cursor-pointer' : ''} ${gameState.whitePuzzleDeck.length === 0 ? 'opacity-60' : ''}`}
                     style={deckSize}
                     onClick={() => canDraw && handleDrawFromDeck('white')}
                   >
@@ -1461,18 +1461,18 @@ export const GamePlayPhase = ({
                     <PuzzleCardDisplay
                       card={card}
                       size={cardSize}
-                      onClick={!isRecyclingExit && !isRecyclingEnter ? () => handleTakePuzzle(card.id, 'black') : undefined}
+                      onClick={actionMode === 'takePuzzle' && !isRecyclingExit && !isRecyclingEnter ? () => handleTakePuzzle(card.id, 'black') : undefined}
                     />
                   </motion.div>
                 );
               })}
               {/* 山札（重なったカード風） */}
               {(() => {
-                const canDraw = currentPlayer.workingPuzzles.length < 4 && gameState.blackPuzzleDeck.length > 0 && !animatingCard;
+                const canDraw = actionMode === 'takePuzzle' && currentPlayer.workingPuzzles.length < 4 && gameState.blackPuzzleDeck.length > 0 && !animatingCard;
                 const deckSize = { width: CARD_SIZES[cardSize].width, height: CARD_SIZES[cardSize].height };
                 return (
                   <div
-                    className={`relative flex-shrink-0 ${canDraw ? 'cursor-pointer' : 'opacity-60'}`}
+                    className={`relative flex-shrink-0 ${canDraw ? 'cursor-pointer' : ''} ${gameState.blackPuzzleDeck.length === 0 ? 'opacity-60' : ''}`}
                     style={deckSize}
                     onClick={() => canDraw && handleDrawFromDeck('black')}
                   >
@@ -1700,26 +1700,31 @@ export const GamePlayPhase = ({
 
             {/* ピース一覧 */}
             <div className="flex flex-wrap gap-2">
-              {currentPlayer.pieces.map((piece) => (
-                <div
-                  key={piece.id}
-                  onMouseDown={(e) => handleDragStart(piece.id, e)}
-                  onTouchStart={(e) => handleDragStart(piece.id, e)}
-                  className={`inline-block p-1 rounded transition-all cursor-grab active:cursor-grabbing select-none ${
-                    selectedPieceId === piece.id
-                      ? 'ring-2 ring-white bg-white/20'
-                      : 'hover:bg-white/10'
-                  }`}
-                  style={{ touchAction: 'none' }}
-                >
-                  <PieceDisplay
-                    type={piece.type}
-                    rotation={selectedPieceId === piece.id ? rotation : 0}
-                    flipped={selectedPieceId === piece.id ? flipped : false}
-                    size={toPieceSize(cardSize)}
-                  />
-                </div>
-              ))}
+              {(() => {
+                const canInteract = actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode;
+                return currentPlayer.pieces.map((piece) => (
+                  <div
+                    key={piece.id}
+                    onMouseDown={canInteract ? (e) => handleDragStart(piece.id, e) : undefined}
+                    onTouchStart={canInteract ? (e) => handleDragStart(piece.id, e) : undefined}
+                    className={`inline-block p-1 rounded transition-all select-none ${
+                      canInteract ? 'cursor-grab active:cursor-grabbing' : ''
+                    } ${
+                      selectedPieceId === piece.id
+                        ? 'ring-2 ring-white bg-white/20'
+                        : canInteract ? 'hover:bg-white/10' : ''
+                    }`}
+                    style={{ touchAction: 'none' }}
+                  >
+                    <PieceDisplay
+                      type={piece.type}
+                      rotation={selectedPieceId === piece.id ? rotation : 0}
+                      flipped={selectedPieceId === piece.id ? flipped : false}
+                      size={toPieceSize(cardSize)}
+                    />
+                  </div>
+                ));
+              })()}
               {currentPlayer.pieces.length === 0 && (
                 <div className="text-slate-500">ピースがありません</div>
               )}
