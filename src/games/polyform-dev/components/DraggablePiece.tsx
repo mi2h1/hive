@@ -131,9 +131,12 @@ export const DragOverlay = ({
     }
   });
 
-  // ピースの中心をカーソルに合わせる
-  const offsetX = (width * cellSize) / 2;
-  const offsetY = (height * cellSize) / 2;
+  // ピースの中心をカーソルに合わせる（gap-pxの1pxも考慮）
+  const gap = 1;
+  const totalWidth = width * cellSize + (width - 1) * gap;
+  const totalHeight = height * cellSize + (height - 1) * gap;
+  const offsetX = totalWidth / 2;
+  const offsetY = totalHeight / 2;
 
   return (
     <div
