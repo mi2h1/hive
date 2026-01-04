@@ -6,9 +6,11 @@ import { MojiHuntGame } from './games/moji-hunt/MojiHuntGame';
 import { MojiHuntDevGame } from './games/moji-hunt-dev/MojiHuntDevGame';
 import { JackalGame } from './games/jackal/JackalGame';
 import { JackalDevGame } from './games/jackal-dev/JackalDevGame';
+import { PolyformGame } from './games/polyform/PolyformGame';
+import { PolyformDevGame } from './games/polyform-dev/PolyformDevGame';
 import { AdminPage } from './admin/AdminPage';
 
-type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'admin';
+type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform' | 'polyform-dev' | 'boards-dev' | 'admin';
 
 // クエリパラメータを保持（?v=xxx などのキャッシュバスター用）
 const getQueryString = (excludeKeys: string[] = []) => {
@@ -33,6 +35,9 @@ const getGameFromPath = (): GameType => {
     if (redirectPath === 'moji-hunt-dev') return 'moji-hunt-dev';
     if (redirectPath === 'jackal') return 'jackal';
     if (redirectPath === 'jackal-dev') return 'jackal-dev';
+    if (redirectPath === 'polyform') return 'polyform';
+    if (redirectPath === 'polyform-dev') return 'polyform-dev';
+    if (redirectPath === 'boards-dev') return 'boards-dev';
     if (redirectPath === 'admin') return 'admin';
   }
 
@@ -43,6 +48,9 @@ const getGameFromPath = (): GameType => {
   if (path === 'moji-hunt-dev') return 'moji-hunt-dev';
   if (path === 'jackal') return 'jackal';
   if (path === 'jackal-dev') return 'jackal-dev';
+  if (path === 'polyform') return 'polyform';
+  if (path === 'polyform-dev') return 'polyform-dev';
+  if (path === 'boards-dev') return 'boards-dev';
   if (path === 'admin') return 'admin';
   return 'none';
 };
@@ -157,6 +165,87 @@ function App() {
   }
   if (selectedGame === 'jackal-dev') {
     return <JackalDevGame onBack={() => selectGame('none')} />;
+  }
+  if (selectedGame === 'polyform') {
+    return <PolyformGame onBack={() => selectGame('none')} />;
+  }
+  if (selectedGame === 'polyform-dev') {
+    return <PolyformDevGame onBack={() => selectGame('none')} />;
+  }
+  if (selectedGame === 'boards-dev') {
+    // 開発版ゲーム一覧
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-4">
+        <div className="max-w-4xl mx-auto">
+          <header className="text-center py-8">
+            <Gamepad2 className="w-12 h-12 text-orange-400 mx-auto mb-3" />
+            <h1 className="text-2xl font-bold text-white mb-1">Game Board DEV</h1>
+            <p className="text-slate-400">
+              開発版ゲーム一覧（<span className="text-orange-300">{playerName}</span> さん）
+            </p>
+          </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* もじはんとDEV */}
+            <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
+              <div className="h-32 bg-gradient-to-br from-pink-600 to-orange-500 flex items-center justify-center">
+                <span className="text-3xl font-bold text-white">もじはんと DEV</span>
+              </div>
+              <div className="p-4">
+                <button
+                  onClick={() => selectGame('moji-hunt-dev')}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500
+                    hover:from-orange-600 hover:to-amber-600 rounded-lg text-white font-bold transition-all"
+                >
+                  開く
+                </button>
+              </div>
+            </div>
+
+            {/* ジャッカルDEV */}
+            <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
+              <div className="h-32 bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                <span className="text-3xl font-bold text-white">ジャッカル DEV</span>
+              </div>
+              <div className="p-4">
+                <button
+                  onClick={() => selectGame('jackal-dev')}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500
+                    hover:from-orange-600 hover:to-amber-600 rounded-lg text-white font-bold transition-all"
+                >
+                  開く
+                </button>
+              </div>
+            </div>
+
+            {/* PolyformDEV */}
+            <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
+              <div className="h-32 bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center">
+                <span className="text-3xl font-bold text-white">Polyform DEV</span>
+              </div>
+              <div className="p-4">
+                <button
+                  onClick={() => selectGame('polyform-dev')}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500
+                    hover:from-orange-600 hover:to-amber-600 rounded-lg text-white font-bold transition-all"
+                >
+                  開く
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => selectGame('none')}
+              className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
+            >
+              本番版一覧に戻る
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // ゲーム選択画面
