@@ -1359,14 +1359,11 @@ export const GamePlayPhase = ({
             {/* 場のパズル＆ピース一覧（横並び） */}
             <div className="flex gap-4 mb-4">
               {/* 場 */}
-              <div className={`relative flex-1 min-w-0 rounded-lg p-4 pt-5 overflow-x-auto transition-all border ${
+              <div className={`relative flex-1 min-w-0 rounded-lg p-4 overflow-x-auto transition-all border ${
                 actionMode === 'takePuzzle'
                   ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
                   : 'bg-slate-800/50 border-slate-600'
               }`}>
-                <span className={`absolute -top-5 left-3 z-10 px-2 text-sm font-medium ${
-                  actionMode === 'takePuzzle' ? 'text-teal-300' : 'text-slate-400'
-                }`}>場</span>
           {/* 白パズル */}
           <div className="mb-3">
             <div className="flex gap-2 items-start justify-center">
@@ -1501,8 +1498,7 @@ export const GamePlayPhase = ({
               </div>
 
               {/* ピース一覧 */}
-              <div className="relative flex-shrink-0 w-36 bg-slate-800/50 border border-slate-600 rounded-lg p-3 pt-5">
-                <span className="absolute -top-5 left-3 z-10 px-2 text-sm font-medium text-slate-400">ピース一覧</span>
+              <div className="relative flex-shrink-0 w-36 bg-slate-800/50 border border-slate-600 rounded-lg p-3">
                 <div className="space-y-3">
                   {[1, 2, 3, 4].map((level) => (
                     <div key={level}>
@@ -1523,16 +1519,13 @@ export const GamePlayPhase = ({
 
           {/* 手持ちパズル（4枚並ぶ幅で固定） */}
           <div
-            className={`relative rounded-lg p-4 pt-5 flex-shrink-0 transition-all border ${
+            className={`relative rounded-lg p-4 flex-shrink-0 transition-all border ${
               actionMode === 'placePiece' || masterActionMode
                 ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
                 : 'bg-slate-800/50 border-slate-600'
             }`}
             style={{ width: CARD_SIZES[cardSize].width * 4 + 56 }}
           >
-            <span className={`absolute -top-5 left-3 z-10 px-2 text-sm font-medium ${
-              actionMode === 'placePiece' || masterActionMode ? 'text-teal-300' : 'text-slate-400'
-            }`}>手持ちパズル（{workingPuzzles.length}/4）</span>
             <div className="flex gap-2">
               <AnimatePresence mode="popLayout">
                 {workingPuzzles.map((wp, index) => (
@@ -1590,18 +1583,11 @@ export const GamePlayPhase = ({
           </div>
 
           {/* 右: 手持ちピース */}
-          <div className={`relative rounded-lg p-4 pt-5 flex-1 min-w-0 transition-all border ${
+          <div className={`relative rounded-lg p-4 flex-1 min-w-0 transition-all border ${
             actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode
               ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
               : 'bg-slate-800/50 border-slate-600'
           }`}>
-            <span className={`absolute -top-5 left-3 z-10 px-2 text-sm font-medium ${
-              actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode ? 'text-teal-300' : 'text-slate-400'
-            }`}>
-              手持ちピース（{currentPlayer.pieces.length}）
-              {currentPlayer.usedMasterAction && <span className="text-purple-400/60 ml-2">マスター済</span>}
-            </span>
-
             {/* レベル変更選択モード */}
             {levelChangeMode && (
               <div className={`rounded-lg p-3 mb-4 border ${
