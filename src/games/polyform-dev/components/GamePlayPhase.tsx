@@ -26,6 +26,15 @@ const toPieceSize = (cardSize: CardSizeType): 'xs' | 'sm' | 'md' | 'lg' => {
   }
 };
 
+// 2段ピースが入る最小高さを計算（セルサイズ×2 + gap + padding）
+const getMinPieceHeight = (cardSize: CardSizeType): number => {
+  const cellSizes = { xs: 8, sm: 12, md: 20, lg: 28 };
+  const pieceSize = toPieceSize(cardSize);
+  const cellPx = cellSizes[pieceSize];
+  // 2段 + gap(1px) + padding(p-1 = 4px each side = 8px)
+  return cellPx * 2 + 1 + 8;
+};
+
 interface GamePlayPhaseProps {
   gameState: GameState;
   currentPlayerId: string;
@@ -1093,8 +1102,8 @@ export const GamePlayPhase = ({
                       <div className="bg-slate-700 text-white px-1 rounded font-bold">{currentPlayer.completedBlack || 0}</div>
                     </div>
                   </div>
-                  {/* 所持ピース */}
-                  <div className="flex flex-wrap gap-0.5 items-center">
+                  {/* 所持ピース（2段ピースの高さを最小に） */}
+                  <div className="flex flex-wrap gap-0.5 items-center min-h-[17px]">
                     {currentPlayer.pieces.map((piece) => (
                       <PieceDisplay key={piece.id} type={piece.type} size="xs" />
                     ))}
@@ -1145,8 +1154,8 @@ export const GamePlayPhase = ({
                         <div className="bg-slate-700 text-white px-1 rounded font-bold">{player.completedBlack || 0}</div>
                       </div>
                     </div>
-                    {/* 所持ピース */}
-                    <div className="flex flex-wrap gap-0.5 items-center">
+                    {/* 所持ピース（2段ピースの高さを最小に） */}
+                    <div className="flex flex-wrap gap-0.5 items-center min-h-[17px]">
                       {player.pieces.map((piece) => (
                         <PieceDisplay key={piece.id} type={piece.type} size="xs" />
                       ))}
@@ -1704,8 +1713,8 @@ export const GamePlayPhase = ({
               </div>
             )}
 
-            {/* ピース一覧 */}
-            <div className="flex flex-wrap gap-2 items-center">
+            {/* ピース一覧（2段ピースの高さを最小に） */}
+            <div className="flex flex-wrap gap-2 items-center" style={{ minHeight: getMinPieceHeight(cardSize) }}>
               {(() => {
                 const canInteract = actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode;
                 return currentPlayer.pieces.map((piece) => (
