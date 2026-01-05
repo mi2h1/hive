@@ -1942,7 +1942,6 @@ export const GamePlayPhase = ({
         <div className="flex flex-col xl:flex-row gap-4 xl:items-start">
           {/* 左カラム: 他プレイヤー情報（1200px以下で全幅・上部配置） */}
           <div className="w-full xl:w-64 flex-shrink-0">
-            <div className="relative bg-slate-800/50 border border-slate-600 rounded-lg p-3">
               {/* プレイヤー一覧（全幅時は横並び、プレイ順に表示） */}
               <div className="flex flex-row xl:flex-col gap-3 overflow-x-auto">
                 {allPlayersSorted.map((player) => {
@@ -2016,7 +2015,6 @@ export const GamePlayPhase = ({
                   );
                 })}
               </div>
-            </div>
           </div>
 
           {/* 右カラム: メインコンテンツ */}
