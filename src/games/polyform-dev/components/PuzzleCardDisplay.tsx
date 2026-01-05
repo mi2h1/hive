@@ -37,7 +37,6 @@ export const PuzzleCardDisplay = ({
 }: PuzzleCardDisplayProps) => {
   const sizeConfig = CARD_SIZES[size];
   const cellSize = sizeConfig.cell;
-  const cardSize = `w-[${sizeConfig.width}px] h-[${sizeConfig.height}px]`;
 
   // 配置済みピースのセル情報を計算
   const placedCells: Map<string, { color: string; pieceId: string }> = new Map();
@@ -67,12 +66,16 @@ export const PuzzleCardDisplay = ({
   return (
     <div
       onClick={onClick}
-      className={`${cardSize} flex flex-col rounded-lg ${compact ? 'p-1.5' : 'p-4'} transition-all bg-cover bg-center ${
+      className={`flex flex-col rounded-lg ${compact ? 'p-1.5' : 'p-4'} transition-all bg-cover bg-center ${
         onClick ? 'cursor-pointer hover:scale-105' : ''
       } ${selected ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-900' : ''} ${
         isComplete ? 'ring-2 ring-yellow-400' : ''
       }`}
-      style={{ backgroundImage: `url(${cardImage})` }}
+      style={{
+        width: sizeConfig.width,
+        height: sizeConfig.height,
+        backgroundImage: `url(${cardImage})`
+      }}
     >
       {/* カード情報ヘッダー（固定高さ） */}
       <div className="flex items-center justify-between h-6 mb-2">
