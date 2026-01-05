@@ -49,16 +49,27 @@ export interface WorkingPuzzle {
   placedPieces: PlacedPiece[];
 }
 
+// 完成したパズル（配置情報付き）
+export interface CompletedPuzzle {
+  cardId: string;
+  placedPieces: PlacedPiece[];
+}
+
 // プレイヤー状態
 export interface Player {
   id: string;
   name: string;
   pieces: PieceInstance[]; // 手持ちピース
   workingPuzzles: WorkingPuzzle[]; // 作業中パズル（最大4枚）
-  completedPuzzleIds: string[]; // 完成パズルのID一覧
+  completedPuzzles: CompletedPuzzle[]; // 完成パズル（配置情報付き）
+  completedPuzzleIds: string[]; // 完成パズルのID一覧（後方互換用）
+  completedWhite: number; // 完成した白カードの枚数
+  completedBlack: number; // 完成した黒カードの枚数
   score: number;
   remainingActions: number; // 残りアクション数（通常3）
   usedMasterAction: boolean; // マスターアクション使用済みフラグ
+  finishingDone: boolean; // 仕上げフェーズ完了フラグ
+  finishingPenalty: number; // 仕上げフェーズでの配置ペナルティ（配置数 × -1）
 }
 
 // ゲームフェーズ
@@ -71,7 +82,7 @@ export type GamePhase =
 
 // ゲーム設定
 export interface GameSettings {
-  // 将来の拡張用
+  scoreVisibility: 'public' | 'hidden'; // 他プレイヤーのスコア表示（public: 常に表示、hidden: 終了時まで非表示）
 }
 
 // ゲーム状態

@@ -5,7 +5,7 @@ interface PieceDisplayProps {
   type: PieceType;
   rotation?: 0 | 90 | 180 | 270;
   flipped?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
   selected?: boolean;
   disabled?: boolean;
@@ -78,9 +78,18 @@ export const PieceDisplay = ({
 
   // セルサイズ
   const cellSize = {
+    xs: 'w-2 h-2',
     sm: 'w-3 h-3',
     md: 'w-5 h-5',
     lg: 'w-7 h-7',
+  }[size];
+
+  // 角丸（小さいサイズは角丸なし）
+  const cellRounded = {
+    xs: '',
+    sm: 'rounded-[1px]',
+    md: 'rounded-[2px]',
+    lg: 'rounded-sm',
   }[size];
 
   // グリッドを生成
@@ -103,13 +112,13 @@ export const PieceDisplay = ({
         disabled ? 'opacity-40' : ''
       }`}
     >
-      <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col gap-px">
         {grid.map((row, y) => (
-          <div key={y} className="flex gap-0.5">
+          <div key={y} className="flex gap-px">
             {row.map((filled, x) => (
               <div
                 key={x}
-                className={`${cellSize} rounded-sm ${
+                className={`${cellSize} ${cellRounded} ${
                   filled ? definition.color : 'bg-transparent'
                 }`}
               />

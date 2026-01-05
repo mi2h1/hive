@@ -1,15 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
 import { Lobby } from './components/Lobby';
 import { GamePlayPhase } from './components/GamePlayPhase';
 
 interface PolyformGameProps {
-  debugMode?: boolean;
   onBack?: () => void;
 }
 
-export const PolyformGame = ({ debugMode = false, onBack }: PolyformGameProps) => {
+export const PolyformGame = ({ onBack }: PolyformGameProps) => {
   const { playerId, playerName } = usePlayer();
   const {
     roomCode,
@@ -22,19 +21,35 @@ export const PolyformGame = ({ debugMode = false, onBack }: PolyformGameProps) =
     leaveRoom,
     startGame,
     updateGameState,
-    addTestPlayer,
+    updateSettings,
   } = useRoom(playerId, playerName);
 
   // ブラウザタブタイトル設定
   useEffect(() => {
-    document.title = debugMode ? 'PolyformDEV' : 'Polyform';
+    document.title = 'POLYFORM';
     return () => {
       document.title = 'Game Board';
     };
-  }, [debugMode]);
+  }, []);
+
+  // フェードアウト状態
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   const gameState = roomData?.gameState;
   const players = gameState?.players ?? [];
+
+  // ゲーム開始処理（ロビーをフェードアウトしてからゲーム開始）
+  const handleStartGame = () => {
+    if (!isHost) return;
+
+    // ロビーをフェードアウト
+    setIsFadingOut(true);
+
+    // フェードアウト完了後にゲーム開始
+    setTimeout(() => {
+      startGame();
+    }, 300);
+  };
 
   // ゲームプレイ中
   if (gameState && gameState.phase !== 'waiting' && playerId) {
@@ -58,13 +73,14 @@ export const PolyformGame = ({ debugMode = false, onBack }: PolyformGameProps) =
       error={error}
       hostId={roomData?.hostId ?? ''}
       playerName={playerName}
+      settings={gameState?.settings}
       onCreateRoom={createRoom}
       onJoinRoom={joinRoom}
       onLeaveRoom={leaveRoom}
-      onStartGame={startGame}
+      onStartGame={handleStartGame}
+      onUpdateSettings={updateSettings}
       onBack={onBack}
-      debugMode={debugMode}
-      onAddTestPlayer={addTestPlayer}
+      isFadingOut={isFadingOut}
     />
   );
 };

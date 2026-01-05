@@ -6,7 +6,7 @@ export const PIECE_DEFINITIONS: Record<PieceType, PieceDefinition> = {
     type: 'dot',
     level: 1,
     shape: [[0, 0]],
-    color: 'bg-yellow-400',
+    color: 'bg-yellow-300',
   },
 
   // Level 2
@@ -22,7 +22,7 @@ export const PIECE_DEFINITIONS: Record<PieceType, PieceDefinition> = {
     type: 'i3',
     level: 3,
     shape: [[0, 0], [1, 0], [2, 0]],
-    color: 'bg-sky-300', // パステル青
+    color: 'bg-blue-500', // 濃い青
   },
   v3: {
     type: 'v3',
@@ -60,7 +60,7 @@ export const PIECE_DEFINITIONS: Record<PieceType, PieceDefinition> = {
     type: 'o4',
     level: 4,
     shape: [[0, 0], [1, 0], [0, 1], [1, 1]],
-    color: 'bg-red-300', // パステル赤
+    color: 'bg-red-500', // 赤
   },
 };
 

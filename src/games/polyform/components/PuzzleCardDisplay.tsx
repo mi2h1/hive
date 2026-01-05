@@ -3,13 +3,27 @@ import type { PuzzleCard, PlacedPiece } from '../types/game';
 import { PIECE_DEFINITIONS } from '../data/pieces';
 import { getTransformedShape } from './PieceDisplay';
 
+// カードサイズ定義（7段階）
+export type CardSizeType = 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
+
+export const CARD_SIZES: Record<CardSizeType, { width: number; height: number; cell: string; cellPx: number }> = {
+  xxs: { width: 100, height: 125, cell: 'w-4 h-4', cellPx: 16 },
+  xs: { width: 115, height: 144, cell: 'w-[18px] h-[18px]', cellPx: 18 },
+  sm: { width: 130, height: 163, cell: 'w-[21px] h-[21px]', cellPx: 21 },
+  md: { width: 150, height: 188, cell: 'w-6 h-6', cellPx: 24 },
+  lg: { width: 170, height: 213, cell: 'w-7 h-7', cellPx: 28 },
+  xl: { width: 195, height: 244, cell: 'w-8 h-8', cellPx: 32 },
+  xxl: { width: 225, height: 281, cell: 'w-9 h-9', cellPx: 36 },
+};
+
 interface PuzzleCardDisplayProps {
   card: PuzzleCard;
   placedPieces?: PlacedPiece[];
-  size?: 'sm' | 'md' | 'lg';
+  size?: CardSizeType;
   onClick?: () => void;
   selected?: boolean;
   showReward?: boolean;
+  compact?: boolean; // パディングを減らしたコンパクト表示
 }
 
 export const PuzzleCardDisplay = ({
@@ -19,20 +33,11 @@ export const PuzzleCardDisplay = ({
   onClick,
   selected = false,
   showReward = true,
+  compact = false,
 }: PuzzleCardDisplayProps) => {
-  // セルサイズ
-  const cellSize = {
-    sm: 'w-5 h-5',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8',
-  }[size];
-
-  // カード全体のサイズ
-  const cardSize = {
-    sm: 'w-[140px] h-[175px]',
-    md: 'w-[180px] h-[225px]',
-    lg: 'w-[230px] h-[285px]',
-  }[size];
+  const sizeConfig = CARD_SIZES[size];
+  const cellSize = sizeConfig.cell;
+  const cardSize = `w-[${sizeConfig.width}px] h-[${sizeConfig.height}px]`;
 
   // 配置済みピースのセル情報を計算
   const placedCells: Map<string, { color: string; pieceId: string }> = new Map();
@@ -54,16 +59,20 @@ export const PuzzleCardDisplay = ({
   const filledCells = placedCells.size;
   const isComplete = filledCells === totalCells;
 
+  // カード画像パス
+  const cardImage = card.type === 'white'
+    ? '/boards/images/cards/card_pf_front_w.png'
+    : '/boards/images/cards/card_pf_front_b.png';
+
   return (
     <div
       onClick={onClick}
-      className={`${cardSize} flex flex-col rounded-lg p-3 transition-all ${
-        card.type === 'white'
-          ? 'bg-slate-100 border-2 border-slate-300'
-          : 'bg-slate-800 border-2 border-slate-600'
-      } ${onClick ? 'cursor-pointer hover:scale-105' : ''} ${
-        selected ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-900' : ''
-      } ${isComplete ? 'ring-2 ring-yellow-400' : ''}`}
+      className={`${cardSize} flex flex-col rounded-lg ${compact ? 'p-1.5' : 'p-4'} transition-all bg-cover bg-center ${
+        onClick ? 'cursor-pointer hover:scale-105' : ''
+      } ${selected ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-900' : ''} ${
+        isComplete ? 'ring-2 ring-yellow-400' : ''
+      }`}
+      style={{ backgroundImage: `url(${cardImage})` }}
     >
       {/* カード情報ヘッダー（固定高さ） */}
       <div className="flex items-center justify-between h-6 mb-2">
@@ -88,9 +97,9 @@ export const PuzzleCardDisplay = ({
 
       {/* 5x5グリッド（下寄せ） */}
       <div className="flex-1 flex items-end justify-center">
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-px">
           {card.shape.map((row, y) => (
-            <div key={y} className="flex gap-0.5">
+            <div key={y} className="flex gap-px">
               {row.map((isActive, x) => {
                 const key = `${x},${y}`;
                 const placed = placedCells.get(key);
@@ -100,11 +109,11 @@ export const PuzzleCardDisplay = ({
                   return (
                     <div
                       key={x}
-                      className={`${cellSize} flex items-center justify-center ${
-                        card.type === 'white' ? 'bg-slate-100 text-slate-300' : 'bg-slate-800 text-slate-600'
-                      }`}
+                      className={`${cellSize} flex items-center justify-center`}
                     >
-                      <div className="w-1 h-1 rounded-full bg-current" />
+                      <div className={`w-1 h-1 rounded-full ${
+                        card.type === 'white' ? 'bg-slate-500' : 'bg-slate-300'
+                      }`} />
                     </div>
                   );
                 }
@@ -114,7 +123,7 @@ export const PuzzleCardDisplay = ({
                   return (
                     <div
                       key={x}
-                      className={`${cellSize} ${placed.color} rounded-sm border border-black/20`}
+                      className={`${cellSize} ${placed.color} rounded-[2px] border border-black/20`}
                     />
                   );
                 }
@@ -123,7 +132,7 @@ export const PuzzleCardDisplay = ({
                 return (
                   <div
                     key={x}
-                    className={`${cellSize} rounded-sm border-2 border-dashed ${
+                    className={`${cellSize} rounded-[2px] border-2 border-dashed ${
                       card.type === 'white'
                         ? 'bg-white border-slate-400'
                         : 'bg-slate-700 border-slate-500'

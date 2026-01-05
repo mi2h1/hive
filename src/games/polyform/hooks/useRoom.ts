@@ -5,7 +5,7 @@ import type { GameState, Player, GameSettings, PieceInstance, WorkingPuzzle, Pla
 import { INITIAL_PIECE_STOCK } from '../data/pieces';
 import { WHITE_PUZZLES, BLACK_PUZZLES } from '../data/puzzles';
 
-// Firebaseパス（本番/開発で切り替え）
+// Firebaseパス（本番用）
 const FIREBASE_PATH = 'polyform-rooms';
 
 // ルームデータ
@@ -16,7 +16,9 @@ export interface RoomData {
 }
 
 // デフォルト設定
-export const DEFAULT_SETTINGS: GameSettings = {};
+export const DEFAULT_SETTINGS: GameSettings = {
+  scoreVisibility: 'public', // デフォルトは公開
+};
 
 // 古いルームを削除（24時間以上前のルーム）
 const cleanupOldRooms = async () => {
@@ -96,10 +98,15 @@ export const createInitialPlayer = (id: string, name: string): Player => {
     name,
     pieces: initialPieces,
     workingPuzzles: [],
+    completedPuzzles: [],
     completedPuzzleIds: [],
+    completedWhite: 0,
+    completedBlack: 0,
     score: 0,
     remainingActions: 3,
     usedMasterAction: false,
+    finishingDone: false,
+    finishingPenalty: 0,
   };
 };
 
@@ -169,7 +176,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     cleanupOldRooms();
   }, []);
 
-  // プレゼンス（接続状態）の設定
+  // プレゼンス（接続状態）の設定 + ハートビート
   useEffect(() => {
     if (!roomCode || !playerId) return;
 
@@ -177,7 +184,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     const myPresenceRef = ref(db, `${FIREBASE_PATH}/${roomCode}/presence/${playerId}`);
 
     const setupPresence = async () => {
-      await set(myPresenceRef, true);
+      await set(myPresenceRef, Date.now()); // タイムスタンプで更新
       await onDisconnect(myPresenceRef).remove();
 
       const roomSnapshot = await get(roomRef);
@@ -191,7 +198,13 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
 
     setupPresence();
 
+    // ハートビート: 30秒ごとにプレゼンスを更新してFirebase接続を維持
+    const heartbeatInterval = setInterval(() => {
+      set(myPresenceRef, Date.now()).catch(console.error);
+    }, 30000);
+
     return () => {
+      clearInterval(heartbeatInterval);
       remove(myPresenceRef);
       onDisconnect(myPresenceRef).cancel();
       onDisconnect(roomRef).cancel();
@@ -472,6 +485,22 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     }
   }, [roomCode]);
 
+  // 設定を更新
+  const updateSettings = useCallback(async (newSettings: Partial<GameSettings>) => {
+    if (!roomCode || !roomData) return;
+
+    try {
+      const currentSettings = roomData.gameState.settings ?? DEFAULT_SETTINGS;
+      await update(ref(db, `${FIREBASE_PATH}/${roomCode}/gameState`), {
+        settings: { ...currentSettings, ...newSettings },
+        updatedAt: Date.now(),
+      });
+    } catch (err) {
+      console.error('Update settings error:', err);
+      setError('設定の更新に失敗しました');
+    }
+  }, [roomCode, roomData]);
+
   // デバッグ用: テストプレイヤーを追加
   const addTestPlayer = useCallback(async () => {
     if (!roomCode || !roomData) return;
@@ -511,6 +540,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     leaveRoom,
     startGame,
     updateGameState,
+    updateSettings,
     addTestPlayer,
   };
 };
