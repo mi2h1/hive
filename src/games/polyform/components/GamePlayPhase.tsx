@@ -1956,9 +1956,9 @@ export const GamePlayPhase = ({
               {/* 上段：ターン情報＋アナウンス（高さ固定） */}
               <div className="flex items-center justify-center gap-4 mb-3 h-8">
                 <div className="flex items-center gap-3">
-                  {/* ターン数表示 */}
+                  {/* ラウンド数表示 */}
                   <span className="text-slate-400 text-sm">
-                    ターン {gameState.currentTurnNumber}
+                    ラウンド {gameState.currentTurnNumber}
                   </span>
                   {/* 最終ラウンド表示 */}
                   {gameState.finalRound && (
