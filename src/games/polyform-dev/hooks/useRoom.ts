@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ref, set, onValue, off, update, remove, get, onDisconnect } from 'firebase/database';
 import { db } from '../../../lib/firebase';
-import type { GameState, Player, GameSettings, PieceInstance, WorkingPuzzle, PlacedPiece } from '../types/game';
+import type { GameState, Player, GameSettings, PieceInstance, WorkingPuzzle, PlacedPiece, CompletedPuzzle } from '../types/game';
 import { INITIAL_PIECE_STOCK } from '../data/pieces';
 import { WHITE_PUZZLES, BLACK_PUZZLES } from '../data/puzzles';
 
@@ -300,6 +300,10 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
             ...wp,
             placedPieces: normalizeArray<PlacedPiece>(wp.placedPieces),
           })),
+          completedPuzzles: normalizeArray<CompletedPuzzle>(p.completedPuzzles).map((cp): CompletedPuzzle => ({
+            ...cp,
+            placedPieces: normalizeArray<PlacedPiece>(cp.placedPieces),
+          })),
           completedPuzzleIds: normalizeArray<string>(p.completedPuzzleIds),
         }));
 
@@ -344,7 +348,8 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     setError(null);
 
     try {
-      await cleanupOldRooms();
+      // クリーンアップはバックグラウンドで実行（ブロックしない）
+      cleanupOldRooms().catch(console.error);
 
       const code = generateRoomCode();
       const roomRef = ref(db, `${FIREBASE_PATH}/${code}`);
