@@ -2396,7 +2396,7 @@ export const GamePlayPhase = ({
 
           {/* 手持ちパズル（4枚並ぶ幅で固定） */}
           <div
-            className={`relative rounded-lg p-4 flex-shrink-0 transition-all border ${
+            className={`relative rounded-lg p-4 flex-shrink-0 transition-all border h-fit ${
               actionMode === 'placePiece' || masterActionMode || (gameState.phase === 'finishing' && !currentPlayer.finishingDone)
                 ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
                 : 'bg-slate-800/50 border-slate-600'
