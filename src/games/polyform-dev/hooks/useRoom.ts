@@ -176,7 +176,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     cleanupOldRooms();
   }, []);
 
-  // プレゼンス（接続状態）の設定
+  // プレゼンス（接続状態）の設定 + ハートビート
   useEffect(() => {
     if (!roomCode || !playerId) return;
 
@@ -184,7 +184,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     const myPresenceRef = ref(db, `${FIREBASE_PATH}/${roomCode}/presence/${playerId}`);
 
     const setupPresence = async () => {
-      await set(myPresenceRef, true);
+      await set(myPresenceRef, Date.now()); // タイムスタンプで更新
       await onDisconnect(myPresenceRef).remove();
 
       const roomSnapshot = await get(roomRef);
@@ -198,7 +198,13 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
 
     setupPresence();
 
+    // ハートビート: 30秒ごとにプレゼンスを更新してFirebase接続を維持
+    const heartbeatInterval = setInterval(() => {
+      set(myPresenceRef, Date.now()).catch(console.error);
+    }, 30000);
+
     return () => {
+      clearInterval(heartbeatInterval);
       remove(myPresenceRef);
       onDisconnect(myPresenceRef).cancel();
       onDisconnect(roomRef).cancel();

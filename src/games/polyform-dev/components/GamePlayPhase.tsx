@@ -40,7 +40,6 @@ interface GamePlayPhaseProps {
   currentPlayerId: string;
   onLeaveRoom: () => void;
   onUpdateGameState?: (updates: Partial<GameState>) => void;
-  isTransitioning?: boolean;
 }
 
 export const GamePlayPhase = ({
@@ -48,7 +47,6 @@ export const GamePlayPhase = ({
   currentPlayerId,
   onLeaveRoom,
   onUpdateGameState,
-  isTransitioning = false,
 }: GamePlayPhaseProps) => {
   // 選択状態
   const [selectedPieceId, setSelectedPieceId] = useState<string | null>(null);
@@ -143,24 +141,20 @@ export const GamePlayPhase = ({
     return () => window.removeEventListener('resize', updateCardSize);
   }, []);
 
-  // ゲーム開始時のカード配布アニメーション
-  // トランジション完了後に開始
+  // ゲーム開始時のフェードインとカード配布アニメーション
   useEffect(() => {
-    // トランジション中は何もしない
-    if (isTransitioning) return;
-
     // フェードイン開始
     const fadeTimer = setTimeout(() => {
       setGameStarted(true);
-    }, 100);
+    }, 50);
 
-    // カード配布（0.5秒後から開始、0.3秒間隔で1枚ずつ）
+    // カード配布（0.3秒後から開始、0.3秒間隔で1枚ずつ）
     const dealTimers: ReturnType<typeof setTimeout>[] = [];
     for (let i = 0; i < 4; i++) {
       dealTimers.push(
         setTimeout(() => {
           setDealtCardCount(i + 1);
-        }, 500 + i * 300)
+        }, 300 + i * 300)
       );
     }
 
@@ -168,7 +162,7 @@ export const GamePlayPhase = ({
       clearTimeout(fadeTimer);
       dealTimers.forEach(clearTimeout);
     };
-  }, [isTransitioning]);
+  }, []);
 
   // アニメーション用のRef
   const workingPuzzleSlotRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -1313,13 +1307,13 @@ export const GamePlayPhase = ({
   }
 
   return (
-    <motion.div
-      className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: gameStarted ? 1 : 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="min-h-screen bg-black/20 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900">
+      <motion.div
+        className="min-h-screen bg-black/20 p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: gameStarted ? 1 : 0 }}
+        transition={{ duration: 0.5 }}
+      >
         {/* ヘッダー（全幅） */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
@@ -2213,17 +2207,17 @@ export const GamePlayPhase = ({
           {/* 右カラム終了 */}
         </div>
         {/* 2カラムレイアウト終了 */}
-      </div>
 
-      {/* ドラッグオーバーレイ（パズル上でプレビュー中は非表示） */}
-      {isDragging && selectedPiece && !hoverPuzzleId && (
-        <DragOverlay
-          type={selectedPiece.type}
-          rotation={rotation}
-          flipped={flipped}
-          position={dragPosition}
-        />
-      )}
-    </motion.div>
+        {/* ドラッグオーバーレイ（パズル上でプレビュー中は非表示） */}
+        {isDragging && selectedPiece && !hoverPuzzleId && (
+          <DragOverlay
+            type={selectedPiece.type}
+            rotation={rotation}
+            flipped={flipped}
+            position={dragPosition}
+          />
+        )}
+      </motion.div>
+    </div>
   );
 };
