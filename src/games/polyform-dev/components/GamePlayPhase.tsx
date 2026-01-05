@@ -1275,6 +1275,7 @@ export const GamePlayPhase = ({
     setRotation(0);
     setFlipped(false);
     setAnnouncement(null);
+    setActionMode('none'); // アクション選択に戻る
   };
 
   // マスターアクション開始
@@ -2617,7 +2618,11 @@ export const GamePlayPhase = ({
                 const canInteract = isFinishingPhase
                   ? !currentPlayer.finishingDone // 仕上げフェーズ：完了していなければ操作可能
                   : (actionMode === 'placePiece' || actionMode === 'pieceChange' || masterActionMode);
-                return currentPlayer.pieces.map((piece) => (
+                // 仮配置中のピースは非表示
+                const displayPieces = pendingPlacement
+                  ? currentPlayer.pieces.filter((p) => p.id !== pendingPlacement.piece.id)
+                  : currentPlayer.pieces;
+                return displayPieces.map((piece) => (
                   <div
                     key={piece.id}
                     onMouseDown={canInteract ? (e) => handleDragStart(piece.id, e) : undefined}
