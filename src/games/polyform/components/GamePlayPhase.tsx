@@ -458,9 +458,19 @@ export const GamePlayPhase = ({
       updates.blackPuzzleDeck = deck;
     }
 
+    // 最終ラウンドチェック（山札が空になったら）
+    if (!gameState.finalRound && deck.length === 0) {
+      const nextPlayerIdx = (nextPlayerIndex + 1) % gameState.playerOrder.length;
+      const nextPlayerId = gameState.playerOrder[nextPlayerIdx];
+      updates.finalRound = true;
+      updates.finalRoundStartPlayer = nextPlayerId;
+      setAnnouncement('最終ラウンド！');
+    } else {
+      setAnnouncement('山札からカードを引いた');
+    }
+
     onUpdateGameState(updates);
     setActionMode('none'); // アクション完了後にリセット
-    setAnnouncement('山札からカードを引いた');
 
     // 最終ターンで黒カードを引いた場合、カウントを増やす
     if (isFinalTurn && deckType === 'black') {
@@ -614,12 +624,22 @@ export const GamePlayPhase = ({
       updates.blackPuzzleDeck = deck;
     }
 
+    // 最終ラウンドチェック（山札が空になったら）
+    if (!gameState.finalRound && deck.length === 0) {
+      const nextPlayerIdx = (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length;
+      const nextPlayerId = gameState.playerOrder[nextPlayerIdx];
+      updates.finalRound = true;
+      updates.finalRoundStartPlayer = nextPlayerId;
+      setAnnouncement('最終ラウンド！');
+    } else {
+      setAnnouncement('カードを取得');
+    }
+
     // 新しいカードのIDを設定（フリップアニメーション用）
     setNewCardId(addedCardId);
     onUpdateGameState(updates);
     setAnimatingCard(null);
     setActionMode('none'); // アクション完了後にリセット
-    setAnnouncement('カードを取得');
 
     // 最終ターンで黒カードを取得した場合、カウントを増やす
     if (isFinalTurn && puzzleType === 'black') {
