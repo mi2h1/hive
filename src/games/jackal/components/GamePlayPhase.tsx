@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Heart, FlaskConical } from 'lucide-react';
 import { Card } from './Card';
+import { CardReference } from './CardReference';
 import type { GameState, Player, Card as CardType } from '../types/game';
 
 interface GamePlayPhaseProps {
@@ -87,8 +88,8 @@ export const GamePlayPhase = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 p-4 pb-44 md:pb-4">
-      <div className="max-w-5xl mx-auto">
-        {/* ヘッダー */}
+      <div className="max-w-7xl mx-auto">
+        {/* ヘッダー（全幅） */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <img
@@ -114,7 +115,7 @@ export const GamePlayPhase = ({
           </div>
         </div>
 
-        {/* デバッグ用: プレイヤー切り替え */}
+        {/* デバッグ用: プレイヤー切り替え（全幅） */}
         {debugMode && (
           <div className="bg-orange-900/30 border border-orange-600/50 rounded-xl p-3 mb-4">
             <div className="flex flex-wrap items-center gap-2">
@@ -148,7 +149,16 @@ export const GamePlayPhase = ({
           </div>
         )}
 
-        {/* 上段: インフォボード（スマホ: 全幅 / PC: 70%+30%横並び） */}
+        {/* カラムレイアウト */}
+        <div className="flex gap-4">
+          {/* 左カラム: カード一覧（PC専用） */}
+          <div className="hidden lg:block w-44 flex-shrink-0">
+            <CardReference />
+          </div>
+
+          {/* 右カラム: メインコンテンツ */}
+          <div className="flex-1">
+          {/* 上段: インフォボード（スマホ: 全幅 / PC: 70%+30%横並び） */}
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           {/* インフォボード（スマホ: 全幅 / PC: 70%） */}
           <div className="w-full md:w-[70%] h-40 bg-slate-800/80 rounded-xl p-4 flex flex-col justify-center">
@@ -343,7 +353,12 @@ export const GamePlayPhase = ({
             </div>
           </div>
         )}
+          </div>
+          {/* 右カラム終わり */}
+        </div>
+        {/* カラムレイアウト終わり */}
       </div>
+      {/* max-w-7xl終わり */}
 
       {/* スマホ用: 下部固定の入力パネル */}
       <div className="fixed bottom-0 left-0 right-0 md:hidden bg-slate-900/95 backdrop-blur border-t border-slate-700 p-4">
