@@ -276,7 +276,18 @@ export const GamePlayPhase = ({
   if (!realPlayer) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900 flex items-center justify-center">
-        <div className="text-white">プレイヤーが見つかりません</div>
+        <div className="bg-slate-800/95 rounded-xl p-6 text-center">
+          <div className="text-white mb-4">プレイヤーが見つかりません</div>
+          <div className="text-slate-400 text-sm mb-6">
+            ホストが退出した可能性があります
+          </div>
+          <button
+            onClick={onLeaveRoom}
+            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold transition-colors"
+          >
+            ロビーに戻る
+          </button>
+        </div>
       </div>
     );
   }
