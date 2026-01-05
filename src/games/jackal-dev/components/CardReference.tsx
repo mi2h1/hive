@@ -30,7 +30,7 @@ const SPECIAL_CARDS = [
 // カード行をレンダリングするヘルパー
 const CardRow = ({ card }: { card: typeof CARDS_ABOVE_ZERO[0] }) => (
   <div
-    className={`flex items-center justify-center gap-2 py-0.5 px-2 rounded ${card.bgColor}`}
+    className={`flex items-center justify-center gap-4 py-0.5 px-2 rounded ${card.bgColor}`}
   >
     {Array.from({ length: card.count }).map((_, i) => (
       <span
@@ -58,7 +58,7 @@ export const CardReference = () => {
         {/* 0の行（通常0 + 特殊0を2カラムで表示） */}
         <div className="flex gap-1">
           {/* 通常0: 3枚 */}
-          <div className="flex-1 flex items-center justify-center gap-2 py-0.5 px-2 rounded bg-green-200">
+          <div className="flex-1 flex items-center justify-center gap-4 py-0.5 px-2 rounded bg-green-200">
             <span className="text-xs font-bold text-slate-800">0</span>
             <span className="text-xs font-bold text-slate-800">0</span>
             <span className="text-xs font-bold text-slate-800">0</span>
