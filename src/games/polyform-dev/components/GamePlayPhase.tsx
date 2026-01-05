@@ -2021,8 +2021,6 @@ export const GamePlayPhase = ({
 
           {/* 右カラム: メインコンテンツ */}
           <div className="flex-1 min-w-0">
-            {/* インフォボード（高さ固定） */}
-            <div className="bg-slate-800/50 rounded-lg p-3 mb-4 h-[100px]">
               {gameState.phase === 'finishing' ? (
                 /* 仕上げフェーズ用のUI */
                 <>
@@ -2314,7 +2312,6 @@ export const GamePlayPhase = ({
               </div>
                 </>
               )}
-            </div>
 
             {/* 場のパズル（全幅） */}
             <div className="mb-4">
