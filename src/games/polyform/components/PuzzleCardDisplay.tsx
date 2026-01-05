@@ -44,7 +44,7 @@ export const PuzzleCardDisplay = ({
     const definition = PIECE_DEFINITIONS[placed.type];
     if (!definition) return;
 
-    const shape = getTransformedShape(placed.type, placed.rotation, false);
+    const shape = getTransformedShape(placed.type, placed.rotation, placed.flipped ?? false);
     shape.forEach(([dx, dy]) => {
       const x = placed.position.x + dx;
       const y = placed.position.y + dy;

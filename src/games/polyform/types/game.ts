@@ -40,6 +40,7 @@ export interface PlacedPiece {
   pieceId: string;
   type: PieceType;
   rotation: 0 | 90 | 180 | 270;
+  flipped: boolean;
   position: { x: number; y: number }; // パズル内の配置位置（左上基準）
 }
 

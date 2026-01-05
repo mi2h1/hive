@@ -746,6 +746,7 @@ export const GamePlayPhase = ({
       pieceId: selectedPiece.id,
       type: selectedPiece.type,
       rotation,
+      flipped,
       position,
     };
 
@@ -755,7 +756,7 @@ export const GamePlayPhase = ({
     const totalCells = card.shape.flat().filter(Boolean).length;
     let filledCells = 0;
     newPlacedPieces.forEach((placed) => {
-      const shape = getTransformedShape(placed.type, placed.rotation, false);
+      const shape = getTransformedShape(placed.type, placed.rotation, placed.flipped);
       filledCells += shape.length;
     });
     const isCompleted = filledCells === totalCells;
