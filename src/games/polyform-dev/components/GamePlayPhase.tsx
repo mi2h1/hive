@@ -2126,6 +2126,14 @@ export const GamePlayPhase = ({
 
                   {/* 2段目: 残りアクション＋アナウンス */}
                   <div className="flex items-center justify-center gap-3 h-7">
+                    {isMyTurn && currentPlayer.remainingActions < 3 && turnStartSnapshot && (
+                      <button
+                        onClick={handleResetTurn}
+                        className="flex items-center gap-1 px-2 py-0.5 bg-slate-600 hover:bg-slate-500 rounded text-slate-300 text-xs transition-all"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                      </button>
+                    )}
                     <span className="text-slate-500 text-sm">
                       残りアクション: <span className={`font-bold ${
                         gameState.players.find(p => p.id === activePlayerId)?.remainingActions === 0 ? 'text-slate-500' : 'text-white'
@@ -2207,15 +2215,6 @@ export const GamePlayPhase = ({
                               className="px-3 py-1 bg-purple-600 hover:bg-purple-500 rounded text-white text-sm font-medium transition-all"
                             >
                               マスター
-                            </button>
-                          )}
-                          {currentPlayer.remainingActions < 3 && turnStartSnapshot && (
-                            <button
-                              onClick={handleResetTurn}
-                              className="flex items-center gap-1 px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded text-slate-300 text-xs transition-all"
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                              <span>リセット</span>
                             </button>
                           )}
                         </>
