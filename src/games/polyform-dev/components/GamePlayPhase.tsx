@@ -1141,6 +1141,30 @@ export const GamePlayPhase = ({
   // 他のプレイヤーを取得
   const otherPlayers = gameState.players.filter((p) => p.id !== debugControlPlayerId);
 
+  // 結果画面用：全プレイヤーの完成パズル数の最大値
+  const maxCompletedPuzzles = Math.max(
+    0,
+    ...gameState.players.map((p) => (p.completedPuzzles || []).length)
+  );
+
+  // 結果画面用：パズルオープン演出
+  useEffect(() => {
+    if (gameState.phase !== 'ended') return;
+
+    if (revealedCardIndex < maxCompletedPuzzles) {
+      const timer = setTimeout(() => {
+        setRevealedCardIndex((prev) => prev + 1);
+      }, 1200); // 1.2秒ごとにオープン
+      return () => clearTimeout(timer);
+    } else if (!showFinalResults && revealedCardIndex >= maxCompletedPuzzles) {
+      // 全てオープン後、少し待って結果表示
+      const timer = setTimeout(() => {
+        setShowFinalResults(true);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.phase, revealedCardIndex, maxCompletedPuzzles, showFinalResults]);
+
   // 最終スコア計算関数
   const calculateFinalScore = (player: typeof currentPlayer) => {
     const completedScore = player.score; // 完成パズルのポイント
@@ -1160,11 +1184,6 @@ export const GamePlayPhase = ({
 
   // 結果画面（ended フェーズ）
   if (gameState.phase === 'ended') {
-    // 全プレイヤーの完成パズル数の最大値
-    const maxCompletedPuzzles = Math.max(
-      ...gameState.players.map((p) => (p.completedPuzzles || []).length)
-    );
-
     // 全プレイヤーのスコアを計算してソート
     const playerResults = gameState.players
       .map((player) => ({
@@ -1172,23 +1191,6 @@ export const GamePlayPhase = ({
         ...calculateFinalScore(player),
       }))
       .sort((a, b) => b.finalScore - a.finalScore);
-
-    // パズルオープン演出用のuseEffect（結果画面専用）
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useEffect(() => {
-      if (revealedCardIndex < maxCompletedPuzzles) {
-        const timer = setTimeout(() => {
-          setRevealedCardIndex((prev) => prev + 1);
-        }, 1200); // 1.2秒ごとにオープン
-        return () => clearTimeout(timer);
-      } else if (!showFinalResults && revealedCardIndex >= maxCompletedPuzzles) {
-        // 全てオープン後、少し待って結果表示
-        const timer = setTimeout(() => {
-          setShowFinalResults(true);
-        }, 800);
-        return () => clearTimeout(timer);
-      }
-    }, [revealedCardIndex, maxCompletedPuzzles, showFinalResults]);
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900">
