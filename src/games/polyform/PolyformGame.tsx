@@ -51,14 +51,51 @@ export const PolyformGame = ({ onBack }: PolyformGameProps) => {
     }, 300);
   };
 
+  // もう一度プレイ（ロビーに戻る）
+  const handlePlayAgain = () => {
+    if (!isHost || !gameState) return;
+
+    // プレイヤーの状態をリセット
+    const resetPlayers = gameState.players.map((p) => ({
+      id: p.id,
+      name: p.name,
+      pieces: [],
+      workingPuzzles: [],
+      completedPuzzles: [],
+      completedPuzzleIds: [],
+      score: 0,
+      remainingActions: 0,
+      completedWhite: 0,
+      completedBlack: 0,
+      usedMasterAction: false,
+      finishingPenalty: 0,
+      finishingDone: false,
+    }));
+
+    updateGameState({
+      phase: 'waiting',
+      players: resetPlayers,
+      currentPlayerIndex: 0,
+      playerOrder: [],
+      whitePuzzleDeck: [],
+      blackPuzzleDeck: [],
+      whitePuzzleMarket: [],
+      blackPuzzleMarket: [],
+      finalRound: false,
+      finalRoundStartPlayer: null,
+    });
+  };
+
   // ゲームプレイ中
   if (gameState && gameState.phase !== 'waiting' && playerId) {
     return (
       <GamePlayPhase
         gameState={gameState}
         currentPlayerId={playerId}
+        isHost={isHost}
         onLeaveRoom={leaveRoom}
         onUpdateGameState={updateGameState}
+        onPlayAgain={handlePlayAgain}
       />
     );
   }

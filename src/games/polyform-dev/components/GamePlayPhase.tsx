@@ -38,15 +38,19 @@ const getMinPieceHeight = (cardSize: CardSizeType): number => {
 interface GamePlayPhaseProps {
   gameState: GameState;
   currentPlayerId: string;
+  isHost: boolean;
   onLeaveRoom: () => void;
   onUpdateGameState?: (updates: Partial<GameState>) => void;
+  onPlayAgain?: () => void;
 }
 
 export const GamePlayPhase = ({
   gameState,
   currentPlayerId,
+  isHost,
   onLeaveRoom,
   onUpdateGameState,
+  onPlayAgain,
 }: GamePlayPhaseProps) => {
   // 選択状態
   const [selectedPieceId, setSelectedPieceId] = useState<string | null>(null);
@@ -272,7 +276,18 @@ export const GamePlayPhase = ({
   if (!realPlayer) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900 flex items-center justify-center">
-        <div className="text-white">プレイヤーが見つかりません</div>
+        <div className="bg-slate-800/95 rounded-xl p-6 text-center">
+          <div className="text-white mb-4">プレイヤーが見つかりません</div>
+          <div className="text-slate-400 text-sm mb-6">
+            ホストが退出した可能性があります
+          </div>
+          <button
+            onClick={onLeaveRoom}
+            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold transition-colors"
+          >
+            ロビーに戻る
+          </button>
+        </div>
       </div>
     );
   }
@@ -1321,12 +1336,34 @@ export const GamePlayPhase = ({
               animate={{ opacity: 1 }}
               className="mt-6"
             >
-              <button
-                onClick={onLeaveRoom}
-                className="px-6 py-3 bg-teal-600 hover:bg-teal-500 rounded-lg text-white font-bold"
-              >
-                ロビーに戻る
-              </button>
+              {isHost ? (
+                <div className="flex gap-3">
+                  <button
+                    onClick={onLeaveRoom}
+                    className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold transition-colors"
+                  >
+                    退出
+                  </button>
+                  <button
+                    onClick={onPlayAgain}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 rounded-lg text-white font-bold transition-all"
+                  >
+                    もう一度プレイ
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="text-slate-400 animate-pulse mb-4">
+                    ホストの選択を待っています...
+                  </div>
+                  <button
+                    onClick={onLeaveRoom}
+                    className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold transition-colors"
+                  >
+                    退出
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
         </div>

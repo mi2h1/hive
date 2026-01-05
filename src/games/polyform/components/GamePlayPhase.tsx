@@ -38,15 +38,19 @@ const getMinPieceHeight = (cardSize: CardSizeType): number => {
 interface GamePlayPhaseProps {
   gameState: GameState;
   currentPlayerId: string;
+  isHost: boolean;
   onLeaveRoom: () => void;
   onUpdateGameState?: (updates: Partial<GameState>) => void;
+  onPlayAgain?: () => void;
 }
 
 export const GamePlayPhase = ({
   gameState,
   currentPlayerId,
+  isHost,
   onLeaveRoom,
   onUpdateGameState,
+  onPlayAgain,
 }: GamePlayPhaseProps) => {
   // 選択状態
   const [selectedPieceId, setSelectedPieceId] = useState<string | null>(null);
@@ -1081,23 +1085,54 @@ export const GamePlayPhase = ({
     ...gameState.players.map((p) => (p.completedPuzzles || []).length)
   );
 
+  // 結果画面用：全プレイヤーの未完成パズル数の最大値
+  const maxIncompletePuzzles = Math.max(
+    0,
+    ...gameState.players.map((p) => (p.workingPuzzles || []).length)
+  );
+
+  // 結果画面用：未完成パズル公開状態
+  const [showIncompletePuzzles, setShowIncompletePuzzles] = useState(false);
+  const [revealedIncompleteIndex, setRevealedIncompleteIndex] = useState(-1);
+
   // 結果画面用：パズルオープン演出
   useEffect(() => {
     if (gameState.phase !== 'ended') return;
 
+    // まず完成パズルを公開
     if (revealedCardIndex < maxCompletedPuzzles) {
       const timer = setTimeout(() => {
         setRevealedCardIndex((prev) => prev + 1);
       }, 1200); // 1.2秒ごとにオープン
       return () => clearTimeout(timer);
-    } else if (!showFinalResults && revealedCardIndex >= maxCompletedPuzzles) {
-      // 全てオープン後、少し待って結果表示
+    }
+
+    // 完成パズル公開後、未完成パズル公開フェーズへ
+    if (!showIncompletePuzzles && revealedCardIndex >= maxCompletedPuzzles && maxIncompletePuzzles > 0) {
+      const timer = setTimeout(() => {
+        setShowIncompletePuzzles(true);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+
+    // 未完成パズルを公開
+    if (showIncompletePuzzles && revealedIncompleteIndex < maxIncompletePuzzles) {
+      const timer = setTimeout(() => {
+        setRevealedIncompleteIndex((prev) => prev + 1);
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+
+    // 全て公開後、結果表示
+    const allRevealed = revealedCardIndex >= maxCompletedPuzzles &&
+      (maxIncompletePuzzles === 0 || revealedIncompleteIndex >= maxIncompletePuzzles);
+    if (!showFinalResults && allRevealed) {
       const timer = setTimeout(() => {
         setShowFinalResults(true);
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [gameState.phase, revealedCardIndex, maxCompletedPuzzles, showFinalResults]);
+  }, [gameState.phase, revealedCardIndex, maxCompletedPuzzles, showIncompletePuzzles, revealedIncompleteIndex, maxIncompletePuzzles, showFinalResults]);
 
   // 最終スコア計算関数
   const calculateFinalScore = (player: typeof currentPlayer) => {
@@ -1205,41 +1240,82 @@ export const GamePlayPhase = ({
                     </AnimatePresence>
                   </div>
 
-                  {/* 右側：完成パズル一覧（横並び、縦中央揃え） */}
+                  {/* 右側：パズル一覧（横並び、縦中央揃え） */}
                   <div className="flex-1 flex items-center">
                     <div className="flex flex-wrap gap-3">
-                      {completedPuzzles.length === 0 ? (
-                        <div className="text-slate-500 text-xs">完成なし</div>
-                      ) : (
-                        completedPuzzles.map((cp, cardIndex) => {
-                          const card = ALL_PUZZLES.find((p) => p.id === cp.cardId);
-                          if (!card) return null;
+                      {/* 完成パズル */}
+                      {completedPuzzles.map((cp, cardIndex) => {
+                        const card = ALL_PUZZLES.find((p) => p.id === cp.cardId);
+                        if (!card) return null;
 
-                          const isRevealed = cardIndex <= revealedCardIndex;
+                        const isRevealed = cardIndex <= revealedCardIndex;
 
-                          return (
-                            <motion.div
-                              key={cp.cardId}
-                              initial={{ rotateY: 90, opacity: 0 }}
-                              animate={{
-                                rotateY: isRevealed ? 0 : 90,
-                                opacity: isRevealed ? 1 : 0,
-                              }}
-                              transition={{ duration: 0.5, ease: 'easeOut' }}
-                              style={{ perspective: 1000 }}
-                            >
-                              {isRevealed && (
-                                <PuzzleCardDisplay
-                                  card={card}
-                                  size="xxs"
-                                  placedPieces={cp.placedPieces}
-                                  showReward={false}
-                                  compact={true}
-                                />
-                              )}
-                            </motion.div>
-                          );
-                        })
+                        return (
+                          <motion.div
+                            key={cp.cardId}
+                            initial={{ rotateY: 90, opacity: 0 }}
+                            animate={{
+                              rotateY: isRevealed ? 0 : 90,
+                              opacity: isRevealed ? 1 : 0,
+                            }}
+                            transition={{ duration: 0.5, ease: 'easeOut' }}
+                            style={{ perspective: 1000 }}
+                          >
+                            {isRevealed && (
+                              <PuzzleCardDisplay
+                                card={card}
+                                size="xxs"
+                                placedPieces={cp.placedPieces}
+                                showReward={false}
+                                compact={true}
+                              />
+                            )}
+                          </motion.div>
+                        );
+                      })}
+
+                      {/* 未完成パズル（赤ハイライト） */}
+                      {showIncompletePuzzles && (player.workingPuzzles || []).map((wp, cardIndex) => {
+                        const card = ALL_PUZZLES.find((p) => p.id === wp.cardId);
+                        if (!card) return null;
+
+                        const isRevealed = cardIndex <= revealedIncompleteIndex;
+
+                        return (
+                          <motion.div
+                            key={`incomplete-${wp.cardId}`}
+                            initial={{ rotateY: 90, opacity: 0 }}
+                            animate={{
+                              rotateY: isRevealed ? 0 : 90,
+                              opacity: isRevealed ? 1 : 0,
+                            }}
+                            transition={{ duration: 0.5, ease: 'easeOut' }}
+                            style={{ perspective: 1000 }}
+                            className="relative"
+                          >
+                            {isRevealed && (
+                              <>
+                                <div className="ring-2 ring-red-500 rounded-lg">
+                                  <PuzzleCardDisplay
+                                    card={card}
+                                    size="xxs"
+                                    placedPieces={wp.placedPieces}
+                                    showReward={false}
+                                    compact={true}
+                                  />
+                                </div>
+                                <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 rounded font-bold">
+                                  未完成
+                                </div>
+                              </>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+
+                      {/* 完成も未完成もない場合 */}
+                      {completedPuzzles.length === 0 && (player.workingPuzzles || []).length === 0 && (
+                        <div className="text-slate-500 text-xs">パズルなし</div>
                       )}
                     </div>
                   </div>
@@ -1253,14 +1329,34 @@ export const GamePlayPhase = ({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mt-6"
+              className="mt-6 w-full max-w-md"
             >
-              <button
-                onClick={onLeaveRoom}
-                className="px-6 py-3 bg-teal-600 hover:bg-teal-500 rounded-lg text-white font-bold"
-              >
-                ロビーに戻る
-              </button>
+              {isHost ? (
+                <div className="flex gap-3">
+                  <button
+                    onClick={onLeaveRoom}
+                    className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold transition-colors"
+                  >
+                    退出
+                  </button>
+                  <button
+                    onClick={onPlayAgain}
+                    className="flex-1 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 rounded-lg text-white font-bold transition-all"
+                  >
+                    もう一度プレイ
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="text-slate-400 animate-pulse mb-4">ホストの選択を待っています...</div>
+                  <button
+                    onClick={onLeaveRoom}
+                    className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
+                  >
+                    退出
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
         </div>
