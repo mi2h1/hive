@@ -80,15 +80,27 @@ export const PuzzleCardDisplay = ({
       {/* カード情報ヘッダー（固定高さ） */}
       <div className="flex items-center justify-between h-6 mb-2">
         {/* ポイント */}
-        <div
-          className={`text-xs font-bold ${
-            card.type === 'white'
-              ? 'text-slate-700'
-              : 'text-yellow-500'
-          }`}
-        >
-          {card.points}
-        </div>
+        {compact ? (
+          <div
+            className={`text-sm font-bold ${
+              card.type === 'white'
+                ? 'text-slate-700'
+                : 'text-yellow-500'
+            }`}
+          >
+            {card.points}
+          </div>
+        ) : (
+          <div
+            className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+              card.type === 'white'
+                ? 'bg-slate-700 text-white'
+                : 'bg-yellow-500 text-black'
+            }`}
+          >
+            {card.points}pt
+          </div>
+        )}
 
         {/* 報酬ピース */}
         <div className="h-5 flex items-center">
