@@ -1162,23 +1162,54 @@ export const GamePlayPhase = ({
     ...gameState.players.map((p) => (p.completedPuzzles || []).length)
   );
 
+  // 結果画面用：全プレイヤーの未完成パズル数の最大値
+  const maxIncompletePuzzles = Math.max(
+    0,
+    ...gameState.players.map((p) => (p.workingPuzzles || []).length)
+  );
+
+  // 結果画面用：未完成パズル公開状態
+  const [showIncompletePuzzles, setShowIncompletePuzzles] = useState(false);
+  const [revealedIncompleteIndex, setRevealedIncompleteIndex] = useState(-1);
+
   // 結果画面用：パズルオープン演出
   useEffect(() => {
     if (gameState.phase !== 'ended') return;
 
+    // まず完成パズルを公開
     if (revealedCardIndex < maxCompletedPuzzles) {
       const timer = setTimeout(() => {
         setRevealedCardIndex((prev) => prev + 1);
       }, 1200); // 1.2秒ごとにオープン
       return () => clearTimeout(timer);
-    } else if (!showFinalResults && revealedCardIndex >= maxCompletedPuzzles) {
-      // 全てオープン後、少し待って結果表示
+    }
+
+    // 完成パズル公開後、未完成パズル公開フェーズへ
+    if (!showIncompletePuzzles && revealedCardIndex >= maxCompletedPuzzles && maxIncompletePuzzles > 0) {
+      const timer = setTimeout(() => {
+        setShowIncompletePuzzles(true);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+
+    // 未完成パズルを公開
+    if (showIncompletePuzzles && revealedIncompleteIndex < maxIncompletePuzzles) {
+      const timer = setTimeout(() => {
+        setRevealedIncompleteIndex((prev) => prev + 1);
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+
+    // 全て公開後、結果表示
+    const allRevealed = revealedCardIndex >= maxCompletedPuzzles &&
+      (maxIncompletePuzzles === 0 || revealedIncompleteIndex >= maxIncompletePuzzles);
+    if (!showFinalResults && allRevealed) {
       const timer = setTimeout(() => {
         setShowFinalResults(true);
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [gameState.phase, revealedCardIndex, maxCompletedPuzzles, showFinalResults]);
+  }, [gameState.phase, revealedCardIndex, maxCompletedPuzzles, showIncompletePuzzles, revealedIncompleteIndex, maxIncompletePuzzles, showFinalResults]);
 
   // 最終スコア計算関数
   const calculateFinalScore = (player: typeof currentPlayer) => {
@@ -1322,6 +1353,45 @@ export const GamePlayPhase = ({
                           );
                         })
                       )}
+
+                      {/* 未完成パズル（赤ハイライト） */}
+                      {showIncompletePuzzles && (player.workingPuzzles || []).map((wp, cardIndex) => {
+                        const card = ALL_PUZZLES.find((p) => p.id === wp.cardId);
+                        if (!card) return null;
+
+                        const isRevealed = cardIndex <= revealedIncompleteIndex;
+
+                        return (
+                          <motion.div
+                            key={`incomplete-${wp.cardId}`}
+                            initial={{ rotateY: 90, opacity: 0 }}
+                            animate={{
+                              rotateY: isRevealed ? 0 : 90,
+                              opacity: isRevealed ? 1 : 0,
+                            }}
+                            transition={{ duration: 0.5, ease: 'easeOut' }}
+                            style={{ perspective: 1000 }}
+                            className="relative"
+                          >
+                            {isRevealed && (
+                              <>
+                                <div className="ring-2 ring-red-500 rounded-lg">
+                                  <PuzzleCardDisplay
+                                    card={card}
+                                    size="xxs"
+                                    placedPieces={wp.placedPieces}
+                                    showReward={false}
+                                    compact={true}
+                                  />
+                                </div>
+                                <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1 rounded font-bold">
+                                  未完成
+                                </div>
+                              </>
+                            )}
+                          </motion.div>
+                        );
+                      })}
                     </div>
                   </div>
                 </motion.div>
