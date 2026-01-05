@@ -289,72 +289,6 @@ export const GamePlayPhase = ({
   // 最終ターンかどうか（最終ラウンド中で、現在のプレイヤーがfinalRoundStartPlayer）
   const isFinalTurn = gameState.finalRound && debugControlPlayerId === gameState.finalRoundStartPlayer;
 
-  // ターン終了処理
-  const endTurn = () => {
-    if (!onUpdateGameState) return;
-
-    // マスターアクション中なら終了させる
-    if (masterActionMode) {
-      setMasterActionMode(false);
-      setMasterActionPlacedPuzzles(new Set());
-    }
-
-    const nextPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length;
-    const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
-
-    // 最終ラウンド判定：山札が尽きたか確認
-    const isBlackDeckEmpty = gameState.blackPuzzleDeck.length === 0;
-    const isWhiteDeckEmpty = gameState.whitePuzzleDeck.length === 0;
-    const shouldTriggerFinalRound = !gameState.finalRound && (isBlackDeckEmpty || isWhiteDeckEmpty);
-
-    // 最終ラウンド終了判定：現在のプレイヤーが最終ラウンド開始プレイヤー（=最後の1ターン）なら仕上げフェーズへ
-    // ※山札が空になったターンの「次のターン」で終了
-    const shouldEndFinalRound = gameState.finalRound && debugControlPlayerId === gameState.finalRoundStartPlayer;
-
-    // 現在のプレイヤーのアクションを0にし、次のプレイヤーのアクションを3にリセット
-    // 次のプレイヤーのusedMasterActionもリセット
-    const updatedPlayers = gameState.players.map((p) => {
-      if (p.id === debugControlPlayerId) {
-        return { ...p, remainingActions: 0 };
-      }
-      if (p.id === nextPlayerId) {
-        return { ...p, remainingActions: 3, usedMasterAction: false };
-      }
-      return p;
-    });
-
-    if (shouldEndFinalRound) {
-      // 最終ラウンド終了 → 仕上げフェーズへ
-      onUpdateGameState({
-        players: updatedPlayers,
-        phase: 'finishing',
-      });
-      setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
-    } else if (shouldTriggerFinalRound) {
-      // 最終ラウンド開始：次のプレイヤーが最後の1ターンをプレイする
-      onUpdateGameState({
-        players: updatedPlayers,
-        currentPlayerIndex: nextPlayerIndex,
-        finalRound: true,
-        finalRoundStartPlayer: nextPlayerId, // 次のプレイヤー（最後の1ターン）
-      });
-      setAnnouncement('最終ラウンド！次のプレイヤーで終了');
-    } else {
-      // 通常のターン終了
-      onUpdateGameState({
-        players: updatedPlayers,
-        currentPlayerIndex: nextPlayerIndex,
-      });
-      setAnnouncement('ターン終了');
-    }
-  };
-
-  // 手動でターン終了
-  const handleEndTurn = () => {
-    if (!isMyTurn || !onUpdateGameState) return;
-    endTurn();
-  };
-
   // 場のパズルカードを取得
   const whitePuzzles = gameState.whitePuzzleMarket
     .map((id) => ALL_PUZZLES.find((p) => p.id === id))
@@ -1367,24 +1301,6 @@ export const GamePlayPhase = ({
                 アクション残り: {currentPlayer.remainingActions}
               </span>
             )}
-            {isMyTurn && (
-              <button
-                onClick={handleEndTurn}
-                className="px-3 py-1 bg-amber-600 hover:bg-amber-500 rounded text-white text-sm font-medium"
-              >
-                ターン終了
-              </button>
-            )}
-            <button
-              onClick={() => {
-                if (onUpdateGameState) {
-                  onUpdateGameState({ phase: 'finishing' });
-                }
-              }}
-              className="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-white text-sm"
-            >
-              即仕上げ
-            </button>
             <button
               onClick={onLeaveRoom}
               className="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm"
