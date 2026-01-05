@@ -1163,10 +1163,10 @@ export const GamePlayPhase = ({
     const isCompleted = filledCells === totalCells;
 
     // 手持ちからピースを削除
-    const updatedPieces = currentPlayer.pieces.filter((p) => p.id !== piece.id);
+    let updatedPieces = currentPlayer.pieces.filter((p) => p.id !== piece.id);
 
     // 配置を更新
-    const updatedWorkingPuzzles = currentPlayer.workingPuzzles.map((wp) => {
+    let updatedWorkingPuzzles = currentPlayer.workingPuzzles.map((wp) => {
       if (wp.cardId === puzzleId) {
         return { ...wp, placedPieces: newPlacedPieces };
       }
@@ -1185,15 +1185,54 @@ export const GamePlayPhase = ({
     const isEndOfFullTurn = turnEnded && nextPlayerIndex === 0;
     const nextTurnNumber = isEndOfFullTurn ? gameState.currentTurnNumber + 1 : gameState.currentTurnNumber;
 
+    // 完成時の追加処理
+    let completedPuzzleData: { cardId: string; placedPieces: PlacedPiece[] } | null = null;
+    let scoreToAdd = 0;
+    let updatedPieceStock = { ...gameState.pieceStock };
+
+    if (isCompleted) {
+      // 完成したパズルに配置されていたピースを手元に戻す
+      const returnedPieces = newPlacedPieces.map((placed) => ({
+        id: `returned-${Date.now()}-${placed.pieceId}`,
+        type: placed.type,
+        rotation: 0 as const,
+      }));
+      updatedPieces = [...updatedPieces, ...returnedPieces];
+
+      // 報酬ピースをストックから取得（在庫があれば）
+      if (card.rewardPieceType && updatedPieceStock[card.rewardPieceType] > 0) {
+        updatedPieces.push({
+          id: `reward-${Date.now()}-${card.rewardPieceType}`,
+          type: card.rewardPieceType,
+          rotation: 0 as const,
+        });
+        updatedPieceStock[card.rewardPieceType]--;
+      }
+
+      // 完成パズルデータ
+      completedPuzzleData = { cardId: puzzleId, placedPieces: [...newPlacedPieces] };
+      scoreToAdd = card.points;
+
+      // 作業中パズルから削除
+      updatedWorkingPuzzles = updatedWorkingPuzzles.filter((wp) => wp.cardId !== puzzleId);
+    }
+
     // Firebaseに同期
     const updatedPlayers = gameState.players.map((p) => {
       if (p.id === debugControlPlayerId) {
-        return {
+        const playerUpdate: typeof p = {
           ...p,
           pieces: updatedPieces,
           workingPuzzles: updatedWorkingPuzzles,
           remainingActions: turnEnded ? 0 : newRemainingActions,
         };
+        if (isCompleted && completedPuzzleData) {
+          playerUpdate.score = p.score + scoreToAdd;
+          playerUpdate.completedPuzzles = [...(p.completedPuzzles || []), completedPuzzleData];
+          playerUpdate.completedWhite = card.type === 'white' ? (p.completedWhite || 0) + 1 : (p.completedWhite || 0);
+          playerUpdate.completedBlack = card.type === 'black' ? (p.completedBlack || 0) + 1 : (p.completedBlack || 0);
+        }
+        return playerUpdate;
       }
       if (turnEnded && p.id === nextPlayerId) {
         return { ...p, remainingActions: 3, usedMasterAction: false };
@@ -1206,6 +1245,10 @@ export const GamePlayPhase = ({
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
     };
+
+    if (isCompleted) {
+      updates.pieceStock = updatedPieceStock;
+    }
 
     // 最終ラウンド終了チェック（フルターン終了時に判定）
     const shouldEndFinalRound =
@@ -1225,14 +1268,14 @@ export const GamePlayPhase = ({
     setPendingPlacement(null);
     setActionMode('none');
 
-    // 完成時は遅延処理をセット
+    // 完成時はアニメーション表示（ただしFirebase更新は既に完了）
     if (isCompleted) {
-      setPendingCompletion({
-        puzzleId,
-        puzzleType: card.type,
-        points: card.points,
-        rewardPieceType: card.rewardPieceType || null,
-      });
+      setCompletedPuzzleId(puzzleId);
+      setAnnouncement(`パズル完成！ +${card.points}pt`);
+      // アニメーション後にハイライトをクリア
+      setTimeout(() => {
+        setCompletedPuzzleId(null);
+      }, 800);
       console.log('パズル完成！', { puzzleId, type: card.type, points: card.points, reward: card.rewardPieceType });
     } else {
       setAnnouncement('ピースを配置');
