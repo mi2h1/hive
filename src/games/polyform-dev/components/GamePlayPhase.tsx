@@ -96,6 +96,9 @@ export const GamePlayPhase = ({
   const [recyclingMarket, setRecyclingMarket] = useState<'white' | 'black' | null>(null);
   const [recyclePhase, setRecyclePhase] = useState<'exit' | 'enter' | null>(null);
 
+  // 最終ターン中の黒カード取得カウント
+  const [blackCardsTakenInFinalTurn, setBlackCardsTakenInFinalTurn] = useState(0);
+
   // 選択中のアクションモード
   type ActionMode = 'none' | 'takePuzzle' | 'placePiece' | 'levelChange' | 'recycle' | 'masterAction';
   const [actionMode, setActionMode] = useState<ActionMode>('none');
@@ -279,6 +282,9 @@ export const GamePlayPhase = ({
   const activePlayerId = gameState.playerOrder[gameState.currentPlayerIndex];
   const isMyTurn = activePlayerId === debugControlPlayerId;
 
+  // 最終ターンかどうか（最終ラウンド中で、現在のプレイヤーがfinalRoundStartPlayer）
+  const isFinalTurn = gameState.finalRound && debugControlPlayerId === gameState.finalRoundStartPlayer;
+
   // ターン終了処理
   const endTurn = () => {
     if (!onUpdateGameState) return;
@@ -404,6 +410,13 @@ export const GamePlayPhase = ({
       return;
     }
 
+    // 最終ターンで黒カードを既に1枚取得済みなら取得不可
+    if (isFinalTurn && puzzleType === 'black' && blackCardsTakenInFinalTurn >= 1) {
+      console.log('最終ターンでは黒カードは1枚までです');
+      setAnnouncement('最終ターンでは黒カードは1枚まで');
+      return;
+    }
+
     // アニメーション開始
     const targetSlotIndex = currentPlayer.workingPuzzles.length;
     setAnimatingCard({ cardId: puzzleId, type: puzzleType, targetSlotIndex });
@@ -425,6 +438,13 @@ export const GamePlayPhase = ({
     // 所持パズルが4枚以上なら取得不可
     if (currentPlayer.workingPuzzles.length >= 4) {
       console.log('所持パズルが上限です');
+      return;
+    }
+
+    // 最終ターンで黒カードを既に1枚取得済みなら取得不可
+    if (isFinalTurn && deckType === 'black' && blackCardsTakenInFinalTurn >= 1) {
+      console.log('最終ターンでは黒カードは1枚までです');
+      setAnnouncement('最終ターンでは黒カードは1枚まで');
       return;
     }
 
@@ -488,6 +508,12 @@ export const GamePlayPhase = ({
     onUpdateGameState(updates);
     setActionMode('none'); // アクション完了後にリセット
     setAnnouncement('山札からカードを引いた');
+
+    // 最終ターンで黒カードを引いた場合、カウントを増やす
+    if (isFinalTurn && deckType === 'black') {
+      setBlackCardsTakenInFinalTurn((prev) => prev + 1);
+    }
+
     console.log('山札から取得:', { drawnCardId, deckType });
   };
 
@@ -641,6 +667,11 @@ export const GamePlayPhase = ({
     setAnimatingCard(null);
     setActionMode('none'); // アクション完了後にリセット
     setAnnouncement('カードを取得');
+
+    // 最終ターンで黒カードを取得した場合、カウントを増やす
+    if (isFinalTurn && puzzleType === 'black') {
+      setBlackCardsTakenInFinalTurn((prev) => prev + 1);
+    }
 
     // 新カードのフリップアニメーション終了後にnewCardIdをリセット
     if (addedCardId) {
@@ -1159,12 +1190,12 @@ export const GamePlayPhase = ({
             <button
               onClick={() => {
                 if (onUpdateGameState) {
-                  onUpdateGameState({ phase: 'ended' });
+                  onUpdateGameState({ phase: 'finishing' });
                 }
               }}
               className="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-white text-sm"
             >
-              即終了
+              即仕上げ
             </button>
             <button
               onClick={onLeaveRoom}
