@@ -132,6 +132,12 @@ export const GamePlayPhase = ({
   }[]>([]);
   // マスターアクション完了後の完成処理中フラグ
   const [isProcessingMasterCompletions, setIsProcessingMasterCompletions] = useState(false);
+  // マスターアクション完了後のターン遷移情報（完成処理後に適用）
+  const [pendingTurnTransition, setPendingTurnTransition] = useState<{
+    nextPlayerIndex: number;
+    nextTurnNumber: number;
+    shouldEndFinalRound: boolean;
+  } | null>(null);
 
   // ターン開始時の状態（リセット用）
   const [turnStartSnapshot, setTurnStartSnapshot] = useState<{
@@ -307,10 +313,37 @@ export const GamePlayPhase = ({
       }, 300);
       return () => clearTimeout(timer);
     } else {
-      // 全て処理完了
+      // 全て処理完了 - ターン遷移を適用
       setIsProcessingMasterCompletions(false);
+
+      if (pendingTurnTransition && onUpdateGameState) {
+        const { nextPlayerIndex, nextTurnNumber, shouldEndFinalRound } = pendingTurnTransition;
+        const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
+
+        // 次のプレイヤーのアクションを3に設定
+        const updatedPlayers = gameState.players.map((p) => {
+          if (p.id === nextPlayerId) {
+            return { ...p, remainingActions: 3, usedMasterAction: false };
+          }
+          return p;
+        });
+
+        const updates: Partial<GameState> = {
+          players: updatedPlayers,
+          currentPlayerIndex: nextPlayerIndex,
+          currentTurnNumber: nextTurnNumber,
+        };
+
+        if (shouldEndFinalRound) {
+          updates.phase = 'finishing';
+          setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
+        }
+
+        onUpdateGameState(updates);
+        setPendingTurnTransition(null);
+      }
     }
-  }, [pendingCompletion, isProcessingMasterCompletions, masterActionPendingCompletions]);
+  }, [pendingCompletion, isProcessingMasterCompletions, masterActionPendingCompletions, pendingTurnTransition, gameState.playerOrder, gameState.players, onUpdateGameState]);
 
   // アナウンス自動消去
   useEffect(() => {
@@ -1212,26 +1245,6 @@ export const GamePlayPhase = ({
     const isEndOfFullTurn = turnEnded && nextPlayerIndex === 0;
     const nextTurnNumber = isEndOfFullTurn ? gameState.currentTurnNumber + 1 : gameState.currentTurnNumber;
 
-    const updatedPlayers = gameState.players.map((p) => {
-      if (p.id === debugControlPlayerId) {
-        return {
-          ...p,
-          remainingActions: turnEnded ? 0 : newRemainingActions,
-          usedMasterAction: true,
-        };
-      }
-      if (turnEnded && p.id === nextPlayerId) {
-        return { ...p, remainingActions: 3, usedMasterAction: false };
-      }
-      return p;
-    });
-
-    const updates: Partial<GameState> = {
-      players: updatedPlayers,
-      currentPlayerIndex: nextPlayerIndex,
-      currentTurnNumber: nextTurnNumber,
-    };
-
     // 最終ラウンド終了チェック（フルターン終了時に判定）
     const shouldEndFinalRound =
       gameState.finalRound &&
@@ -1239,18 +1252,34 @@ export const GamePlayPhase = ({
       gameState.finalRoundTurnNumber !== null &&
       nextTurnNumber > gameState.finalRoundTurnNumber + 1;
 
-    if (shouldEndFinalRound) {
-      updates.phase = 'finishing';
-    }
-
-    onUpdateGameState(updates);
-
     setMasterActionMode(false);
     setMasterActionPlacedPuzzles(new Set());
     setMasterActionSnapshot(null);
 
-    // 完成保留リストがある場合は順次処理を開始
+    // 完成保留リストがある場合は、ターン遷移を遅延して完成処理を先に行う
     if (masterActionPendingCompletions.length > 0) {
+      // 現在のプレイヤーのアクション消費とusedMasterActionのみ更新
+      const updatedPlayers = gameState.players.map((p) => {
+        if (p.id === debugControlPlayerId) {
+          return {
+            ...p,
+            remainingActions: turnEnded ? 0 : newRemainingActions,
+            usedMasterAction: true,
+          };
+        }
+        return p;
+      });
+      onUpdateGameState({ players: updatedPlayers });
+
+      // ターン遷移情報を保存（完成処理後に適用）
+      if (turnEnded) {
+        setPendingTurnTransition({
+          nextPlayerIndex,
+          nextTurnNumber,
+          shouldEndFinalRound,
+        });
+      }
+
       setIsProcessingMasterCompletions(true);
       // 最初の完成を処理開始
       const firstCompletion = masterActionPendingCompletions[0];
@@ -1258,11 +1287,35 @@ export const GamePlayPhase = ({
       setMasterActionPendingCompletions((prev) => prev.slice(1));
       setAnnouncement(`パズル完成処理中... (1/${masterActionPendingCompletions.length})`);
     } else {
+      // 完成保留がない場合は即座にターン遷移
+      const updatedPlayers = gameState.players.map((p) => {
+        if (p.id === debugControlPlayerId) {
+          return {
+            ...p,
+            remainingActions: turnEnded ? 0 : newRemainingActions,
+            usedMasterAction: true,
+          };
+        }
+        if (turnEnded && p.id === nextPlayerId) {
+          return { ...p, remainingActions: 3, usedMasterAction: false };
+        }
+        return p;
+      });
+
+      const updates: Partial<GameState> = {
+        players: updatedPlayers,
+        currentPlayerIndex: nextPlayerIndex,
+        currentTurnNumber: nextTurnNumber,
+      };
+
       if (shouldEndFinalRound) {
+        updates.phase = 'finishing';
         setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
       } else {
         setAnnouncement(`マスターアクション完了（${masterActionPlacedPuzzles.size}枚に配置）`);
       }
+
+      onUpdateGameState(updates);
     }
   };
 
