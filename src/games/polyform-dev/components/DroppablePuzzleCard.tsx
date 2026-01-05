@@ -11,6 +11,7 @@ interface DroppablePuzzleCardProps {
   size?: CardSizeType;
   selected?: boolean;
   completed?: boolean; // 完成ハイライト
+  disabled?: boolean; // 配置不可（マスターアクション中の配置済みなど）
   // ドラッグ中のピース情報
   draggingPiece?: {
     type: PieceType;
@@ -73,6 +74,7 @@ export const DroppablePuzzleCard = ({
   size = 'md',
   selected = false,
   completed = false,
+  disabled = false,
   draggingPiece,
   hoverPosition,
   onDrop,
@@ -140,22 +142,24 @@ export const DroppablePuzzleCard = ({
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (!draggingPiece || !onHover) return;
+      if (disabled || !draggingPiece || !onHover) return;
       const pos = getGridPosition(e.clientX, e.clientY);
       onHover(pos);
     },
-    [draggingPiece, onHover, getGridPosition]
+    [disabled, draggingPiece, onHover, getGridPosition]
   );
 
   const handleMouseLeave = useCallback(() => {
+    if (disabled) return;
     onHover?.(null);
-  }, [onHover]);
+  }, [disabled, onHover]);
 
   const handleMouseUp = useCallback(() => {
+    if (disabled) return;
     if (hoverPosition && isValidHover && onDrop) {
       onDrop(hoverPosition);
     }
-  }, [hoverPosition, isValidHover, onDrop]);
+  }, [disabled, hoverPosition, isValidHover, onDrop]);
 
   // 埋まっているマス数を計算
   const totalCells = card.shape.flat().filter(Boolean).length;
@@ -173,10 +177,10 @@ export const DroppablePuzzleCard = ({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseUp={handleMouseUp}
-      className={`flex flex-col rounded-lg p-4 transition-all bg-cover bg-center ${
+      className={`relative flex flex-col rounded-lg p-4 transition-all bg-cover bg-center ${
         selected ? 'ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-900' : ''
       } ${completed ? 'ring-4 ring-green-400 shadow-lg shadow-green-400/50' : isComplete ? 'ring-2 ring-yellow-400' : ''} ${
-        draggingPiece ? 'cursor-crosshair' : ''
+        draggingPiece && !disabled ? 'cursor-crosshair' : ''
       }`}
       style={{
         width: sizeConfig.width,
@@ -184,6 +188,12 @@ export const DroppablePuzzleCard = ({
         backgroundImage: `url(${cardImage})`
       }}
     >
+      {/* 配置不可オーバーレイ */}
+      {disabled && (
+        <div className="absolute inset-0 bg-slate-900/60 rounded-lg z-10 flex items-center justify-center">
+          <span className="text-slate-400 text-xs font-medium">配置済み</span>
+        </div>
+      )}
       {/* カード情報ヘッダー（固定高さ） */}
       <div className="flex items-center justify-between h-6 mb-2">
         <div

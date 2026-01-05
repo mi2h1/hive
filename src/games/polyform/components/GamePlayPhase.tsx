@@ -123,6 +123,15 @@ export const GamePlayPhase = ({
     pieces: PieceInstance[];
     workingPuzzles: WorkingPuzzle[];
   } | null>(null);
+  // マスターアクション中の完成保留リスト
+  const [masterActionPendingCompletions, setMasterActionPendingCompletions] = useState<{
+    puzzleId: string;
+    puzzleType: 'white' | 'black';
+    points: number;
+    rewardPieceType: PieceType | null;
+  }[]>([]);
+  // マスターアクション完了後の完成処理中フラグ
+  const [isProcessingMasterCompletions, setIsProcessingMasterCompletions] = useState(false);
 
   // ターン開始時の状態（リセット用）
   const [turnStartSnapshot, setTurnStartSnapshot] = useState<{
@@ -281,6 +290,27 @@ export const GamePlayPhase = ({
 
     return () => clearTimeout(timer);
   }, [pendingCompletion]);
+
+  // マスターアクション完成の連続処理
+  useEffect(() => {
+    // pendingCompletionがnullになったら次を処理
+    if (pendingCompletion !== null) return;
+    if (!isProcessingMasterCompletions) return;
+
+    if (masterActionPendingCompletions.length > 0) {
+      // 次の完成を処理
+      const nextCompletion = masterActionPendingCompletions[0];
+      // 少し遅延を入れて連続処理
+      const timer = setTimeout(() => {
+        setPendingCompletion(nextCompletion);
+        setMasterActionPendingCompletions((prev) => prev.slice(1));
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      // 全て処理完了
+      setIsProcessingMasterCompletions(false);
+    }
+  }, [pendingCompletion, isProcessingMasterCompletions, masterActionPendingCompletions]);
 
   // アナウンス自動消去
   useEffect(() => {
@@ -1006,14 +1036,18 @@ export const GamePlayPhase = ({
         onUpdateGameState({ players: updatedPlayers });
       }
 
-      // 完成時は遅延処理をセット
+      // 完成時はキューに追加（確定時にまとめて処理）
       if (isCompleted) {
-        setPendingCompletion({
-          puzzleId,
-          puzzleType: card.type,
-          points: card.points,
-          rewardPieceType: card.rewardPieceType || null,
-        });
+        setMasterActionPendingCompletions((prev) => [
+          ...prev,
+          {
+            puzzleId,
+            puzzleType: card.type,
+            points: card.points,
+            rewardPieceType: card.rewardPieceType || null,
+          },
+        ]);
+        setAnnouncement(`パズル完成！（確定時に処理）`);
       } else {
         setAnnouncement('マスターアクション中');
       }
@@ -1138,6 +1172,7 @@ export const GamePlayPhase = ({
 
     setMasterActionMode(true);
     setMasterActionPlacedPuzzles(new Set());
+    setMasterActionPendingCompletions([]);
     setAnnouncement('マスターアクション開始');
   };
 
@@ -1186,9 +1221,6 @@ export const GamePlayPhase = ({
 
     if (shouldEndFinalRound) {
       updates.phase = 'finishing';
-      setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
-    } else {
-      setAnnouncement(`マスターアクション完了（${masterActionPlacedPuzzles.size}枚に配置）`);
     }
 
     onUpdateGameState(updates);
@@ -1196,6 +1228,22 @@ export const GamePlayPhase = ({
     setMasterActionMode(false);
     setMasterActionPlacedPuzzles(new Set());
     setMasterActionSnapshot(null);
+
+    // 完成保留リストがある場合は順次処理を開始
+    if (masterActionPendingCompletions.length > 0) {
+      setIsProcessingMasterCompletions(true);
+      // 最初の完成を処理開始
+      const firstCompletion = masterActionPendingCompletions[0];
+      setPendingCompletion(firstCompletion);
+      setMasterActionPendingCompletions((prev) => prev.slice(1));
+      setAnnouncement(`パズル完成処理中... (1/${masterActionPendingCompletions.length})`);
+    } else {
+      if (shouldEndFinalRound) {
+        setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
+      } else {
+        setAnnouncement(`マスターアクション完了（${masterActionPlacedPuzzles.size}枚に配置）`);
+      }
+    }
   };
 
   // マスターアクションキャンセル
@@ -1218,6 +1266,7 @@ export const GamePlayPhase = ({
     setMasterActionMode(false);
     setMasterActionPlacedPuzzles(new Set());
     setMasterActionSnapshot(null);
+    setMasterActionPendingCompletions([]);
     setAnnouncement('マスターアクション中止');
   };
 
@@ -2093,7 +2142,8 @@ export const GamePlayPhase = ({
               {masterActionMode && (
                 <div className="flex items-center justify-center gap-3">
                   <span className="text-purple-300 text-sm">
-                    マスターアクション中（{masterActionPlacedPuzzles.size}/{currentPlayer.workingPuzzles.length}枚配置）- 各パズルに1つずつ配置可能
+                    マスターアクション中（{masterActionPlacedPuzzles.size}/{currentPlayer.workingPuzzles.length}枚配置
+                    {masterActionPendingCompletions.length > 0 && `、${masterActionPendingCompletions.length}枚完成`}）
                   </span>
                   <button
                     onClick={handleCompleteMasterAction}
@@ -2358,6 +2408,7 @@ export const GamePlayPhase = ({
                       placedPieces={wp.placedPieces}
                       size={cardSize}
                       completed={completedPuzzleId === wp.cardId}
+                      disabled={masterActionMode && masterActionPlacedPuzzles.has(wp.cardId)}
                       draggingPiece={draggingPiece}
                       hoverPosition={hoverPuzzleId === wp.cardId ? hoverGridPosition : null}
                       onHover={(pos) => {
