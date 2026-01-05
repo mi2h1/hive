@@ -2293,10 +2293,12 @@ export const GamePlayPhase = ({
                     {[1, 2, 3, 4].map((level) => (
                       <div key={level} className="flex flex-col items-center gap-0.5">
                         <span className="text-slate-400 text-xs font-medium">Lv.{level}</span>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 items-end">
                           {PIECES_BY_LEVEL[level].map((type) => (
                             <div key={type} className="flex flex-col items-center">
-                              <PieceDisplay type={type} size="xs" />
+                              <div className="h-4 flex items-end">
+                                <PieceDisplay type={type} size="xs" />
+                              </div>
                               <span className={`text-xs leading-tight ${
                                 gameState.pieceStock[type] === 0 ? 'text-red-400' : 'text-slate-400'
                               }`}>
