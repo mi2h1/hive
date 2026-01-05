@@ -1131,6 +1131,106 @@ export const GamePlayPhase = ({
   // 他のプレイヤーを取得
   const otherPlayers = gameState.players.filter((p) => p.id !== debugControlPlayerId);
 
+  // 最終スコア計算関数
+  const calculateFinalScore = (player: typeof currentPlayer) => {
+    const completedScore = player.score; // 完成パズルのポイント
+    const finishingPenalty = player.finishingPenalty || 0; // 仕上げペナルティ
+    // 未完成パズルのペナルティ（各パズルのポイントをマイナス）
+    const incompletePenalty = player.workingPuzzles.reduce((sum, wp) => {
+      const card = ALL_PUZZLES.find((p) => p.id === wp.cardId);
+      return sum + (card?.points || 0);
+    }, 0);
+    return {
+      completedScore,
+      finishingPenalty,
+      incompletePenalty,
+      finalScore: completedScore - finishingPenalty - incompletePenalty,
+    };
+  };
+
+  // 結果画面（ended フェーズ）
+  if (gameState.phase === 'ended') {
+    // 全プレイヤーのスコアを計算してソート
+    const playerResults = gameState.players
+      .map((player) => ({
+        player,
+        ...calculateFinalScore(player),
+      }))
+      .sort((a, b) => b.finalScore - a.finalScore);
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900">
+        <div className="min-h-screen bg-black/20 p-4 flex flex-col items-center justify-center">
+          {/* タイトル */}
+          <div className="text-center mb-8">
+            <img src="/boards/images/vec_logo_polyform.svg" alt="POLYFORM" className="h-10 mx-auto mb-4" style={{ filter: 'brightness(0) invert(1)' }} />
+            <h1 className="text-3xl font-bold text-white mb-2">ゲーム終了</h1>
+          </div>
+
+          {/* 結果テーブル */}
+          <div className="bg-slate-800/80 rounded-xl p-6 max-w-2xl w-full">
+            <h2 className="text-xl font-bold text-white mb-4 text-center">結果発表</h2>
+            <div className="space-y-3">
+              {playerResults.map((result, index) => (
+                <div
+                  key={result.player.id}
+                  className={`flex items-center justify-between p-4 rounded-lg ${
+                    index === 0
+                      ? 'bg-amber-600/30 border-2 border-amber-400'
+                      : 'bg-slate-700/50 border border-slate-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    {/* 順位 */}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                      index === 0
+                        ? 'bg-amber-400 text-amber-900'
+                        : index === 1
+                          ? 'bg-slate-300 text-slate-700'
+                          : index === 2
+                            ? 'bg-amber-700 text-amber-100'
+                            : 'bg-slate-600 text-slate-300'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    {/* プレイヤー名 */}
+                    <div>
+                      <div className="text-white font-bold">{result.player.name}</div>
+                      <div className="text-slate-400 text-xs">
+                        完成: {result.player.completedWhite || 0}白 / {result.player.completedBlack || 0}黒
+                      </div>
+                    </div>
+                  </div>
+                  {/* スコア詳細 */}
+                  <div className="text-right">
+                    <div className={`text-2xl font-bold ${index === 0 ? 'text-amber-300' : 'text-white'}`}>
+                      {result.finalScore}pt
+                    </div>
+                    <div className="text-slate-400 text-xs">
+                      {result.completedScore}pt
+                      {result.finishingPenalty > 0 && <span className="text-red-400"> -{result.finishingPenalty}</span>}
+                      {result.incompletePenalty > 0 && <span className="text-red-400"> -{result.incompletePenalty}</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ボタン */}
+          <div className="mt-8 flex gap-4">
+            <button
+              onClick={onLeaveRoom}
+              className="px-6 py-3 bg-teal-600 hover:bg-teal-500 rounded-lg text-white font-bold"
+            >
+              ロビーに戻る
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       className="min-h-screen bg-gradient-to-br from-teal-900 to-emerald-900"
