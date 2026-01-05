@@ -1880,7 +1880,6 @@ export const GamePlayPhase = ({
         <div className="flex flex-col xl:flex-row gap-4 xl:items-start">
           {/* 左カラム: 他プレイヤー情報（1200px以下で全幅・上部配置） */}
           <div className="w-full xl:w-64 flex-shrink-0">
-            <div className="relative bg-slate-800/50 border border-slate-600 rounded-lg p-3">
               {/* プレイヤー一覧（全幅時は横並び、プレイ順に表示） */}
               <div className="flex flex-row xl:flex-col gap-3 overflow-x-auto">
                 {allPlayersSorted.map((player) => {
@@ -1954,13 +1953,10 @@ export const GamePlayPhase = ({
                   );
                 })}
               </div>
-            </div>
           </div>
 
           {/* 右カラム: メインコンテンツ */}
           <div className="flex-1 min-w-0">
-            {/* インフォボード（高さ固定） */}
-            <div className="bg-slate-800/50 rounded-lg p-3 mb-4 h-[100px]">
               {gameState.phase === 'finishing' ? (
                 /* 仕上げフェーズ用のUI */
                 <>
@@ -2039,37 +2035,47 @@ export const GamePlayPhase = ({
               ) : (
                 /* 通常フェーズ用のUI */
                 <>
-              {/* インフォパネル（3段構成・高さ固定） */}
-              <div className="flex flex-col gap-1 mb-3 h-24">
-                {/* 1段目: ラウンド｜ターン */}
-                <div className="flex items-center justify-center gap-2 h-7">
-                  <span className="text-slate-400 text-sm">
-                    ラウンド {gameState.currentTurnNumber}
-                  </span>
-                  {gameState.finalRound && (
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                      gameState.finalRoundTurnNumber !== null && gameState.currentTurnNumber > gameState.finalRoundTurnNumber
-                        ? 'bg-red-600 text-white'
-                        : 'bg-yellow-600 text-white'
-                    }`}>
-                      {gameState.finalRoundTurnNumber !== null && gameState.currentTurnNumber > gameState.finalRoundTurnNumber
-                        ? '最終ラウンド！'
-                        : '次が最終ラウンド！'}
+              {/* インフォパネル */}
+              <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-3 mb-3">
+                  <div className="flex flex-col gap-1">
+                    {/* 1段目: ラウンド｜ターン */}
+                    <div className="flex items-center justify-center gap-2 h-7">
+                    <span className="text-slate-400 text-sm">
+                      ラウンド {gameState.currentTurnNumber}
                     </span>
-                  )}
-                  <span className="text-slate-600">|</span>
-                  <span className={`text-sm font-medium ${isMyTurn ? 'text-teal-400' : 'text-slate-400'}`}>
-                    {isMyTurn ? 'あなたのターン' : `${gameState.players.find(p => p.id === activePlayerId)?.name}のターン`}
-                  </span>
-                </div>
+                    {gameState.finalRound && (
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                        gameState.finalRoundTurnNumber !== null && gameState.currentTurnNumber > gameState.finalRoundTurnNumber
+                          ? 'bg-red-600 text-white'
+                          : 'bg-yellow-600 text-white'
+                      }`}>
+                        {gameState.finalRoundTurnNumber !== null && gameState.currentTurnNumber > gameState.finalRoundTurnNumber
+                          ? '最終ラウンド！'
+                          : '次が最終ラウンド！'}
+                      </span>
+                    )}
+                    <span className="text-slate-600">|</span>
+                    <span className={`text-sm font-medium ${isMyTurn ? 'text-teal-400' : 'text-slate-400'}`}>
+                      {isMyTurn ? 'あなたのターン' : `${gameState.players.find(p => p.id === activePlayerId)?.name}のターン`}
+                    </span>
+                  </div>
 
-                {/* 2段目: 残りアクション＋アナウンス */}
-                <div className="flex items-center justify-center gap-3 h-7">
-                  <span className="text-slate-500 text-sm">
-                    残りアクション: <span className={`font-bold ${
-                      gameState.players.find(p => p.id === activePlayerId)?.remainingActions === 0 ? 'text-slate-500' : 'text-white'
-                    }`}>{gameState.players.find(p => p.id === activePlayerId)?.remainingActions ?? 0}</span>
-                  </span>
+                  {/* 2段目: 残りアクション＋アナウンス */}
+                  <div className="flex items-center justify-center gap-3 h-7">
+                    {isMyTurn && currentPlayer.remainingActions < 3 && turnStartSnapshot && (
+                      <button
+                        onClick={handleResetTurn}
+                        className="flex items-center gap-1 px-2 py-0.5 bg-slate-600 hover:bg-slate-500 rounded text-slate-300 text-xs transition-all"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>リセット</span>
+                      </button>
+                    )}
+                    <span className="text-slate-500 text-sm">
+                      残りアクション: <span className={`font-bold ${
+                        gameState.players.find(p => p.id === activePlayerId)?.remainingActions === 0 ? 'text-slate-500' : 'text-white'
+                      }`}>{gameState.players.find(p => p.id === activePlayerId)?.remainingActions ?? 0}</span>
+                    </span>
                   <AnimatePresence mode="wait">
                     {announcement && (
                       <motion.div
@@ -2148,15 +2154,6 @@ export const GamePlayPhase = ({
                               マスター
                             </button>
                           )}
-                          {currentPlayer.remainingActions < 3 && turnStartSnapshot && (
-                            <button
-                              onClick={handleResetTurn}
-                              className="flex items-center gap-1 px-2 py-1 bg-slate-600 hover:bg-slate-500 rounded text-slate-300 text-xs transition-all"
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                              <span>リセット</span>
-                            </button>
-                          )}
                         </>
                       )}
                       {actionMode === 'takePuzzle' && (
@@ -2218,11 +2215,11 @@ export const GamePlayPhase = ({
                   {!isMyTurn && !masterActionMode && (
                     <span className="text-slate-500 text-sm">相手のアクションを待っています...</span>
                   )}
+                  </div>
                 </div>
               </div>
                 </>
               )}
-            </div>
 
             {/* 場のパズル（全幅） */}
             <div className="mb-4">
@@ -2463,12 +2460,14 @@ export const GamePlayPhase = ({
             </div>
           </div>
 
-          {/* 右: 手持ちピース */}
-          <div className={`relative rounded-lg p-4 flex-1 min-w-0 transition-all border ${
-            actionMode === 'placePiece' || actionMode === 'pieceChange' || masterActionMode || (gameState.phase === 'finishing' && !currentPlayer.finishingDone)
-              ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
-              : 'bg-slate-800/50 border-slate-600'
-          }`}>
+          {/* 右カラム: 手持ちピース + ピースストック */}
+          <div className="flex-1 min-w-0 flex flex-col gap-4">
+            {/* 手持ちピース */}
+            <div className={`relative rounded-lg p-4 transition-all border ${
+              actionMode === 'placePiece' || actionMode === 'pieceChange' || masterActionMode || (gameState.phase === 'finishing' && !currentPlayer.finishingDone)
+                ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
+                : 'bg-slate-800/50 border-slate-600'
+            }`}>
             {/* ピース変更選択モード：選択したピースの変更先一覧 */}
             {pieceChangeMode && selectedPiece && (
               <div className="rounded-lg p-3 mb-4 border bg-slate-700/50 border-teal-400">
@@ -2593,6 +2592,58 @@ export const GamePlayPhase = ({
                     <PieceDisplay type={pieceType as PieceType} size="sm" />
                   </button>
                 ))}
+              </div>
+            </div>
+            </div>
+
+            {/* ピースストック一覧（2段レイアウト） */}
+            <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-3">
+              <div className="flex flex-col gap-2">
+                {/* 1段目: Lv1 | Lv2 | Lv3 */}
+                <div className="flex gap-4 items-center justify-center">
+                  {[1, 2, 3].map((level, index) => (
+                    <div key={level} className="flex items-center gap-4">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-slate-400 text-xs font-medium">Lv.{level}</span>
+                        <div className="flex gap-1 items-end">
+                          {PIECES_BY_LEVEL[level].map((type) => (
+                            <div key={type} className="flex flex-col items-center">
+                              <div className="h-4 flex items-end">
+                                <PieceDisplay type={type} size="xs" />
+                              </div>
+                              <span className={`text-xs leading-tight ${
+                                gameState.pieceStock[type] === 0 ? 'text-red-400' : 'text-slate-400'
+                              }`}>
+                                {gameState.pieceStock[type]}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {index < 2 && <div className="w-px h-10 bg-slate-600" />}
+                    </div>
+                  ))}
+                </div>
+                {/* 2段目: Lv4 */}
+                <div className="flex justify-center">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-slate-400 text-xs font-medium">Lv.4</span>
+                    <div className="flex gap-1 items-end">
+                      {PIECES_BY_LEVEL[4].map((type) => (
+                        <div key={type} className="flex flex-col items-center">
+                          <div className="h-4 flex items-end">
+                            <PieceDisplay type={type} size="xs" />
+                          </div>
+                          <span className={`text-xs leading-tight ${
+                            gameState.pieceStock[type] === 0 ? 'text-red-400' : 'text-slate-400'
+                          }`}>
+                            {gameState.pieceStock[type]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
