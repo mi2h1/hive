@@ -191,7 +191,15 @@ export const GamePlayPhase = ({
       const player = gameState.players.find((p) => p.id === debugControlPlayerId);
       if (!player) return;
 
-      let updatedPieces = [...player.pieces];
+      // 完成したパズルに配置されていたピースを取得
+      const completedPuzzle = player.workingPuzzles.find((wp) => wp.cardId === puzzleId);
+      const returnedPieces = completedPuzzle?.placedPieces.map((placed) => ({
+        id: `returned-${Date.now()}-${placed.pieceId}`,
+        type: placed.type,
+        rotation: 0 as const,
+      })) || [];
+
+      let updatedPieces = [...player.pieces, ...returnedPieces];
       if (rewardPieceType) {
         updatedPieces.push({
           id: `reward-${Date.now()}-${rewardPieceType}`,
@@ -284,6 +292,15 @@ export const GamePlayPhase = ({
     const nextPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length;
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
 
+    // 最終ラウンド判定：山札が尽きたか確認
+    const isBlackDeckEmpty = gameState.blackPuzzleDeck.length === 0;
+    const isWhiteDeckEmpty = gameState.whitePuzzleDeck.length === 0;
+    const shouldTriggerFinalRound = !gameState.finalRound && (isBlackDeckEmpty || isWhiteDeckEmpty);
+
+    // 最終ラウンド終了判定：現在のプレイヤーが最終ラウンド開始プレイヤー（=最後の1ターン）なら仕上げフェーズへ
+    // ※山札が空になったターンの「次のターン」で終了
+    const shouldEndFinalRound = gameState.finalRound && debugControlPlayerId === gameState.finalRoundStartPlayer;
+
     // 現在のプレイヤーのアクションを0にし、次のプレイヤーのアクションを3にリセット
     // 次のプレイヤーのusedMasterActionもリセット
     const updatedPlayers = gameState.players.map((p) => {
@@ -296,12 +313,30 @@ export const GamePlayPhase = ({
       return p;
     });
 
-    onUpdateGameState({
-      players: updatedPlayers,
-      currentPlayerIndex: nextPlayerIndex,
-    });
-
-    setAnnouncement('ターン終了');
+    if (shouldEndFinalRound) {
+      // 最終ラウンド終了 → 仕上げフェーズへ
+      onUpdateGameState({
+        players: updatedPlayers,
+        phase: 'finishing',
+      });
+      setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
+    } else if (shouldTriggerFinalRound) {
+      // 最終ラウンド開始：次のプレイヤーが最後の1ターンをプレイする
+      onUpdateGameState({
+        players: updatedPlayers,
+        currentPlayerIndex: nextPlayerIndex,
+        finalRound: true,
+        finalRoundStartPlayer: nextPlayerId, // 次のプレイヤー（最後の1ターン）
+      });
+      setAnnouncement('最終ラウンド！次のプレイヤーで終了');
+    } else {
+      // 通常のターン終了
+      onUpdateGameState({
+        players: updatedPlayers,
+        currentPlayerIndex: nextPlayerIndex,
+      });
+      setAnnouncement('ターン終了');
+    }
   };
 
   // 手動でターン終了
@@ -665,8 +700,15 @@ export const GamePlayPhase = ({
 
   // ドラッグ開始
   const handleDragStart = (pieceId: string, e: React.MouseEvent | React.TouchEvent) => {
-    // ピース配置モードまたはマスターアクション中でない場合は無視
-    if (actionMode !== 'placePiece' && actionMode !== 'levelChange' && !masterActionMode) return;
+    // 仕上げフェーズ中
+    const isFinishingPhase = gameState.phase === 'finishing';
+    if (isFinishingPhase) {
+      // 仕上げ完了済みなら操作不可
+      if (currentPlayer.finishingDone) return;
+    } else {
+      // 通常フェーズ：ピース配置モードまたはマスターアクション中でない場合は無視
+      if (actionMode !== 'placePiece' && actionMode !== 'levelChange' && !masterActionMode) return;
+    }
 
     setSelectedPieceId(pieceId);
     setIsDragging(true);
@@ -682,14 +724,22 @@ export const GamePlayPhase = ({
   const handleDrop = (puzzleId: string, position: { x: number; y: number }) => {
     if (!selectedPiece) return;
 
-    // ピース配置モードまたはマスターアクション中でない場合は無視
-    if (actionMode !== 'placePiece' && !masterActionMode) return;
+    // 仕上げフェーズの処理
+    const isFinishingPhase = gameState.phase === 'finishing';
+    if (isFinishingPhase) {
+      // 仕上げ完了済みなら配置不可
+      if (currentPlayer.finishingDone) return;
+    } else {
+      // 通常フェーズの条件チェック
+      // ピース配置モードまたはマスターアクション中でない場合は無視
+      if (actionMode !== 'placePiece' && !masterActionMode) return;
 
-    // 自分のターンでない場合は無視
-    if (!isMyTurn) return;
+      // 自分のターンでない場合は無視
+      if (!isMyTurn) return;
 
-    // アクションが残っていない場合は無視（マスターアクション中は除く）
-    if (currentPlayer.remainingActions <= 0 && !masterActionMode) return;
+      // アクションが残っていない場合は無視（マスターアクション中は除く）
+      if (currentPlayer.remainingActions <= 0 && !masterActionMode) return;
+    }
 
     const workingPuzzle = currentPlayer.workingPuzzles.find((wp) => wp.cardId === puzzleId);
     if (!workingPuzzle) return;
@@ -773,6 +823,38 @@ export const GamePlayPhase = ({
         });
       } else {
         setAnnouncement('マスターアクション中');
+      }
+      return;
+    }
+
+    // 仕上げフェーズのピース配置：ペナルティ付き、アクション消費なし
+    if (isFinishingPhase) {
+      if (onUpdateGameState) {
+        const newPenalty = (currentPlayer.finishingPenalty || 0) + 1;
+        const updatedPlayers = gameState.players.map((p) => {
+          if (p.id === debugControlPlayerId) {
+            return {
+              ...p,
+              pieces: updatedPieces,
+              workingPuzzles: updatedWorkingPuzzles,
+              finishingPenalty: newPenalty,
+            };
+          }
+          return p;
+        });
+        onUpdateGameState({ players: updatedPlayers });
+      }
+
+      // 完成時は遅延処理をセット
+      if (isCompleted) {
+        setPendingCompletion({
+          puzzleId,
+          puzzleType: card.type,
+          points: card.points,
+          rewardPieceType: card.rewardPieceType || null,
+        });
+      } else {
+        setAnnouncement(`配置 (-1pt)`);
       }
       return;
     }
@@ -1212,6 +1294,84 @@ export const GamePlayPhase = ({
           <div className="flex-1 min-w-0">
             {/* インフォボード（高さ固定） */}
             <div className="bg-slate-800/50 rounded-lg p-3 mb-4 h-[100px]">
+              {gameState.phase === 'finishing' ? (
+                /* 仕上げフェーズ用のUI */
+                <>
+                  {/* 上段：フェーズ名＋ペナルティ表示 */}
+                  <div className="flex items-center justify-center gap-4 mb-3 h-8">
+                    <span className="text-amber-400 text-sm font-bold">仕上げフェーズ</span>
+                    {currentPlayer.finishingPenalty > 0 && (
+                      <span className="text-red-400 text-sm">
+                        配置ペナルティ: -{currentPlayer.finishingPenalty}pt
+                      </span>
+                    )}
+                    <AnimatePresence mode="wait">
+                      {announcement && (
+                        <motion.div
+                          key={announcement}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          className="bg-amber-600 text-white px-3 py-1 rounded-full text-sm font-medium"
+                        >
+                          {announcement}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* 下段：配置 or 完了表示 */}
+                  {currentPlayer.finishingDone ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <span className="text-slate-400 text-sm">仕上げ完了！他のプレイヤーを待っています...</span>
+                      <div className="flex gap-1">
+                        {gameState.players.map((p) => (
+                          <span
+                            key={p.id}
+                            className={`text-xs px-2 py-0.5 rounded ${
+                              p.finishingDone
+                                ? 'bg-green-600 text-white'
+                                : 'bg-slate-600 text-slate-300'
+                            }`}
+                          >
+                            {p.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-3">
+                      <span className="text-amber-300 text-sm">
+                        ピースをパズルに配置（1つ配置につき -1pt）。終わったら「仕上げ完了」を押してください
+                      </span>
+                      <button
+                        onClick={() => {
+                          if (!onUpdateGameState) return;
+                          const updatedPlayers = gameState.players.map((p) => {
+                            if (p.id === debugControlPlayerId) {
+                              return { ...p, finishingDone: true };
+                            }
+                            return p;
+                          });
+                          // 全員完了したかチェック
+                          const allDone = updatedPlayers.every((p) => p.finishingDone);
+                          if (allDone) {
+                            onUpdateGameState({ players: updatedPlayers, phase: 'ended' });
+                          } else {
+                            onUpdateGameState({ players: updatedPlayers });
+                          }
+                          setAnnouncement('仕上げ完了！');
+                        }}
+                        className="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 rounded text-white text-sm font-medium"
+                      >
+                        仕上げ完了
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* 通常フェーズ用のUI */
+                <>
               {/* 上段：ターン情報＋アナウンス（高さ固定） */}
               <div className="flex items-center justify-center gap-4 mb-3 h-8">
                 <div className="flex items-center gap-3">
@@ -1421,6 +1581,8 @@ export const GamePlayPhase = ({
                   )}
                 </div>
               )}
+                </>
+              )}
             </div>
 
             {/* 場のパズル＆ピース一覧（横並び） */}
@@ -1593,7 +1755,7 @@ export const GamePlayPhase = ({
           {/* 手持ちパズル（4枚並ぶ幅で固定） */}
           <div
             className={`relative rounded-lg p-4 flex-shrink-0 transition-all border ${
-              actionMode === 'placePiece' || masterActionMode
+              actionMode === 'placePiece' || masterActionMode || (gameState.phase === 'finishing' && !currentPlayer.finishingDone)
                 ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
                 : 'bg-slate-800/50 border-slate-600'
             }`}
@@ -1657,7 +1819,7 @@ export const GamePlayPhase = ({
 
           {/* 右: 手持ちピース */}
           <div className={`relative rounded-lg p-4 flex-1 min-w-0 transition-all border ${
-            actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode
+            actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode || (gameState.phase === 'finishing' && !currentPlayer.finishingDone)
               ? 'bg-teal-800/30 border-teal-400 ring-2 ring-teal-400/30'
               : 'bg-slate-800/50 border-slate-600'
           }`}>
@@ -1710,8 +1872,8 @@ export const GamePlayPhase = ({
                     size={toPieceSize(cardSize)}
                   />
                   <div className="flex gap-2">
-                    {/* 回転・反転ボタン：ピース配置モードまたはマスターアクション中のみ表示 */}
-                    {(actionMode === 'placePiece' || masterActionMode) && (
+                    {/* 回転・反転ボタン：ピース配置モード、マスターアクション中、または仕上げフェーズで表示 */}
+                    {(actionMode === 'placePiece' || masterActionMode || (gameState.phase === 'finishing' && !currentPlayer.finishingDone)) && (
                       <>
                         <button
                           onClick={handleRotate}
@@ -1760,7 +1922,10 @@ export const GamePlayPhase = ({
             {/* ピース一覧（2段ピースの高さを最小に） */}
             <div className="flex flex-wrap gap-2 items-center" style={{ minHeight: getMinPieceHeight(cardSize) }}>
               {(() => {
-                const canInteract = actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode;
+                const isFinishingPhase = gameState.phase === 'finishing';
+                const canInteract = isFinishingPhase
+                  ? !currentPlayer.finishingDone // 仕上げフェーズ：完了していなければ操作可能
+                  : (actionMode === 'placePiece' || actionMode === 'levelChange' || masterActionMode);
                 return currentPlayer.pieces.map((piece) => (
                   <div
                     key={piece.id}

@@ -61,6 +61,8 @@ export interface Player {
   score: number;
   remainingActions: number; // 残りアクション数（通常3）
   usedMasterAction: boolean; // マスターアクション使用済みフラグ
+  finishingDone: boolean; // 仕上げフェーズ完了フラグ
+  finishingPenalty: number; // 仕上げフェーズでの配置ペナルティ（配置数 × -1）
 }
 
 // ゲームフェーズ

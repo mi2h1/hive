@@ -104,6 +104,8 @@ export const createInitialPlayer = (id: string, name: string): Player => {
     score: 0,
     remainingActions: 3,
     usedMasterAction: false,
+    finishingDone: false,
+    finishingPenalty: 0,
   };
 };
 
