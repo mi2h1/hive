@@ -524,14 +524,16 @@ export const GamePlayPhase = ({
     const newRemainingActions = currentPlayer.remainingActions - 1;
     let finalPlayers = updatedPlayers;
     let nextPlayerIndex = gameState.currentPlayerIndex;
+    let turnEnded = false;
 
     if (newRemainingActions <= 0) {
       // ターン終了：次のプレイヤーへ
+      turnEnded = true;
       nextPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length;
       const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
       finalPlayers = updatedPlayers.map((p) => {
         if (p.id === nextPlayerId) {
-          return { ...p, remainingActions: 3 };
+          return { ...p, remainingActions: 3, usedMasterAction: false };
         }
         return p;
       });
@@ -549,10 +551,14 @@ export const GamePlayPhase = ({
       updates.blackPuzzleDeck = deck;
     }
 
-    // 最終ラウンドチェック（山札が空になったら）
-    if (!gameState.finalRound && deck.length === 0) {
-      const nextPlayerIdx = (nextPlayerIndex + 1) % gameState.playerOrder.length;
-      const nextPlayerId = gameState.playerOrder[nextPlayerIdx];
+    // 最終ラウンド終了チェック（ターン終了時に、自分がfinalRoundStartPlayerなら仕上げフェーズへ）
+    if (turnEnded && gameState.finalRound && debugControlPlayerId === gameState.finalRoundStartPlayer) {
+      updates.phase = 'finishing';
+      setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
+    }
+    // 最終ラウンド開始チェック（山札が空になったら）
+    else if (!gameState.finalRound && deck.length === 0) {
+      const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
       updates.finalRound = true;
       updates.finalRoundStartPlayer = nextPlayerId;
       setAnnouncement('最終ラウンド！');
@@ -682,7 +688,8 @@ export const GamePlayPhase = ({
 
     // アクション消費とターン終了判定
     const newRemainingActions = currentPlayer.remainingActions - 1;
-    const nextPlayerIndex = newRemainingActions <= 0
+    const turnEnded = newRemainingActions <= 0;
+    const nextPlayerIndex = turnEnded
       ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
       : gameState.currentPlayerIndex;
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
@@ -692,11 +699,11 @@ export const GamePlayPhase = ({
         return {
           ...p,
           workingPuzzles: [...p.workingPuzzles, newWorkingPuzzle],
-          remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
+          remainingActions: turnEnded ? 0 : newRemainingActions,
         };
       }
-      if (newRemainingActions <= 0 && p.id === nextPlayerId) {
-        return { ...p, remainingActions: 3 };
+      if (turnEnded && p.id === nextPlayerId) {
+        return { ...p, remainingActions: 3, usedMasterAction: false };
       }
       return p;
     });
@@ -715,10 +722,13 @@ export const GamePlayPhase = ({
       updates.blackPuzzleDeck = deck;
     }
 
-    // 最終ラウンドチェック（山札が空になったら）
-    if (!gameState.finalRound && deck.length === 0) {
-      const nextPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length;
-      const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
+    // 最終ラウンド終了チェック（ターン終了時に、自分がfinalRoundStartPlayerなら仕上げフェーズへ）
+    if (turnEnded && gameState.finalRound && debugControlPlayerId === gameState.finalRoundStartPlayer) {
+      updates.phase = 'finishing';
+      setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
+    }
+    // 最終ラウンド開始チェック（山札が空になったら）
+    else if (!gameState.finalRound && deck.length === 0) {
       updates.finalRound = true;
       updates.finalRoundStartPlayer = nextPlayerId;
       setAnnouncement('最終ラウンド！');
@@ -964,7 +974,8 @@ export const GamePlayPhase = ({
 
     // 通常のピース配置：アクション消費
     const newRemainingActions = currentPlayer.remainingActions - 1;
-    const nextPlayerIndex = newRemainingActions <= 0
+    const turnEnded = newRemainingActions <= 0;
+    const nextPlayerIndex = turnEnded
       ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
       : gameState.currentPlayerIndex;
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
@@ -977,15 +988,27 @@ export const GamePlayPhase = ({
             ...p,
             pieces: updatedPieces,
             workingPuzzles: updatedWorkingPuzzles,
-            remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
+            remainingActions: turnEnded ? 0 : newRemainingActions,
           };
         }
-        if (newRemainingActions <= 0 && p.id === nextPlayerId) {
-          return { ...p, remainingActions: 3 };
+        if (turnEnded && p.id === nextPlayerId) {
+          return { ...p, remainingActions: 3, usedMasterAction: false };
         }
         return p;
       });
-      onUpdateGameState({ players: updatedPlayers, currentPlayerIndex: nextPlayerIndex });
+
+      const updates: Partial<GameState> = {
+        players: updatedPlayers,
+        currentPlayerIndex: nextPlayerIndex,
+      };
+
+      // 最終ラウンド終了チェック（ターン終了時に、自分がfinalRoundStartPlayerなら仕上げフェーズへ）
+      if (turnEnded && gameState.finalRound && debugControlPlayerId === gameState.finalRoundStartPlayer) {
+        updates.phase = 'finishing';
+        setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
+      }
+
+      onUpdateGameState(updates);
     }
 
     // アクション完了後にリセット（マスターアクション以外）
@@ -1027,7 +1050,8 @@ export const GamePlayPhase = ({
 
     // 1アクション消費＆usedMasterActionをtrueに
     const newRemainingActions = currentPlayer.remainingActions - 1;
-    const nextPlayerIndex = newRemainingActions <= 0
+    const turnEnded = newRemainingActions <= 0;
+    const nextPlayerIndex = turnEnded
       ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
       : gameState.currentPlayerIndex;
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
@@ -1036,21 +1060,33 @@ export const GamePlayPhase = ({
       if (p.id === debugControlPlayerId) {
         return {
           ...p,
-          remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
+          remainingActions: turnEnded ? 0 : newRemainingActions,
           usedMasterAction: true,
         };
       }
-      if (newRemainingActions <= 0 && p.id === nextPlayerId) {
+      if (turnEnded && p.id === nextPlayerId) {
         return { ...p, remainingActions: 3, usedMasterAction: false };
       }
       return p;
     });
 
-    onUpdateGameState({ players: updatedPlayers, currentPlayerIndex: nextPlayerIndex });
+    const updates: Partial<GameState> = {
+      players: updatedPlayers,
+      currentPlayerIndex: nextPlayerIndex,
+    };
+
+    // 最終ラウンド終了チェック
+    if (turnEnded && gameState.finalRound && debugControlPlayerId === gameState.finalRoundStartPlayer) {
+      updates.phase = 'finishing';
+      setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
+    } else {
+      setAnnouncement(`マスターアクション完了（${masterActionPlacedPuzzles.size}枚に配置）`);
+    }
+
+    onUpdateGameState(updates);
 
     setMasterActionMode(false);
     setMasterActionPlacedPuzzles(new Set());
-    setAnnouncement(`マスターアクション完了（${masterActionPlacedPuzzles.size}枚に配置）`);
   };
 
   // マスターアクションキャンセル
@@ -1088,7 +1124,8 @@ export const GamePlayPhase = ({
 
     // アクション消費とターン終了判定
     const newRemainingActions = currentPlayer.remainingActions - 1;
-    const nextPlayerIndex = newRemainingActions <= 0
+    const turnEnded = newRemainingActions <= 0;
+    const nextPlayerIndex = turnEnded
       ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
       : gameState.currentPlayerIndex;
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
@@ -1098,17 +1135,29 @@ export const GamePlayPhase = ({
         return {
           ...p,
           pieces: [...p.pieces, newPiece],
-          remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
+          remainingActions: turnEnded ? 0 : newRemainingActions,
         };
       }
-      if (newRemainingActions <= 0 && p.id === nextPlayerId) {
-        return { ...p, remainingActions: 3 };
+      if (turnEnded && p.id === nextPlayerId) {
+        return { ...p, remainingActions: 3, usedMasterAction: false };
       }
       return p;
     });
 
-    onUpdateGameState({ players: updatedPlayers, currentPlayerIndex: nextPlayerIndex });
-    setAnnouncement('レベル1ピースを獲得');
+    const updates: Partial<GameState> = {
+      players: updatedPlayers,
+      currentPlayerIndex: nextPlayerIndex,
+    };
+
+    // 最終ラウンド終了チェック
+    if (turnEnded && gameState.finalRound && debugControlPlayerId === gameState.finalRoundStartPlayer) {
+      updates.phase = 'finishing';
+      setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
+    } else {
+      setAnnouncement('レベル1ピースを獲得');
+    }
+
+    onUpdateGameState(updates);
   };
 
   // ピース変更確定（新しいピースタイプを選択）
@@ -1131,7 +1180,8 @@ export const GamePlayPhase = ({
 
     // アクション消費とターン終了判定
     const newRemainingActions = currentPlayer.remainingActions - 1;
-    const nextPlayerIndex = newRemainingActions <= 0
+    const turnEnded = newRemainingActions <= 0;
+    const nextPlayerIndex = turnEnded
       ? (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length
       : gameState.currentPlayerIndex;
     const nextPlayerId = gameState.playerOrder[nextPlayerIndex];
@@ -1141,11 +1191,11 @@ export const GamePlayPhase = ({
         return {
           ...p,
           pieces: updatedPieces,
-          remainingActions: newRemainingActions <= 0 ? 0 : newRemainingActions,
+          remainingActions: turnEnded ? 0 : newRemainingActions,
         };
       }
-      if (newRemainingActions <= 0 && p.id === nextPlayerId) {
-        return { ...p, remainingActions: 3 };
+      if (turnEnded && p.id === nextPlayerId) {
+        return { ...p, remainingActions: 3, usedMasterAction: false };
       }
       return p;
     });
@@ -1153,11 +1203,23 @@ export const GamePlayPhase = ({
     const targetLevel = PIECE_DEFINITIONS[newType].level;
     const actionText = category === 'up' ? `Lv${targetLevel}にアップ` : category === 'down' ? `Lv${targetLevel}にダウン` : `Lv${targetLevel}の別ピースに交換`;
 
-    onUpdateGameState({ players: updatedPlayers, currentPlayerIndex: nextPlayerIndex });
+    const updates: Partial<GameState> = {
+      players: updatedPlayers,
+      currentPlayerIndex: nextPlayerIndex,
+    };
+
+    // 最終ラウンド終了チェック
+    if (turnEnded && gameState.finalRound && debugControlPlayerId === gameState.finalRoundStartPlayer) {
+      updates.phase = 'finishing';
+      setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
+    } else {
+      setAnnouncement(actionText);
+    }
+
+    onUpdateGameState(updates);
     setPieceChangeMode(null);
     setSelectedPieceId(null);
     setActionMode('none'); // アクション完了後にリセット
-    setAnnouncement(actionText);
   };
 
   // ドラッグ中のピース情報
