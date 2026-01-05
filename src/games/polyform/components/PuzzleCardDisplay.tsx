@@ -81,7 +81,9 @@ export const PuzzleCardDisplay = ({
       <div className="flex items-center justify-between h-6 mb-2">
         {/* ポイント */}
         <div
-          className={`text-sm font-bold ${
+          className={`font-bold ${
+            compact ? 'text-base ml-1' : 'text-sm'
+          } ${
             card.type === 'white'
               ? 'text-slate-700'
               : 'text-yellow-500'
