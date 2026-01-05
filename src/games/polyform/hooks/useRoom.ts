@@ -134,6 +134,10 @@ const initializeGame = (players: Player[]): Partial<GameState> => {
   const shuffledWhite = shuffleArray(WHITE_PUZZLES.map(p => p.id));
   const shuffledBlack = shuffleArray(BLACK_PUZZLES.map(p => p.id));
 
+  // プレイヤー人数に応じた黒パズル枚数（2人:12枚、3人:14枚、4人:16枚）
+  const blackPuzzleCount = players.length === 2 ? 12 : players.length === 3 ? 14 : 16;
+  const selectedBlack = shuffledBlack.slice(0, blackPuzzleCount);
+
   // プレイヤー順をシャッフル
   const playerOrder = shuffleArray(players.map(p => p.id));
 
@@ -155,9 +159,9 @@ const initializeGame = (players: Player[]): Partial<GameState> => {
     playerOrder,
     currentPlayerIndex: 0,
     whitePuzzleDeck: shuffledWhite.slice(4),
-    blackPuzzleDeck: shuffledBlack.slice(4),
+    blackPuzzleDeck: selectedBlack.slice(4),
     whitePuzzleMarket: shuffledWhite.slice(0, 4),
-    blackPuzzleMarket: shuffledBlack.slice(0, 4),
+    blackPuzzleMarket: selectedBlack.slice(0, 4),
     pieceStock,
     finalRound: false,
     finalRoundStartPlayer: null,
