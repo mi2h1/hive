@@ -61,6 +61,10 @@ export const PolyformDevGame = ({ onBack }: PolyformDevGameProps) => {
   const handlePlayAgain = () => {
     if (!isHost || !gameState) return;
 
+    // ローカル状態をリセット
+    setIsFadingOut(false);
+    setShowTransition(false);
+
     // プレイヤーの状態をリセット
     const resetPlayers = gameState.players.map((p) => ({
       id: p.id,
