@@ -260,12 +260,18 @@ export const GamePlayPhase = ({
       })) || [];
 
       let updatedPieces = [...player.pieces, ...returnedPieces];
-      if (rewardPieceType) {
+      let updatedPieceStock = { ...gameState.pieceStock };
+
+      // 報酬ピースをストックから取得（在庫がある場合のみ）
+      let rewardGiven = false;
+      if (rewardPieceType && updatedPieceStock[rewardPieceType] > 0) {
         updatedPieces.push({
           id: `reward-${Date.now()}-${rewardPieceType}`,
           type: rewardPieceType,
           rotation: 0 as const,
         });
+        updatedPieceStock[rewardPieceType] -= 1;
+        rewardGiven = true;
       }
 
       const updatedPlayers = gameState.players.map((p) => {
@@ -288,10 +294,16 @@ export const GamePlayPhase = ({
         return p;
       });
 
-      onUpdateGameState({ players: updatedPlayers });
+      onUpdateGameState({ players: updatedPlayers, pieceStock: updatedPieceStock });
       setCompletedPuzzleId(null);
       setPendingCompletion(null);
-      setAnnouncement(`パズル完成！ +${points}pt`);
+
+      // 報酬ピースが在庫切れの場合は別メッセージ
+      if (rewardPieceType && !rewardGiven) {
+        setAnnouncement(`パズル完成！ +${points}pt（報酬ピース在庫切れ）`);
+      } else {
+        setAnnouncement(`パズル完成！ +${points}pt`);
+      }
     }, 800); // ハイライト表示時間
 
     return () => clearTimeout(timer);
@@ -1363,11 +1375,21 @@ export const GamePlayPhase = ({
     // アクションが残っていない場合は無視
     if (currentPlayer.remainingActions <= 0) return;
 
+    // 在庫確認
+    if (gameState.pieceStock.dot <= 0) {
+      setAnnouncement('レベル1ピースは在庫切れです');
+      return;
+    }
+
     const newPiece = {
       id: `piece-${Date.now()}-dot`,
       type: 'dot' as PieceType,
       rotation: 0 as const,
     };
+
+    // ストック更新
+    const updatedPieceStock = { ...gameState.pieceStock };
+    updatedPieceStock.dot -= 1;
 
     // アクション消費とターン終了判定
     const newRemainingActions = currentPlayer.remainingActions - 1;
@@ -1399,6 +1421,7 @@ export const GamePlayPhase = ({
       players: updatedPlayers,
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
+      pieceStock: updatedPieceStock,
     };
 
     // 最終ラウンド終了チェック（フルターン終了時に判定）
@@ -1428,6 +1451,16 @@ export const GamePlayPhase = ({
     // アクションが残っていない場合は無視
     if (currentPlayer.remainingActions <= 0) return;
 
+    // 新しいピースの在庫確認
+    if (gameState.pieceStock[newType] <= 0) {
+      setAnnouncement('そのピースは在庫切れです');
+      return;
+    }
+
+    // 元のピースのタイプを取得
+    const oldPiece = currentPlayer.pieces.find((p) => p.id === pieceChangeMode);
+    const oldPieceType = oldPiece?.type;
+
     const updatedPieces = currentPlayer.pieces
       .filter((p) => p.id !== pieceChangeMode)
       .concat({
@@ -1435,6 +1468,13 @@ export const GamePlayPhase = ({
         type: newType,
         rotation: 0 as const,
       });
+
+    // ストック更新：元のピースを戻し、新しいピースを取る
+    const updatedPieceStock = { ...gameState.pieceStock };
+    if (oldPieceType) {
+      updatedPieceStock[oldPieceType] += 1;
+    }
+    updatedPieceStock[newType] -= 1;
 
     // アクション消費とターン終了判定
     const newRemainingActions = currentPlayer.remainingActions - 1;
@@ -1469,6 +1509,7 @@ export const GamePlayPhase = ({
       players: updatedPlayers,
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
+      pieceStock: updatedPieceStock,
     };
 
     // 最終ラウンド終了チェック（フルターン終了時に判定）
@@ -2479,9 +2520,16 @@ export const GamePlayPhase = ({
                   {[1, 2, 3, 4].map((level) => (
                     <div key={level} className="space-y-1">
                       <div className="text-slate-400 text-xs">Lv.{level}</div>
-                      <div className="flex flex-col gap-1 items-center">
+                      <div className="flex flex-col gap-1">
                         {PIECES_BY_LEVEL[level].map((type) => (
-                          <PieceDisplay key={type} type={type} size="sm" />
+                          <div key={type} className="flex items-center gap-1">
+                            <PieceDisplay type={type} size="sm" />
+                            <span className={`text-xs min-w-[1.5rem] text-right ${
+                              gameState.pieceStock[type] === 0 ? 'text-red-400' : 'text-slate-400'
+                            }`}>
+                              ×{gameState.pieceStock[type]}
+                            </span>
+                          </div>
                         ))}
                       </div>
                     </div>

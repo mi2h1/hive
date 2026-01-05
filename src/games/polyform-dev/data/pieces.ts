@@ -64,17 +64,17 @@ export const PIECE_DEFINITIONS: Record<PieceType, PieceDefinition> = {
   },
 };
 
-// ピースの初期ストック数
+// ピースの初期ストック数（各ピース最大10個、全プレイヤー共有）
 export const INITIAL_PIECE_STOCK: Record<PieceType, number> = {
-  dot: 15,
-  i2: 12,
-  i3: 6,
-  v3: 6,
-  i4: 6,
-  l4: 6,
-  t4: 6,
-  s4: 6,
-  o4: 6,
+  dot: 10,
+  i2: 10,
+  i3: 10,
+  v3: 10,
+  i4: 10,
+  l4: 10,
+  t4: 10,
+  s4: 10,
+  o4: 10,
 };
 
 // レベルごとのピースタイプ
