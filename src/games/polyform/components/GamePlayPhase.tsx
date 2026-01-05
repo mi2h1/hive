@@ -1434,35 +1434,40 @@ export const GamePlayPhase = ({
                       <div className="text-white text-sm font-medium truncate">{currentPlayer.name}</div>
                       {isMyTurn && <span className="text-[10px] bg-teal-500 text-white px-1 rounded">ターン中</span>}
                     </div>
-                    <div className="text-white/60 text-xs">{currentPlayer.score}pt</div>
+                    <div className="flex items-center gap-2">
+                      {/* 完成枚数 */}
+                      <div className="flex gap-1 text-[10px]">
+                        <div className="bg-slate-200 text-slate-700 px-1 rounded font-bold">{currentPlayer.completedWhite || 0}</div>
+                        <div className="bg-slate-700 text-white px-1 rounded font-bold">{currentPlayer.completedBlack || 0}</div>
+                      </div>
+                      <div className="text-white/60 text-xs">{currentPlayer.score}pt</div>
+                    </div>
                   </div>
-                  {/* 所持パズル＆完成枚数 */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex gap-1">
-                      {currentPlayer.workingPuzzles.map((wp) => {
-                        const card = ALL_PUZZLES.find((p) => p.id === wp.cardId);
-                        return (
-                          <div
-                            key={wp.cardId}
-                            className={`w-6 h-8 rounded text-[8px] flex items-center justify-center font-bold ${
-                              card?.type === 'white'
-                                ? 'bg-slate-200 text-slate-700'
-                                : 'bg-slate-700 text-white'
-                            }`}
-                          >
-                            {card?.points}
+                  {/* 所持パズル（全幅） */}
+                  <div className="flex gap-1 mb-2">
+                    {currentPlayer.workingPuzzles.map((wp) => {
+                      const card = ALL_PUZZLES.find((p) => p.id === wp.cardId);
+                      if (!card) return null;
+                      return (
+                        <div
+                          key={wp.cardId}
+                          className="w-[50px] h-[63px] overflow-hidden"
+                        >
+                          <div className="origin-top-left scale-[0.5]">
+                            <PuzzleCardDisplay
+                              card={card}
+                              size="xxs"
+                              placedPieces={wp.placedPieces}
+                              showReward={false}
+                              compact={true}
+                            />
                           </div>
-                        );
-                      })}
-                      {Array(4 - currentPlayer.workingPuzzles.length).fill(null).map((_, i) => (
-                        <div key={`empty-${i}`} className="w-6 h-8 rounded border border-dashed border-slate-500" />
-                      ))}
-                    </div>
-                    {/* 完成枚数 */}
-                    <div className="flex gap-1 text-[10px]">
-                      <div className="bg-slate-200 text-slate-700 px-1 rounded font-bold">{currentPlayer.completedWhite || 0}</div>
-                      <div className="bg-slate-700 text-white px-1 rounded font-bold">{currentPlayer.completedBlack || 0}</div>
-                    </div>
+                        </div>
+                      );
+                    })}
+                    {Array(4 - currentPlayer.workingPuzzles.length).fill(null).map((_, i) => (
+                      <div key={`empty-${i}`} className="w-[50px] h-[63px] rounded border border-dashed border-slate-500" />
+                    ))}
                   </div>
                   {/* 所持ピース（2段ピースの高さを最小に） */}
                   <div className="flex flex-wrap gap-0.5 items-center min-h-[17px]">
@@ -1484,37 +1489,42 @@ export const GamePlayPhase = ({
                         <div className="text-white text-sm font-medium truncate">{player.name}</div>
                         {isActivePlayer && <span className="text-[10px] bg-amber-500 text-white px-1 rounded">ターン中</span>}
                       </div>
-                      <div className="text-white/60 text-xs">
-                        {gameState.settings?.scoreVisibility === 'hidden' ? '???pt' : `${player.score}pt`}
+                      <div className="flex items-center gap-2">
+                        {/* 完成枚数 */}
+                        <div className="flex gap-1 text-[10px]">
+                          <div className="bg-slate-200 text-slate-700 px-1 rounded font-bold">{player.completedWhite || 0}</div>
+                          <div className="bg-slate-700 text-white px-1 rounded font-bold">{player.completedBlack || 0}</div>
+                        </div>
+                        <div className="text-white/60 text-xs">
+                          {gameState.settings?.scoreVisibility === 'hidden' ? '???pt' : `${player.score}pt`}
+                        </div>
                       </div>
                     </div>
-                    {/* 所持パズル＆完成枚数 */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex gap-1">
-                        {player.workingPuzzles.map((wp) => {
-                          const card = ALL_PUZZLES.find((p) => p.id === wp.cardId);
-                          return (
-                            <div
-                              key={wp.cardId}
-                              className={`w-6 h-8 rounded text-[8px] flex items-center justify-center font-bold ${
-                                card?.type === 'white'
-                                  ? 'bg-slate-200 text-slate-700'
-                                  : 'bg-slate-700 text-white'
-                              }`}
-                            >
-                              {card?.points}
+                    {/* 所持パズル（全幅） */}
+                    <div className="flex gap-1 mb-2">
+                      {player.workingPuzzles.map((wp) => {
+                        const card = ALL_PUZZLES.find((p) => p.id === wp.cardId);
+                        if (!card) return null;
+                        return (
+                          <div
+                            key={wp.cardId}
+                            className="w-[50px] h-[63px] overflow-hidden"
+                          >
+                            <div className="origin-top-left scale-[0.5]">
+                              <PuzzleCardDisplay
+                                card={card}
+                                size="xxs"
+                                placedPieces={wp.placedPieces}
+                                showReward={false}
+                                compact={true}
+                              />
                             </div>
-                          );
-                        })}
-                        {Array(4 - player.workingPuzzles.length).fill(null).map((_, i) => (
-                          <div key={`empty-${i}`} className="w-6 h-8 rounded border border-dashed border-slate-500" />
-                        ))}
-                      </div>
-                      {/* 完成枚数 */}
-                      <div className="flex gap-1 text-[10px]">
-                        <div className="bg-slate-200 text-slate-700 px-1 rounded font-bold">{player.completedWhite || 0}</div>
-                        <div className="bg-slate-700 text-white px-1 rounded font-bold">{player.completedBlack || 0}</div>
-                      </div>
+                          </div>
+                        );
+                      })}
+                      {Array(4 - player.workingPuzzles.length).fill(null).map((_, i) => (
+                        <div key={`empty-${i}`} className="w-[50px] h-[63px] rounded border border-dashed border-slate-500" />
+                      ))}
                     </div>
                     {/* 所持ピース（2段ピースの高さを最小に） */}
                     <div className="flex flex-wrap gap-0.5 items-center min-h-[17px]">
