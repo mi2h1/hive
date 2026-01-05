@@ -123,7 +123,8 @@ export const createInitialGameState = (settings: GameSettings = DEFAULT_SETTINGS
   blackPuzzleMarket: [],
   pieceStock: { ...INITIAL_PIECE_STOCK },
   finalRound: false,
-  finalRoundStartPlayer: null,
+  finalRoundTurnNumber: null,
+  currentTurnNumber: 1,
   settings,
   createdAt: Date.now(),
   updatedAt: Date.now(),
@@ -164,7 +165,8 @@ const initializeGame = (players: Player[]): Partial<GameState> => {
     blackPuzzleMarket: selectedBlack.slice(0, 4),
     pieceStock,
     finalRound: false,
-    finalRoundStartPlayer: null,
+    finalRoundTurnNumber: null,
+    currentTurnNumber: 1,
     updatedAt: Date.now(),
   };
 };

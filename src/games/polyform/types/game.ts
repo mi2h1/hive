@@ -105,7 +105,8 @@ export interface GameState {
 
   // ゲーム終了関連
   finalRound: boolean;
-  finalRoundStartPlayer: string | null;
+  finalRoundTurnNumber: number | null; // 最終ラウンドが開始されたターン番号
+  currentTurnNumber: number; // 現在のターン番号（全員が1回ずつ手番を行う単位）
 
   // 設定
   settings: GameSettings;

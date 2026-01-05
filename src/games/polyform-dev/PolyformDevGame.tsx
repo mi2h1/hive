@@ -92,7 +92,8 @@ export const PolyformDevGame = ({ onBack }: PolyformDevGameProps) => {
       whitePuzzleMarket: [],
       blackPuzzleMarket: [],
       finalRound: false,
-      finalRoundStartPlayer: null,
+      finalRoundTurnNumber: null,
+      currentTurnNumber: 1,
     });
   };
 
