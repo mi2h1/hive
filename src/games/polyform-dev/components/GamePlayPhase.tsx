@@ -790,8 +790,10 @@ export const GamePlayPhase = ({
       players: finalPlayers,
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
-      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
+    if (turnEnded) {
+      updates.turnTransitionTimestamp = Date.now();
+    }
 
     if (deckType === 'white') {
       updates.whitePuzzleDeck = deck;
@@ -900,8 +902,10 @@ export const GamePlayPhase = ({
       currentPlayerIndex: nextPlayerIndex,
       announcement: logMessage,
       actionLogs: createActionLog(logMessage),
-      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
+    if (turnEnded) {
+      updates.turnTransitionTimestamp = Date.now();
+    }
     if (recyclingMarket === 'white') {
       updates.whitePuzzleMarket = newMarket;
       updates.whitePuzzleDeck = deck;
@@ -992,8 +996,10 @@ export const GamePlayPhase = ({
       players: updatedPlayers,
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
-      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
+    if (turnEnded) {
+      updates.turnTransitionTimestamp = Date.now();
+    }
 
     if (puzzleType === 'white') {
       updates.whitePuzzleMarket = market;
@@ -1386,8 +1392,10 @@ export const GamePlayPhase = ({
       players: updatedPlayers,
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
-      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
+    if (turnEnded) {
+      updates.turnTransitionTimestamp = Date.now();
+    }
 
     if (isCompleted) {
       updates.pieceStock = updatedPieceStock;
@@ -1553,8 +1561,10 @@ export const GamePlayPhase = ({
         players: updatedPlayers,
         currentPlayerIndex: nextPlayerIndex,
         currentTurnNumber: nextTurnNumber,
-        turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
       };
+      if (turnEnded) {
+        updates.turnTransitionTimestamp = Date.now();
+      }
 
       let logMessage: string;
       if (shouldEndFinalRound) {
@@ -1673,8 +1683,10 @@ export const GamePlayPhase = ({
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
       pieceStock: updatedPieceStock,
-      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
+    if (turnEnded) {
+      updates.turnTransitionTimestamp = Date.now();
+    }
 
     // 最終ラウンド終了チェック（フルターン終了時に判定）
     const shouldEndFinalRound =
@@ -1774,8 +1786,10 @@ export const GamePlayPhase = ({
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
       pieceStock: updatedPieceStock,
-      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
+    if (turnEnded) {
+      updates.turnTransitionTimestamp = Date.now();
+    }
 
     // 最終ラウンド終了チェック（フルターン終了時に判定）
     const shouldEndFinalRound =
