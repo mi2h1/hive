@@ -842,6 +842,7 @@ export const GamePlayPhase = ({
     const updates: Partial<GameState> = {
       players: updatedPlayers,
       currentPlayerIndex: nextPlayerIndex,
+      announcement: `${currentPlayer.name}がリサイクル`,
     };
     if (recyclingMarket === 'white') {
       updates.whitePuzzleMarket = newMarket;
@@ -952,14 +953,17 @@ export const GamePlayPhase = ({
 
     if (shouldEndFinalRound) {
       updates.phase = 'finishing';
+      updates.announcement = '最終ラウンド終了！仕上げフェーズへ';
       setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
     }
     // 最終ラウンド開始チェック（黒パズルの山札が空になったら）
     else if (!gameState.finalRound && puzzleType === 'black' && deck.length === 0) {
       updates.finalRound = true;
       updates.finalRoundTurnNumber = gameState.currentTurnNumber;
-      setAnnouncement('最終ラウンド！');
+      updates.announcement = '最終ラウンド開始！';
+      setAnnouncement('最終ラウンド開始！');
     } else {
+      updates.announcement = `${currentPlayer.name}がカードを取得`;
       setAnnouncement('カードを取得');
     }
 
@@ -1333,7 +1337,14 @@ export const GamePlayPhase = ({
 
     if (shouldEndFinalRound) {
       updates.phase = 'finishing';
+      updates.announcement = '最終ラウンド終了！仕上げフェーズへ';
       setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
+    } else if (isCompleted) {
+      updates.announcement = `${currentPlayer.name}がパズル完成！ +${card.points}pt`;
+      // setAnnouncementは下で実行
+    } else {
+      updates.announcement = `${currentPlayer.name}がピースを配置`;
+      // setAnnouncementは下で実行
     }
 
     onUpdateGameState(updates);
@@ -1425,7 +1436,10 @@ export const GamePlayPhase = ({
         }
         return p;
       });
-      onUpdateGameState({ players: updatedPlayers });
+      onUpdateGameState({
+        players: updatedPlayers,
+        announcement: `${currentPlayer.name}がマスターアクション（${masterActionPendingCompletions.length}枚完成）`,
+      });
 
       // ターン遷移情報を保存（完成処理後に適用）
       if (turnEnded) {
@@ -1471,8 +1485,10 @@ export const GamePlayPhase = ({
 
       if (shouldEndFinalRound) {
         updates.phase = 'finishing';
+        updates.announcement = '最終ラウンド終了！仕上げフェーズへ';
         setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
       } else {
+        updates.announcement = `${currentPlayer.name}がマスターアクション（${masterActionPlacedPuzzles.size}枚に配置）`;
         setAnnouncement(`マスターアクション完了（${masterActionPlacedPuzzles.size}枚に配置）`);
       }
 
@@ -1591,8 +1607,10 @@ export const GamePlayPhase = ({
 
     if (shouldEndFinalRound) {
       updates.phase = 'finishing';
+      updates.announcement = '最終ラウンド終了！仕上げフェーズへ';
       setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
     } else {
+      updates.announcement = `${currentPlayer.name}がレベル1ピースを獲得`;
       setAnnouncement('レベル1ピースを獲得');
     }
 
@@ -1688,8 +1706,10 @@ export const GamePlayPhase = ({
 
     if (shouldEndFinalRound) {
       updates.phase = 'finishing';
+      updates.announcement = '最終ラウンド終了！仕上げフェーズへ';
       setAnnouncement('最終ラウンド終了！仕上げフェーズへ');
     } else {
+      updates.announcement = `${currentPlayer.name}が${actionText}`;
       setAnnouncement(actionText);
     }
 
@@ -2415,7 +2435,9 @@ export const GamePlayPhase = ({
 
                   {/* 相手のターン */}
                   {!isMyTurn && !masterActionMode && (
-                    <span className="text-slate-500 text-sm">相手のアクションを待っています...</span>
+                    <span className={`text-sm ${gameState.announcement ? 'text-teal-300' : 'text-slate-500'}`}>
+                      {gameState.announcement || '相手のアクションを待っています...'}
+                    </span>
                   )}
                   </div>
                 </div>

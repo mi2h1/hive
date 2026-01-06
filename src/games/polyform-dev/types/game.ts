@@ -111,6 +111,9 @@ export interface GameState {
   // 設定
   settings: GameSettings;
 
+  // アクションアナウンス（他プレイヤーに通知）
+  announcement?: string;
+
   // タイムスタンプ
   createdAt: number;
   updatedAt: number;
