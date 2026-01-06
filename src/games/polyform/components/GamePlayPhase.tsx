@@ -412,6 +412,7 @@ export const GamePlayPhase = ({
           players: updatedPlayers,
           currentPlayerIndex: nextPlayerIndex,
           currentTurnNumber: nextTurnNumber,
+          turnTransitionTimestamp: Date.now(),
         };
 
         if (shouldEndFinalRound) {
@@ -483,6 +484,26 @@ export const GamePlayPhase = ({
   // 自分のターンかどうか（デバッグモードでは操作対象プレイヤーのターンかどうか）
   const activePlayerId = gameState.playerOrder[gameState.currentPlayerIndex];
   const isMyTurn = activePlayerId === debugControlPlayerId;
+
+  // ターン遷移中かどうか（1秒間の待機）
+  const [isTurnTransitioning, setIsTurnTransitioning] = useState(false);
+  useEffect(() => {
+    const checkTransition = () => {
+      if (gameState.turnTransitionTimestamp) {
+        const elapsed = Date.now() - gameState.turnTransitionTimestamp;
+        setIsTurnTransitioning(elapsed < 1000);
+      } else {
+        setIsTurnTransitioning(false);
+      }
+    };
+    checkTransition();
+    // 100msごとにチェックして遷移終了を検知
+    const interval = setInterval(checkTransition, 100);
+    return () => clearInterval(interval);
+  }, [gameState.turnTransitionTimestamp]);
+
+  // アクション可能かどうか（自分のターンで、遷移中でない）
+  const canAct = isMyTurn && !isTurnTransitioning;
 
   // 最終ラウンド中かどうか
   const isFinalRound = gameState.finalRound;
@@ -584,6 +605,7 @@ export const GamePlayPhase = ({
         currentTurnNumber: nextTurnNumber,
         finalRound: true,
         finalRoundTurnNumber: gameState.currentTurnNumber,
+        turnTransitionTimestamp: Date.now(),
       });
       setAnnouncement('最終ラウンド開始！次のターン終了後に仕上げへ');
     } else {
@@ -591,6 +613,7 @@ export const GamePlayPhase = ({
         players: updatedPlayers,
         currentPlayerIndex: nextPlayerIndex,
         currentTurnNumber: nextTurnNumber,
+        turnTransitionTimestamp: Date.now(),
       });
       setAnnouncement('ターン終了');
     }
@@ -631,9 +654,9 @@ export const GamePlayPhase = ({
       return;
     }
 
-    // 自分のターンでない場合は無視
-    if (!isMyTurn) {
-      console.log('自分のターンではありません');
+    // 自分のターンでない場合（遷移中含む）は無視
+    if (!canAct) {
+      console.log('自分のターンではありません（または遷移中）');
       return;
     }
 
@@ -674,8 +697,8 @@ export const GamePlayPhase = ({
     // アクションモードがtakePuzzleでない場合は無視
     if (actionMode !== 'takePuzzle') return;
 
-    // 自分のターンでない場合は無視
-    if (!isMyTurn) return;
+    // 自分のターンでない場合（遷移中含む）は無視
+    if (!canAct) return;
 
     // アクションが残っていない場合は無視
     if (currentPlayer.remainingActions <= 0) return;
@@ -749,6 +772,7 @@ export const GamePlayPhase = ({
       players: finalPlayers,
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
+      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
 
     if (deckType === 'white') {
@@ -792,8 +816,8 @@ export const GamePlayPhase = ({
   const handleRecycle = (marketType: 'white' | 'black') => {
     if (!onUpdateGameState || recyclingMarket) return;
 
-    // 自分のターンでない場合は無視
-    if (!isMyTurn) return;
+    // 自分のターンでない場合（遷移中含む）は無視
+    if (!canAct) return;
 
     // アクションが残っていない場合は無視
     if (currentPlayer.remainingActions <= 0) return;
@@ -851,12 +875,14 @@ export const GamePlayPhase = ({
     });
 
     // ゲーム状態を更新
+    const turnEnded = newRemainingActions <= 0;
     const logMessage = `${currentPlayer.name}がリサイクル`;
     const updates: Partial<GameState> = {
       players: updatedPlayers,
       currentPlayerIndex: nextPlayerIndex,
       announcement: logMessage,
       actionLogs: createActionLog(logMessage),
+      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
     if (recyclingMarket === 'white') {
       updates.whitePuzzleMarket = newMarket;
@@ -948,6 +974,7 @@ export const GamePlayPhase = ({
       players: updatedPlayers,
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
+      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
 
     if (puzzleType === 'white') {
@@ -1096,8 +1123,8 @@ export const GamePlayPhase = ({
       // ピース配置モードまたはマスターアクション中でない場合は無視
       if (actionMode !== 'placePiece' && !masterActionMode) return;
 
-      // 自分のターンでない場合は無視
-      if (!isMyTurn) return;
+      // 自分のターンでない場合（遷移中含む）は無視
+      if (!canAct) return;
 
       // アクションが残っていない場合は無視（マスターアクション中は除く）
       if (currentPlayer.remainingActions <= 0 && !masterActionMode) return;
@@ -1341,6 +1368,7 @@ export const GamePlayPhase = ({
       players: updatedPlayers,
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
+      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
 
     if (isCompleted) {
@@ -1403,7 +1431,7 @@ export const GamePlayPhase = ({
 
   // マスターアクション開始
   const handleStartMasterAction = () => {
-    if (!isMyTurn || !onUpdateGameState) return;
+    if (!canAct || !onUpdateGameState) return;
     if (currentPlayer.remainingActions <= 0) return;
     if (currentPlayer.usedMasterAction) return;
     if (currentPlayer.workingPuzzles.length === 0) return;
@@ -1507,6 +1535,7 @@ export const GamePlayPhase = ({
         players: updatedPlayers,
         currentPlayerIndex: nextPlayerIndex,
         currentTurnNumber: nextTurnNumber,
+        turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
       };
 
       let logMessage: string;
@@ -1564,8 +1593,8 @@ export const GamePlayPhase = ({
   const handleGetLevel1Piece = () => {
     if (!onUpdateGameState) return;
 
-    // 自分のターンでない場合は無視
-    if (!isMyTurn) return;
+    // 自分のターンでない場合（遷移中含む）は無視
+    if (!canAct) return;
 
     // アクションが残っていない場合は無視
     if (currentPlayer.remainingActions <= 0) return;
@@ -1626,6 +1655,7 @@ export const GamePlayPhase = ({
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
       pieceStock: updatedPieceStock,
+      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
 
     // 最終ラウンド終了チェック（フルターン終了時に判定）
@@ -1655,8 +1685,8 @@ export const GamePlayPhase = ({
   const handleConfirmPieceChange = (newType: PieceType, _category: 'up' | 'down' | 'same') => {
     if (!pieceChangeMode || !onUpdateGameState) return;
 
-    // 自分のターンでない場合は無視
-    if (!isMyTurn) return;
+    // 自分のターンでない場合（遷移中含む）は無視
+    if (!canAct) return;
 
     // アクションが残っていない場合は無視
     if (currentPlayer.remainingActions <= 0) return;
@@ -1726,6 +1756,7 @@ export const GamePlayPhase = ({
       currentPlayerIndex: nextPlayerIndex,
       currentTurnNumber: nextTurnNumber,
       pieceStock: updatedPieceStock,
+      turnTransitionTimestamp: turnEnded ? Date.now() : undefined,
     };
 
     // 最終ラウンド終了チェック（フルターン終了時に判定）
@@ -2106,7 +2137,11 @@ export const GamePlayPhase = ({
             <div className="text-white">
               <span className="font-bold">{currentPlayer.name}</span>
             </div>
-            {isMyTurn ? (
+            {isTurnTransitioning ? (
+              <span className="bg-amber-500 text-white text-xs px-2 py-1 rounded font-bold animate-pulse">
+                遷移中...
+              </span>
+            ) : isMyTurn ? (
               <span className="bg-teal-500 text-white text-xs px-2 py-1 rounded font-bold">
                 あなたのターン
               </span>
@@ -2320,8 +2355,8 @@ export const GamePlayPhase = ({
                       </span>
                     )}
                     <span className="text-slate-600">|</span>
-                    <span className={`text-sm font-medium ${isMyTurn ? 'text-teal-400' : 'text-slate-400'}`}>
-                      {isMyTurn ? 'あなたのターン' : `${gameState.players.find(p => p.id === activePlayerId)?.name}のターン`}
+                    <span className={`text-sm font-medium ${isTurnTransitioning ? 'text-amber-400 animate-pulse' : isMyTurn ? 'text-teal-400' : 'text-slate-400'}`}>
+                      {isTurnTransitioning ? 'ターン遷移中...' : isMyTurn ? 'あなたのターン' : `${gameState.players.find(p => p.id === activePlayerId)?.name}のターン`}
                     </span>
                   </div>
 

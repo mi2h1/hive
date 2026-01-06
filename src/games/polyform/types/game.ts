@@ -124,6 +124,9 @@ export interface GameState {
   // アクションログ（最新20件を保持）
   actionLogs?: ActionLog[];
 
+  // ターン遷移タイムスタンプ（遷移中の待機表示用）
+  turnTransitionTimestamp?: number;
+
   // タイムスタンプ
   createdAt: number;
   updatedAt: number;
