@@ -21,6 +21,21 @@ interface MojiHuntPlayer {
   revealedCharacters?: string[];
 }
 
+interface JackalPlayer {
+  id: string;
+  name: string;
+  life: number;
+  isEliminated: boolean;
+}
+
+interface PolyformPlayer {
+  id: string;
+  name: string;
+  score: number;
+  completedWhite: number;
+  completedBlack: number;
+}
+
 // AOAの部屋データ型
 interface AoaRoom {
   code: string;
@@ -50,6 +65,35 @@ interface MojiHuntRoom {
   };
 }
 
+// ジャッカルの部屋データ型
+interface JackalRoom {
+  code: string;
+  hostId: string;
+  createdAt: number;
+  gameState: {
+    phase: string;
+    round: number;
+    players: JackalPlayer[] | Record<string, JackalPlayer>;
+    currentTurnPlayerId?: string;
+    currentDeclaredValue?: number;
+  };
+}
+
+// POLYFORMの部屋データ型
+interface PolyformRoom {
+  code: string;
+  hostId: string;
+  createdAt: number;
+  gameState: {
+    phase: string;
+    currentPlayerIndex: number;
+    currentTurnNumber: number;
+    finalRound: boolean;
+    players: PolyformPlayer[] | Record<string, PolyformPlayer>;
+    playerOrder: string[];
+  };
+}
+
 export interface AdminMojiHuntPlayerDetail {
   id: string;
   name: string;
@@ -61,7 +105,7 @@ export interface AdminMojiHuntPlayerDetail {
 }
 
 export interface AdminRoom {
-  gameType: 'aoa' | 'moji-hunt' | 'moji-hunt-dev';
+  gameType: 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform-dev';
   code: string;
   hostId: string;
   createdAt: number;
@@ -79,6 +123,14 @@ export interface AdminRoom {
     eliminatedCount?: number;
     mojiHuntPlayers?: AdminMojiHuntPlayerDetail[];
     usedCharacters?: string[];
+    // ジャッカル
+    jackalRound?: number;
+    currentDeclaredValue?: number;
+    jackalPlayers?: Array<{ id: string; name: string; life: number; isEliminated: boolean }>;
+    // POLYFORM
+    currentTurnNumber?: number;
+    finalRound?: boolean;
+    polyformPlayers?: Array<{ id: string; name: string; score: number; completedWhite: number; completedBlack: number }>;
   };
 }
 
@@ -90,13 +142,19 @@ export const useAdminRooms = () => {
     const aoaRef = ref(db, 'rooms');
     const mojiHuntRef = ref(db, 'moji-hunt-rooms');
     const mojiHuntDevRef = ref(db, 'moji-hunt-dev-rooms');
+    const jackalRef = ref(db, 'jackal-rooms');
+    const jackalDevRef = ref(db, 'jackal-dev-rooms');
+    const polyformDevRef = ref(db, 'polyform-dev-rooms');
 
     let aoaRooms: AdminRoom[] = [];
     let mojiHuntRooms: AdminRoom[] = [];
     let mojiHuntDevRooms: AdminRoom[] = [];
+    let jackalRooms: AdminRoom[] = [];
+    let jackalDevRooms: AdminRoom[] = [];
+    let polyformDevRooms: AdminRoom[] = [];
 
     const updateRooms = () => {
-      setRooms([...aoaRooms, ...mojiHuntRooms, ...mojiHuntDevRooms].sort((a, b) => b.createdAt - a.createdAt));
+      setRooms([...aoaRooms, ...mojiHuntRooms, ...mojiHuntDevRooms, ...jackalRooms, ...jackalDevRooms, ...polyformDevRooms].sort((a, b) => b.createdAt - a.createdAt));
       setIsLoading(false);
     };
 
@@ -245,23 +303,164 @@ export const useAdminRooms = () => {
       updateRooms();
     });
 
+    // ジャッカルの部屋を監視
+    onValue(jackalRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        jackalRooms = [];
+        updateRooms();
+        return;
+      }
+
+      const data = snapshot.val();
+      jackalRooms = Object.entries(data).map(([code, room]) => {
+        const r = room as JackalRoom;
+        const rawPlayers = r.gameState?.players;
+        const players: JackalPlayer[] = Array.isArray(rawPlayers)
+          ? rawPlayers
+          : Object.values(rawPlayers || {}) as JackalPlayer[];
+
+        const currentTurnPlayer = players.find(p => p.id === r.gameState?.currentTurnPlayerId);
+        const eliminatedCount = players.filter(p => p.isEliminated).length;
+
+        return {
+          gameType: 'jackal' as const,
+          code,
+          hostId: r.hostId,
+          createdAt: r.createdAt || 0,
+          phase: r.gameState?.phase || 'unknown',
+          playerCount: players.length,
+          players: players.map(p => ({ id: p.id, name: p.name })),
+          details: {
+            jackalRound: r.gameState?.round,
+            currentTurnPlayerName: currentTurnPlayer?.name,
+            currentDeclaredValue: r.gameState?.currentDeclaredValue ?? undefined,
+            eliminatedCount,
+            jackalPlayers: players.map(p => ({
+              id: p.id,
+              name: p.name,
+              life: p.life,
+              isEliminated: p.isEliminated,
+            })),
+          },
+        };
+      });
+      updateRooms();
+    });
+
+    // ジャッカル（開発版）の部屋を監視
+    onValue(jackalDevRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        jackalDevRooms = [];
+        updateRooms();
+        return;
+      }
+
+      const data = snapshot.val();
+      jackalDevRooms = Object.entries(data).map(([code, room]) => {
+        const r = room as JackalRoom;
+        const rawPlayers = r.gameState?.players;
+        const players: JackalPlayer[] = Array.isArray(rawPlayers)
+          ? rawPlayers
+          : Object.values(rawPlayers || {}) as JackalPlayer[];
+
+        const currentTurnPlayer = players.find(p => p.id === r.gameState?.currentTurnPlayerId);
+        const eliminatedCount = players.filter(p => p.isEliminated).length;
+
+        return {
+          gameType: 'jackal-dev' as const,
+          code,
+          hostId: r.hostId,
+          createdAt: r.createdAt || 0,
+          phase: r.gameState?.phase || 'unknown',
+          playerCount: players.length,
+          players: players.map(p => ({ id: p.id, name: p.name })),
+          details: {
+            jackalRound: r.gameState?.round,
+            currentTurnPlayerName: currentTurnPlayer?.name,
+            currentDeclaredValue: r.gameState?.currentDeclaredValue ?? undefined,
+            eliminatedCount,
+            jackalPlayers: players.map(p => ({
+              id: p.id,
+              name: p.name,
+              life: p.life,
+              isEliminated: p.isEliminated,
+            })),
+          },
+        };
+      });
+      updateRooms();
+    });
+
+    // POLYFORM（開発版）の部屋を監視
+    onValue(polyformDevRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        polyformDevRooms = [];
+        updateRooms();
+        return;
+      }
+
+      const data = snapshot.val();
+      polyformDevRooms = Object.entries(data).map(([code, room]) => {
+        const r = room as PolyformRoom;
+        const rawPlayers = r.gameState?.players;
+        const players: PolyformPlayer[] = Array.isArray(rawPlayers)
+          ? rawPlayers
+          : Object.values(rawPlayers || {}) as PolyformPlayer[];
+
+        const playerOrder = r.gameState?.playerOrder || [];
+        const currentPlayerId = playerOrder[r.gameState?.currentPlayerIndex || 0];
+        const currentTurnPlayer = players.find(p => p.id === currentPlayerId);
+
+        return {
+          gameType: 'polyform-dev' as const,
+          code,
+          hostId: r.hostId,
+          createdAt: r.createdAt || 0,
+          phase: r.gameState?.phase || 'unknown',
+          playerCount: players.length,
+          players: players.map(p => ({ id: p.id, name: p.name })),
+          details: {
+            currentTurnPlayerName: currentTurnPlayer?.name,
+            currentTurnNumber: r.gameState?.currentTurnNumber,
+            finalRound: r.gameState?.finalRound,
+            polyformPlayers: players.map(p => ({
+              id: p.id,
+              name: p.name,
+              score: p.score,
+              completedWhite: p.completedWhite,
+              completedBlack: p.completedBlack,
+            })),
+          },
+        };
+      });
+      updateRooms();
+    });
+
     return () => {
       off(aoaRef);
       off(mojiHuntRef);
       off(mojiHuntDevRef);
+      off(jackalRef);
+      off(jackalDevRef);
+      off(polyformDevRef);
     };
   }, []);
 
-  // 特定の部屋を削除
-  const deleteRoom = useCallback(async (gameType: 'aoa' | 'moji-hunt' | 'moji-hunt-dev', code: string) => {
-    let path: string;
-    if (gameType === 'aoa') {
-      path = `rooms/${code}`;
-    } else if (gameType === 'moji-hunt') {
-      path = `moji-hunt-rooms/${code}`;
-    } else {
-      path = `moji-hunt-dev-rooms/${code}`;
+  // ゲームタイプからFirebaseパスを取得
+  const getPathForGameType = (gameType: AdminRoom['gameType'], code: string): string => {
+    switch (gameType) {
+      case 'aoa': return `rooms/${code}`;
+      case 'moji-hunt': return `moji-hunt-rooms/${code}`;
+      case 'moji-hunt-dev': return `moji-hunt-dev-rooms/${code}`;
+      case 'jackal': return `jackal-rooms/${code}`;
+      case 'jackal-dev': return `jackal-dev-rooms/${code}`;
+      case 'polyform-dev': return `polyform-dev-rooms/${code}`;
     }
+  };
+
+  // 特定の部屋を削除
+  const deleteRoom = useCallback(async (gameType: AdminRoom['gameType'], code: string) => {
+    const path = getPathForGameType(gameType, code);
     await remove(ref(db, path));
   }, []);
 
@@ -273,14 +472,7 @@ export const useAdminRooms = () => {
     const deletePromises: Promise<void>[] = [];
     for (const room of rooms) {
       if (now - room.createdAt > maxAge) {
-        let path: string;
-        if (room.gameType === 'aoa') {
-          path = `rooms/${room.code}`;
-        } else if (room.gameType === 'moji-hunt') {
-          path = `moji-hunt-rooms/${room.code}`;
-        } else {
-          path = `moji-hunt-dev-rooms/${room.code}`;
-        }
+        const path = getPathForGameType(room.gameType, room.code);
         deletePromises.push(remove(ref(db, path)));
       }
     }
@@ -293,14 +485,7 @@ export const useAdminRooms = () => {
   const deleteAllRooms = useCallback(async () => {
     const deletePromises: Promise<void>[] = [];
     for (const room of rooms) {
-      let path: string;
-      if (room.gameType === 'aoa') {
-        path = `rooms/${room.code}`;
-      } else if (room.gameType === 'moji-hunt') {
-        path = `moji-hunt-rooms/${room.code}`;
-      } else {
-        path = `moji-hunt-dev-rooms/${room.code}`;
-      }
+      const path = getPathForGameType(room.gameType, room.code);
       deletePromises.push(remove(ref(db, path)));
     }
     await Promise.all(deletePromises);
