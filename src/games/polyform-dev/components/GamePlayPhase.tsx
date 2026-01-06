@@ -99,10 +99,25 @@ export const GamePlayPhase = ({
     const result: { type: PieceType; category: 'up' | 'down' | 'same' }[] = [];
 
     // レベルアップ（現在レベルが4未満の場合）
+    // 1つ上のレベルが全て在庫切れの場合、さらに上のレベルも選択肢に追加
     if (currentLevel < 4) {
-      PIECES_BY_LEVEL[currentLevel + 1].forEach((type) => {
-        result.push({ type, category: 'up' });
-      });
+      let targetLevel = currentLevel + 1;
+      while (targetLevel <= 4) {
+        const piecesAtLevel = PIECES_BY_LEVEL[targetLevel];
+        const hasAnyInStock = piecesAtLevel.some((type) => gameState.pieceStock[type] > 0);
+
+        // このレベルのピースを選択肢に追加
+        piecesAtLevel.forEach((type) => {
+          result.push({ type, category: 'up' });
+        });
+
+        // このレベルに在庫があるピースがあれば、これ以上上は見ない
+        if (hasAnyInStock) {
+          break;
+        }
+        // 全て在庫切れなら、さらに上のレベルも選択肢に追加
+        targetLevel++;
+      }
     }
 
     // 同レベル交換（自分以外）
@@ -113,6 +128,7 @@ export const GamePlayPhase = ({
     });
 
     // レベルダウン（現在レベルが1より大きい場合）
+    // ダウングレードはスキップ不可（1つ下のレベルのみ）
     if (currentLevel > 1) {
       PIECES_BY_LEVEL[currentLevel - 1].forEach((type) => {
         result.push({ type, category: 'down' });
