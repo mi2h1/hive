@@ -2,10 +2,14 @@ import { useEffect } from 'react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
 import { Lobby } from './components/Lobby';
+import { GamePlayPhase } from './components/GamePlayPhase';
+import { ResultScreen } from './components/ResultScreen';
 
 interface DesperadoGameProps {
   onBack: () => void;
 }
+
+const INITIAL_LIVES = 5;
 
 export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
   const { playerId, playerName } = usePlayer();
@@ -55,6 +59,31 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
     });
   };
 
+  // もう一度遊ぶ
+  const handlePlayAgain = () => {
+    if (!gameState) return;
+
+    // ターン順をシャッフル
+    const shuffledOrder = [...players.map(p => p.id)].sort(() => Math.random() - 0.5);
+
+    updateGameState({
+      phase: 'rolling',
+      currentRound: 1,
+      desperadoRolledThisRound: false,
+      turnOrder: shuffledOrder,
+      currentTurnPlayerId: shuffledOrder[0],
+      winnerId: null,
+      lastLoser: null,
+      players: players.map(p => ({
+        ...p,
+        lives: INITIAL_LIVES,
+        currentRoll: null,
+        hasRolled: false,
+        isEliminated: false,
+      })),
+    });
+  };
+
   // 退出
   const handleLeaveRoom = () => {
     leaveRoom();
@@ -83,44 +112,27 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
     );
   }
 
-  // ゲームプレイ画面（後で実装）
-  if (phase === 'rolling' || phase === 'result') {
+  // ゲームプレイ画面
+  if ((phase === 'rolling' || phase === 'result') && gameState && playerId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-900 to-red-900">
-        <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
-          <div className="bg-slate-800/95 rounded-xl p-6 max-w-2xl w-full text-center">
-            <h1 className="text-3xl font-bold text-white mb-4">Desperado</h1>
-            <p className="text-amber-400 mb-4">ラウンド {gameState?.currentRound}</p>
-            <p className="text-slate-400 mb-8">ゲームプレイ画面は開発中...</p>
-            <button
-              onClick={handleLeaveRoom}
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold"
-            >
-              退出
-            </button>
-          </div>
-        </div>
-      </div>
+      <GamePlayPhase
+        gameState={gameState}
+        playerId={playerId}
+        onUpdateGameState={updateGameState}
+        onLeaveRoom={handleLeaveRoom}
+      />
     );
   }
 
-  // ゲーム終了画面（後で実装）
-  if (phase === 'game_end') {
+  // ゲーム終了画面
+  if (phase === 'game_end' && gameState && playerId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-900 to-red-900">
-        <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
-          <div className="bg-slate-800/95 rounded-xl p-6 max-w-2xl w-full text-center">
-            <h1 className="text-3xl font-bold text-white mb-4">ゲーム終了</h1>
-            <p className="text-slate-400 mb-8">結果画面は開発中...</p>
-            <button
-              onClick={handleLeaveRoom}
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-bold"
-            >
-              退出
-            </button>
-          </div>
-        </div>
-      </div>
+      <ResultScreen
+        gameState={gameState}
+        playerId={playerId}
+        onPlayAgain={handlePlayAgain}
+        onLeaveRoom={handleLeaveRoom}
+      />
     );
   }
 
