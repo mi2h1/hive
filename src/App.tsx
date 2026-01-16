@@ -10,7 +10,7 @@ import { PolyformGame } from './games/polyform/PolyformGame';
 import { PolyformDevGame } from './games/polyform-dev/PolyformDevGame';
 import { AdminPage } from './admin/AdminPage';
 
-type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform' | 'polyform-dev' | 'boards-dev' | 'admin';
+type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform' | 'polyform-dev' | 'desperado' | 'boards-dev' | 'admin';
 
 // クエリパラメータを保持（?v=xxx などのキャッシュバスター用）
 const getQueryString = (excludeKeys: string[] = []) => {
@@ -37,6 +37,7 @@ const getGameFromPath = (): GameType => {
     if (redirectPath === 'jackal-dev') return 'jackal-dev';
     if (redirectPath === 'polyform') return 'polyform';
     if (redirectPath === 'polyform-dev') return 'polyform-dev';
+    if (redirectPath === 'desperado') return 'desperado';
     if (redirectPath === 'boards-dev') return 'boards-dev';
     if (redirectPath === 'admin') return 'admin';
   }
@@ -50,6 +51,7 @@ const getGameFromPath = (): GameType => {
   if (path === 'jackal-dev') return 'jackal-dev';
   if (path === 'polyform') return 'polyform';
   if (path === 'polyform-dev') return 'polyform-dev';
+  if (path === 'desperado') return 'desperado';
   if (path === 'boards-dev') return 'boards-dev';
   if (path === 'admin') return 'admin';
   return 'none';
@@ -371,6 +373,27 @@ function App() {
                     hover:from-teal-600 hover:to-emerald-600 rounded-lg text-white font-bold transition-all"
                 >
                   遊ぶ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* デスペラード */}
+          <div className="bg-slate-800/80 rounded-xl overflow-hidden transition-all opacity-75">
+            <div className="h-40 bg-gradient-to-br from-amber-600 to-red-600 flex items-center justify-center">
+              <span className="text-3xl font-bold text-white">Desperado</span>
+            </div>
+            <div className="p-4">
+              <h2 className="text-lg font-bold text-white mb-2">デスペラード</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                ダイス2個で勝負！最強の「デスペラード」を出せるか？最後まで生き残れ！
+              </p>
+              <div className="flex gap-2">
+                <button
+                  disabled
+                  className="flex-1 px-4 py-2 bg-slate-600 rounded-lg text-slate-400 font-bold cursor-not-allowed"
+                >
+                  開発中
                 </button>
               </div>
             </div>
