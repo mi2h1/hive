@@ -8,6 +8,7 @@ import { JackalGame } from './games/jackal/JackalGame';
 import { JackalDevGame } from './games/jackal-dev/JackalDevGame';
 import { PolyformGame } from './games/polyform/PolyformGame';
 import { PolyformDevGame } from './games/polyform-dev/PolyformDevGame';
+import { DesperadoGame } from './games/desperado/DesperadoGame';
 import { AdminPage } from './admin/AdminPage';
 
 type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform' | 'polyform-dev' | 'desperado' | 'boards-dev' | 'admin';
@@ -173,6 +174,9 @@ function App() {
   }
   if (selectedGame === 'polyform-dev') {
     return <PolyformDevGame onBack={() => selectGame('none')} />;
+  }
+  if (selectedGame === 'desperado') {
+    return <DesperadoGame onBack={() => selectGame('none')} />;
   }
   if (selectedGame === 'boards-dev') {
     // 開発版ゲーム一覧
@@ -379,7 +383,7 @@ function App() {
           </div>
 
           {/* デスペラード */}
-          <div className="bg-slate-800/80 rounded-xl overflow-hidden transition-all opacity-75">
+          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-amber-500 transition-all">
             <div className="h-40 bg-gradient-to-br from-amber-600 to-red-600 flex items-center justify-center">
               <span className="text-3xl font-bold text-white">Desperado</span>
             </div>
@@ -390,10 +394,11 @@ function App() {
               </p>
               <div className="flex gap-2">
                 <button
-                  disabled
-                  className="flex-1 px-4 py-2 bg-slate-600 rounded-lg text-slate-400 font-bold cursor-not-allowed"
+                  onClick={() => selectGame('desperado')}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500
+                    hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
                 >
-                  開発中
+                  遊ぶ
                 </button>
               </div>
             </div>
