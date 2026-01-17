@@ -313,13 +313,19 @@ export const GamePlayPhase = ({
                         );
                       })()}
                     </div>
-                    <button
-                      onClick={handleNextRound}
-                      className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
-                        hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
-                    >
-                      次のラウンドへ
-                    </button>
+                    {isHost ? (
+                      <button
+                        onClick={handleNextRound}
+                        className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
+                          hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
+                      >
+                        次のラウンドへ
+                      </button>
+                    ) : (
+                      <div className="text-center text-slate-400 py-3">
+                        ホストの操作を待っています...
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

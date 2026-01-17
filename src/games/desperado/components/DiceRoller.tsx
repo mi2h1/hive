@@ -215,31 +215,23 @@ export const DiceRoller = ({
 
   return (
     <div className="relative w-full h-64">
-      {/* ポーカーテーブル風フレーム */}
+      {/* フェルト部分 */}
       <div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-b from-amber-700 via-amber-800 to-amber-950 p-3 shadow-2xl"
+        className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 overflow-hidden shadow-xl"
         style={{
-          boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.5)',
+          boxShadow: 'inset 0 4px 16px rgba(0,0,0,0.4), inset 0 -2px 8px rgba(255,255,255,0.1)',
         }}
       >
-        {/* フェルト部分 */}
-        <div
-          className="w-full h-full rounded-xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 overflow-hidden"
-          style={{
-            boxShadow: 'inset 0 4px 16px rgba(0,0,0,0.4), inset 0 -2px 8px rgba(255,255,255,0.1)',
-          }}
-        >
-          <canvas
-            ref={canvasRef}
-            className="w-full h-full"
-            style={{ display: 'block' }}
-          />
-        </div>
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full"
+          style={{ display: 'block' }}
+        />
       </div>
 
       {/* 接続中表示 */}
       {!isConnected && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50">
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50">
           <p className="text-amber-400 animate-pulse">{connectionStatus}</p>
         </div>
       )}
