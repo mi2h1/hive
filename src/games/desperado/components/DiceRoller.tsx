@@ -61,16 +61,27 @@ function Dice({
   color,
   onStabilized,
   diceRef,
+  canReport,
 }: {
   position: [number, number, number];
   color: string;
   onStabilized: (face: number) => void;
   diceRef: React.RefObject<RapierRigidBody | null>;
+  canReport: boolean;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [isStable, setIsStable] = useState(false);
   const stableFrames = useRef(0);
   const hasReported = useRef(false);
+
+  // canReportがfalseになったらリセット（次のロールに備える）
+  useEffect(() => {
+    if (!canReport) {
+      hasReported.current = false;
+      stableFrames.current = 0;
+      setIsStable(false);
+    }
+  }, [canReport]);
 
   // サイコロのテクスチャを作成
   const materials = useRef<THREE.MeshStandardMaterial[]>([]);
@@ -156,7 +167,8 @@ function Dice({
   }, [color]);
 
   useFrame(() => {
-    if (!diceRef.current || hasReported.current) return;
+    // canReportがtrueになるまで（ボタンが押されるまで）は報告しない
+    if (!diceRef.current || hasReported.current || !canReport) return;
 
     const velocity = diceRef.current.linvel();
     const angVel = diceRef.current.angvel();
@@ -242,6 +254,7 @@ function Scene({
   const dice2Ref = useRef<RapierRigidBody>(null);
   const [dice1Face, setDice1Face] = useState<number | null>(null);
   const [dice2Face, setDice2Face] = useState<number | null>(null);
+  const [canReport, setCanReport] = useState(false);
   const hasStartedRoll = useRef(false);
 
   // ダイスを振る
@@ -301,6 +314,8 @@ function Scene({
     // 状態リセット
     setDice1Face(null);
     setDice2Face(null);
+    // 少し遅延してからcanReportをtrueに（ダイスが動き始めてから）
+    setTimeout(() => setCanReport(true), 200);
   }, []);
 
   // isRollingが true になったら振る
@@ -312,6 +327,7 @@ function Scene({
     }
     if (!isRolling) {
       hasStartedRoll.current = false;
+      setCanReport(false);
     }
   }, [isRolling, rollDice]);
 
@@ -341,12 +357,14 @@ function Scene({
         color="#dc2626"
         onStabilized={setDice1Face}
         diceRef={dice1Ref}
+        canReport={canReport}
       />
       <Dice
         position={[1.5, 3, 0]}
         color="#dc2626"
         onStabilized={setDice2Face}
         diceRef={dice2Ref}
+        canReport={canReport}
       />
     </>
   );
