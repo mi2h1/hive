@@ -212,7 +212,7 @@ export const DiceRoller = ({
       // エラーレスポンスの詳細を表示
       if (err && typeof err === 'object' && 'response' in err) {
         const axiosErr = err as { response?: { data?: unknown; status?: number; headers?: unknown } };
-        console.error('Response data:', axiosErr.response?.data);
+        console.error('Response data (full):', JSON.stringify(axiosErr.response?.data, null, 2));
         console.error('Response status:', axiosErr.response?.status);
       }
       setIsRolling(false);
