@@ -91,6 +91,9 @@ export const DiceRoller = ({
         // SDK開始
         await dddice.start();
 
+        // カメラコントロールを無効化（ドラッグ/タッチで視点変更させない）
+        dddice.controlsEnabled = false;
+
         // テーマをプリロード（ディレイ軽減）
         try {
           const theme = await dddice.api?.theme?.get(DICE_THEME);
