@@ -177,23 +177,24 @@ export const DiceRoller = ({
 
   // ダイスを振る
   const handleRoll = useCallback(async () => {
-    if (!dddiceRef.current || !isConnected || isRolling) return;
+    if (!dddiceRef.current || !isConnected || isRolling || !dddiceRoomSlug) return;
 
     onStartRoll();
     setIsRolling(true);
     hasHandledRoll.current = false;
 
     try {
-      // 2つのd6を振る
+      console.log('Rolling dice in room:', dddiceRoomSlug);
+      // 2つのd6を振る（ルームを明示的に指定）
       await dddiceRef.current.roll([
         { theme: 'dddice-red', type: 'd6' },
         { theme: 'dddice-red', type: 'd6' },
-      ]);
+      ], { room: dddiceRoomSlug });
     } catch (err) {
       console.error('Roll error:', err);
       setIsRolling(false);
     }
-  }, [isConnected, isRolling, onStartRoll]);
+  }, [isConnected, isRolling, onStartRoll, dddiceRoomSlug]);
 
   return (
     <div className="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden">
