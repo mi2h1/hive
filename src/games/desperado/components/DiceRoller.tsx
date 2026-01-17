@@ -65,21 +65,24 @@ export const DiceRoller = ({
           setIsRolling(false);
         });
 
-        // 開始
+        // まずAPIキーなしで開始してゲストトークンを取得
         await dddice.start();
         console.log('dddice SDK started');
 
-        // ゲストユーザーを作成し、返されたトークンを使用
+        // ゲストユーザーを作成し、返されたトークンで再初期化
         try {
           const guestResponse = await dddice.api?.user?.guest();
           console.log('Guest user created:', guestResponse);
           if (guestResponse?.data) {
             // 新しいトークンでSDKを再初期化
-            dddice.apiKey = guestResponse.data;
-            console.log('API key updated to guest token');
+            const guestToken = guestResponse.data;
+            console.log('Reinitializing with guest token...');
+            dddice.initialize(canvasRef.current!, guestToken);
+            await dddice.start();
+            console.log('SDK reinitialized with guest token');
           }
         } catch (guestErr) {
-          console.log('Guest user creation failed (may already exist):', guestErr);
+          console.log('Guest user creation failed:', guestErr);
         }
 
         setConnectionStatus('SDK起動完了');
