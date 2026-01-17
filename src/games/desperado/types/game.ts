@@ -36,6 +36,8 @@ export interface GameState {
   currentTurnPlayerId: string | null;
   lastLoser: string | null;
   winnerId: string | null;
+  // ダイスアニメーション同期用
+  rollingPlayerId: string | null; // 現在ダイスを振っているプレイヤーID
 }
 
 // 部屋データ

@@ -41,7 +41,9 @@ export const GamePlayPhase = ({
   const handleStartRoll = useCallback(() => {
     if (!currentPlayer || currentPlayer.hasRolled || !isMyTurn) return;
     setIsRolling(true);
-  }, [currentPlayer, isMyTurn]);
+    // 他のプレイヤーに「振り始めた」ことを通知
+    onUpdateGameState({ rollingPlayerId: playerId });
+  }, [currentPlayer, isMyTurn, playerId, onUpdateGameState]);
 
   // 3Dダイスの結果を受け取る
   const handleRollComplete = useCallback((die1: number, die2: number) => {
@@ -81,6 +83,7 @@ export const GamePlayPhase = ({
       currentTurnPlayerId: allHaveRolled ? null : nextPlayerId,
       desperadoRolledThisRound: gameState.desperadoRolledThisRound || isDesperado,
       phase: allHaveRolled ? 'result' : 'rolling',
+      rollingPlayerId: null, // ロール完了を通知
     });
 
     setIsRolling(false);
@@ -124,6 +127,7 @@ export const GamePlayPhase = ({
         players: updatedPlayers,
         phase: 'game_end',
         winnerId: remainingPlayers[0]?.id ?? null,
+        rollingPlayerId: null,
       });
     } else {
       // 次のラウンド開始
@@ -142,6 +146,7 @@ export const GamePlayPhase = ({
           : newTurnOrder[0],
         turnOrder: newTurnOrder,
         lastLoser: loserIds[0] ?? null,
+        rollingPlayerId: null,
       });
     }
   };
@@ -246,11 +251,32 @@ export const GamePlayPhase = ({
             {gameState.phase === 'rolling' && (
               <>
                 {isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
+                  // 自分のターン: ダイスを振る
                   <DiceRoller
                     isRolling={isRolling}
                     onStartRoll={handleStartRoll}
                     onRollComplete={handleRollComplete}
                   />
+                ) : gameState.rollingPlayerId && gameState.rollingPlayerId !== playerId ? (
+                  // 他のプレイヤーがダイスを振っている: 観戦モード
+                  (() => {
+                    const rollingPlayer = gameState.players.find(p => p.id === gameState.rollingPlayerId);
+                    const forcedResult = rollingPlayer?.currentRoll ?? null;
+                    return (
+                      <div>
+                        <p className="text-center text-amber-400 mb-2">
+                          {rollingPlayer?.name}がダイスを振っています
+                        </p>
+                        <DiceRoller
+                          isRolling={true}
+                          onStartRoll={() => {}}
+                          onRollComplete={() => {}}
+                          isSpectator={true}
+                          forcedResult={forcedResult}
+                        />
+                      </div>
+                    );
+                  })()
                 ) : currentPlayer?.hasRolled ? (
                   <div className="text-center text-slate-400 py-4">
                     他のプレイヤーを待っています...

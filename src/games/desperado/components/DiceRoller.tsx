@@ -8,6 +8,9 @@ interface DiceRollerProps {
   onRollComplete: (die1: number, die2: number) => void;
   isRolling: boolean;
   onStartRoll: () => void;
+  // 観戦モード用
+  isSpectator?: boolean;
+  forcedResult?: { die1: number; die2: number } | null;
 }
 
 // サイコロの面のUV座標マッピング（各面に数字を表示）
@@ -246,9 +249,13 @@ function Table() {
 function Scene({
   onRollComplete,
   isRolling,
+  isSpectator,
+  forcedResult,
 }: {
   onRollComplete: (die1: number, die2: number) => void;
   isRolling: boolean;
+  isSpectator?: boolean;
+  forcedResult?: { die1: number; die2: number } | null;
 }) {
   const dice1Ref = useRef<RapierRigidBody>(null);
   const dice2Ref = useRef<RapierRigidBody>(null);
@@ -256,6 +263,7 @@ function Scene({
   const [dice2Face, setDice2Face] = useState<number | null>(null);
   const [canReport, setCanReport] = useState(false);
   const hasStartedRoll = useRef(false);
+  const hasReportedForcedResult = useRef(false);
 
   // ダイスを振る
   const rollDice = useCallback(() => {
@@ -333,12 +341,26 @@ function Scene({
     }
   }, [isRolling, rollDice]);
 
-  // 両方のサイコロが安定したら結果を返す
+  // 両方のサイコロが安定したら結果を返す（観戦モードでない場合のみ）
   useEffect(() => {
-    if (dice1Face !== null && dice2Face !== null) {
+    if (!isSpectator && dice1Face !== null && dice2Face !== null) {
       onRollComplete(dice1Face, dice2Face);
     }
-  }, [dice1Face, dice2Face, onRollComplete]);
+  }, [dice1Face, dice2Face, onRollComplete, isSpectator]);
+
+  // 観戦モード: 強制結果が来たら即座にセット
+  useEffect(() => {
+    if (isSpectator && forcedResult && !hasReportedForcedResult.current) {
+      hasReportedForcedResult.current = true;
+      setDice1Face(forcedResult.die1);
+      setDice2Face(forcedResult.die2);
+      setCanReport(false); // これ以上の報告を止める
+    }
+    // forcedResultがnullになったらリセット
+    if (!forcedResult) {
+      hasReportedForcedResult.current = false;
+    }
+  }, [isSpectator, forcedResult]);
 
   return (
     <>
@@ -372,7 +394,13 @@ function Scene({
   );
 }
 
-export const DiceRoller = ({ onRollComplete, isRolling, onStartRoll }: DiceRollerProps) => {
+export const DiceRoller = ({
+  onRollComplete,
+  isRolling,
+  onStartRoll,
+  isSpectator = false,
+  forcedResult,
+}: DiceRollerProps) => {
   return (
     <div className="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden">
       <Canvas
@@ -383,11 +411,14 @@ export const DiceRoller = ({ onRollComplete, isRolling, onStartRoll }: DiceRolle
           <Scene
             onRollComplete={onRollComplete}
             isRolling={isRolling}
+            isSpectator={isSpectator}
+            forcedResult={forcedResult}
           />
         </Physics>
       </Canvas>
 
-      {!isRolling && (
+      {/* 観戦モードでなく、ロール中でない場合のみボタンを表示 */}
+      {!isSpectator && !isRolling && (
         <button
           onClick={onStartRoll}
           className="absolute bottom-4 left-1/2 -translate-x-1/2 px-8 py-3
@@ -396,6 +427,14 @@ export const DiceRoller = ({ onRollComplete, isRolling, onStartRoll }: DiceRolle
         >
           ダイスを振る
         </button>
+      )}
+
+      {/* 観戦モードの場合のラベル */}
+      {isSpectator && isRolling && !forcedResult && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-6 py-2
+          bg-slate-800/80 rounded-lg text-amber-400 font-bold text-sm">
+          ダイスを振っています...
+        </div>
       )}
     </div>
   );

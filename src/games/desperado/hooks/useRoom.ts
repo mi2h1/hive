@@ -26,6 +26,7 @@ const createInitialGameState = (): GameState => ({
   currentTurnPlayerId: null,
   lastLoser: null,
   winnerId: null,
+  rollingPlayerId: null,
 });
 
 // 古いルームを削除（24時間以上前のルーム）

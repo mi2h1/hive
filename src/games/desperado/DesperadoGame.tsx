@@ -51,6 +51,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
       desperadoRolledThisRound: false,
       turnOrder: shuffledOrder,
       currentTurnPlayerId: shuffledOrder[0],
+      rollingPlayerId: null,
       players: players.map(p => ({
         ...p,
         currentRoll: null,
@@ -74,6 +75,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
       currentTurnPlayerId: shuffledOrder[0],
       winnerId: null,
       lastLoser: null,
+      rollingPlayerId: null,
       players: players.map(p => ({
         ...p,
         lives: INITIAL_LIVES,
