@@ -28,11 +28,17 @@
 - **開発版**: `/boards/polyform-dev`（デバッグ機能付き）
 - **本番版**: 未実装
 
+### デスペラード (Desperado)
+サイコロ2個を振って出目の強さを競うダイスバトルゲーム（2〜8人）。最弱の出目を出したプレイヤーがライフを失い、最後まで生き残れ！
+
+- **本番版**: `/boards/desperado`
+- **特徴**: dddice連携による3Dダイスアニメーション同期
+
 ## 管理画面
 
 `/boards/admin` で全ゲームの部屋をリアルタイム監視できる。
 
-- 部屋一覧（AOA / もじはんと / ジャッカル / POLYFORM + 各DEV版）
+- 部屋一覧（AOA / もじはんと / ジャッカル / POLYFORM / デスペラード + 各DEV版）
 - プレイヤー情報、ゲームフェーズ、お題表示
 - もじはんとの文字パネル状況（50音グリッド）
 - 古い部屋の一括削除
@@ -68,6 +74,7 @@ npm run build
 - `docs/moji-hunt-spec.md` - もじはんと仕様書
 - `docs/jackal-spec.md` - ジャッカル仕様書
 - `docs/polyform-spec.md` - POLYFORM仕様書
+- `docs/desperado-spec.md` - デスペラード仕様書
 - `src/games/aoa/README.md` - AOA詳細
 
 ## ライセンス
