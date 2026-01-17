@@ -207,8 +207,14 @@ export const DiceRoller = ({
         { theme: 'dddice-red', type: 'd6' },
         { theme: 'dddice-red', type: 'd6' },
       ], { room: dddiceRoomSlug });
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Roll error:', err);
+      // エラーレスポンスの詳細を表示
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: unknown; status?: number; headers?: unknown } };
+        console.error('Response data:', axiosErr.response?.data);
+        console.error('Response status:', axiosErr.response?.status);
+      }
       setIsRolling(false);
     }
   }, [isConnected, isRolling, onStartRoll, dddiceRoomSlug]);
