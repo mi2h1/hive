@@ -28,16 +28,6 @@ const DICE_FACES = {
   negZ: 5, // 後面
 };
 
-// 各出目を上面にするための回転（Euler角）
-const DICE_ROTATIONS: Record<number, [number, number, number]> = {
-  1: [0, 0, 0],                          // 1が上（デフォルト）
-  2: [-Math.PI / 2, 0, 0],               // 2が上
-  3: [0, 0, Math.PI / 2],                // 3が上
-  4: [0, 0, -Math.PI / 2],               // 4が上
-  5: [Math.PI / 2, 0, 0],                // 5が上
-  6: [Math.PI, 0, 0],                    // 6が上
-};
-
 // サイコロの上面を判定
 function getDiceTopFace(rotation: THREE.Euler): number {
   const up = new THREE.Vector3(0, 1, 0);
@@ -257,17 +247,13 @@ function Table() {
   );
 }
 
-// シーン
+// シーン（自分がダイスを振るときのみ使用）
 function Scene({
   onRollComplete,
   isRolling,
-  isSpectator,
-  forcedResult,
 }: {
   onRollComplete: (die1: number, die2: number) => void;
   isRolling: boolean;
-  isSpectator?: boolean;
-  forcedResult?: { die1: number; die2: number } | null;
 }) {
   const dice1Ref = useRef<RapierRigidBody>(null);
   const dice2Ref = useRef<RapierRigidBody>(null);
@@ -275,46 +261,6 @@ function Scene({
   const [dice2Face, setDice2Face] = useState<number | null>(null);
   const [canReport, setCanReport] = useState(false);
   const hasStartedRoll = useRef(false);
-  const hasReportedForcedResult = useRef(false);
-  // 強制結果を保持（useFrameで使用）
-  const forcedResultRef = useRef<{ die1: number; die2: number } | null>(null);
-
-  // forcedResultの変更を追跡
-  useEffect(() => {
-    forcedResultRef.current = forcedResult ?? null;
-  }, [forcedResult]);
-
-  // 観戦モード: forcedResultが来たらダイスを毎フレーム強制位置に固定
-  useFrame(() => {
-    if (!isSpectator || !forcedResultRef.current) return;
-    if (!dice1Ref.current || !dice2Ref.current) return;
-
-    const result = forcedResultRef.current;
-
-    // テーブル上の固定位置に移動
-    dice1Ref.current.setTranslation({ x: -1.5, y: 0.5, z: 0 }, true);
-    dice2Ref.current.setTranslation({ x: 1.5, y: 0.5, z: 0 }, true);
-
-    // 速度をゼロにして止める
-    dice1Ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
-    dice2Ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
-    dice1Ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
-    dice2Ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
-
-    // 正しい出目が上を向くように回転を設定
-    const rotation1 = DICE_ROTATIONS[result.die1] || [0, 0, 0];
-    const rotation2 = DICE_ROTATIONS[result.die2] || [0, 0, 0];
-
-    const quat1 = new THREE.Quaternion().setFromEuler(
-      new THREE.Euler(rotation1[0], rotation1[1], rotation1[2])
-    );
-    const quat2 = new THREE.Quaternion().setFromEuler(
-      new THREE.Euler(rotation2[0], rotation2[1], rotation2[2])
-    );
-
-    dice1Ref.current.setRotation(quat1, true);
-    dice2Ref.current.setRotation(quat2, true);
-  });
 
   // ダイスを振る
   const rollDice = useCallback(() => {
@@ -392,26 +338,12 @@ function Scene({
     }
   }, [isRolling, rollDice]);
 
-  // 両方のサイコロが安定したら結果を返す（観戦モードでない場合のみ）
+  // 両方のサイコロが安定したら結果を返す
   useEffect(() => {
-    if (!isSpectator && dice1Face !== null && dice2Face !== null) {
+    if (dice1Face !== null && dice2Face !== null) {
       onRollComplete(dice1Face, dice2Face);
     }
-  }, [dice1Face, dice2Face, onRollComplete, isSpectator]);
-
-  // 観戦モード: 強制結果が来たら状態を更新
-  useEffect(() => {
-    if (isSpectator && forcedResult && !hasReportedForcedResult.current) {
-      hasReportedForcedResult.current = true;
-      setDice1Face(forcedResult.die1);
-      setDice2Face(forcedResult.die2);
-      setCanReport(false); // これ以上の報告を止める
-    }
-    // forcedResultがnullになったらリセット
-    if (!forcedResult) {
-      hasReportedForcedResult.current = false;
-    }
-  }, [isSpectator, forcedResult]);
+  }, [dice1Face, dice2Face, onRollComplete]);
 
   return (
     <>
@@ -445,6 +377,58 @@ function Scene({
   );
 }
 
+// 2D ダイス表示（観戦用）
+function DiceDisplay({ value }: { value: number }) {
+  // ダイスの目をドットで表現
+  const dots: [number, number][] = [];
+  const positions = {
+    center: [50, 50] as [number, number],
+    topLeft: [25, 25] as [number, number],
+    topRight: [75, 25] as [number, number],
+    middleLeft: [25, 50] as [number, number],
+    middleRight: [75, 50] as [number, number],
+    bottomLeft: [25, 75] as [number, number],
+    bottomRight: [75, 75] as [number, number],
+  };
+
+  switch (value) {
+    case 1:
+      dots.push(positions.center);
+      break;
+    case 2:
+      dots.push(positions.topLeft, positions.bottomRight);
+      break;
+    case 3:
+      dots.push(positions.topLeft, positions.center, positions.bottomRight);
+      break;
+    case 4:
+      dots.push(positions.topLeft, positions.topRight, positions.bottomLeft, positions.bottomRight);
+      break;
+    case 5:
+      dots.push(positions.topLeft, positions.topRight, positions.center, positions.bottomLeft, positions.bottomRight);
+      break;
+    case 6:
+      dots.push(positions.topLeft, positions.topRight, positions.middleLeft, positions.middleRight, positions.bottomLeft, positions.bottomRight);
+      break;
+  }
+
+  return (
+    <div className="w-20 h-20 bg-red-600 rounded-lg relative shadow-lg border-2 border-red-700">
+      {dots.map(([x, y], i) => (
+        <div
+          key={i}
+          className="absolute w-4 h-4 bg-white rounded-full"
+          style={{
+            left: `${x}%`,
+            top: `${y}%`,
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export const DiceRoller = ({
   onRollComplete,
   isRolling,
@@ -454,9 +438,39 @@ export const DiceRoller = ({
   showButton,
 }: DiceRollerProps) => {
   // ロール中でなければ物理シミュレーションを止める
-  // 観戦者のforcedResult時はuseFrameで位置を強制するため、物理は動かしたまま
   const shouldPausePhysics = !isRolling;
 
+  // 観戦者モード: 2D表示
+  if (isSpectator) {
+    return (
+      <div className="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center">
+        {forcedResult ? (
+          // 結果が出た場合
+          <div className="flex items-center gap-6">
+            <DiceDisplay value={forcedResult.die1} />
+            <DiceDisplay value={forcedResult.die2} />
+          </div>
+        ) : isRolling ? (
+          // 誰かがダイスを振っている最中
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-6 mb-4">
+              <div className="w-20 h-20 bg-red-600 rounded-lg animate-bounce shadow-lg" style={{ animationDelay: '0ms' }} />
+              <div className="w-20 h-20 bg-red-600 rounded-lg animate-bounce shadow-lg" style={{ animationDelay: '150ms' }} />
+            </div>
+            <p className="text-amber-400 animate-pulse">ダイスを振っています...</p>
+          </div>
+        ) : (
+          // 待機中
+          <div className="flex items-center gap-6 opacity-50">
+            <DiceDisplay value={1} />
+            <DiceDisplay value={1} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 自分がダイスを振るモード: 3D表示
   return (
     <div className="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden">
       <Canvas
@@ -467,8 +481,6 @@ export const DiceRoller = ({
           <Scene
             onRollComplete={onRollComplete}
             isRolling={isRolling}
-            isSpectator={isSpectator}
-            forcedResult={forcedResult}
           />
         </Physics>
       </Canvas>
@@ -484,7 +496,6 @@ export const DiceRoller = ({
           ダイスを振る
         </button>
       )}
-
     </div>
   );
 };
