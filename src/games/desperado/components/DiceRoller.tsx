@@ -82,6 +82,14 @@ export const DiceRoller = ({
 
   // ルームの作成または参加
   useEffect(() => {
+    console.log('[DiceRoller] useEffect triggered:', {
+      isSdkReady,
+      isConnected,
+      isHost,
+      dddiceRoomSlug,
+      hasDddice: !!dddiceRef.current,
+    });
+
     // SDK未初期化 or 接続済み or 処理中ならスキップ
     if (!isSdkReady || isConnected) return;
 
@@ -93,6 +101,7 @@ export const DiceRoller = ({
     // どちらでもない → 待機（何もしない）
     const shouldCreateRoom = isHost && !dddiceRoomSlug;
     const shouldJoinRoom = !!dddiceRoomSlug;
+    console.log('[DiceRoller] shouldCreateRoom:', shouldCreateRoom, 'shouldJoinRoom:', shouldJoinRoom);
 
     if (!shouldCreateRoom && !shouldJoinRoom) {
       setConnectionStatus('ホストがルームを作成するのを待っています...');
