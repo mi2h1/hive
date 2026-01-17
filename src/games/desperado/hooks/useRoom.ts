@@ -5,6 +5,31 @@ import type { GameState, Player, RoomData } from '../types/game';
 
 const ROOM_PATH = 'desperado-rooms';
 const INITIAL_LIVES = 5;
+const DDDICE_API_KEY = 'lu5TTPrLRZ4JcL2t7PwE9xBnkdltDqhlwyk33XnUdb7bd065';
+
+// dddice ルームを削除
+const deleteDddiceRoom = async (slug: string | null | undefined): Promise<void> => {
+  if (!slug) return;
+
+  try {
+    const response = await fetch(`https://dddice.com/api/1.0/room/${slug}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${DDDICE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+
+    if (response.ok || response.status === 404) {
+      console.log(`Deleted dddice room: ${slug}`);
+    } else {
+      console.warn(`Failed to delete dddice room ${slug}: ${response.status}`);
+    }
+  } catch (err) {
+    console.error('Delete dddice room error:', err);
+  }
+};
 
 // 初期プレイヤーを作成
 const createInitialPlayer = (id: string, name: string): Player => ({
@@ -42,10 +67,19 @@ const cleanupOldRooms = async () => {
     const maxAge = 24 * 60 * 60 * 1000; // 24時間
 
     const deletePromises: Promise<void>[] = [];
+    const dddiceDeletePromises: Promise<void>[] = [];
+
     for (const [code, room] of Object.entries(rooms)) {
-      const roomData = room as { createdAt?: number; gameState?: { players?: unknown[] | Record<string, unknown> } };
+      const roomData = room as {
+        createdAt?: number;
+        gameState?: {
+          players?: unknown[] | Record<string, unknown>;
+          dddiceRoomSlug?: string;
+        };
+      };
       const createdAt = roomData.createdAt || 0;
       const players = roomData.gameState?.players;
+      const dddiceSlug = roomData.gameState?.dddiceRoomSlug;
 
       let playerCount = 0;
       if (Array.isArray(players)) {
@@ -57,11 +91,15 @@ const cleanupOldRooms = async () => {
       // 24時間以上前 または プレイヤーが0人のルームを削除
       if (now - createdAt > maxAge || playerCount === 0) {
         deletePromises.push(remove(ref(db, `${ROOM_PATH}/${code}`)));
+        // dddice ルームも削除
+        if (dddiceSlug) {
+          dddiceDeletePromises.push(deleteDddiceRoom(dddiceSlug));
+        }
       }
     }
 
     if (deletePromises.length > 0) {
-      await Promise.all(deletePromises);
+      await Promise.all([...deletePromises, ...dddiceDeletePromises]);
       console.log(`Cleaned up ${deletePromises.length} old desperado rooms`);
     }
   } catch (err) {
@@ -157,7 +195,12 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
         const remainingPlayers = players.filter(p => effectiveOnlineIds.includes(p.id));
 
         if (remainingPlayers.length === 0) {
-          await remove(roomRef);
+          // 全員オフラインになった場合、dddice ルームも削除
+          const dddiceSlug = room.gameState?.dddiceRoomSlug;
+          await Promise.all([
+            remove(roomRef),
+            deleteDddiceRoom(dddiceSlug),
+          ]);
         } else {
           const updates: Record<string, unknown> = {
             'gameState/players': remainingPlayers,
@@ -330,14 +373,23 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
 
     try {
       const isHost = roomData.hostId === playerId;
+      const dddiceSlug = roomData.gameState.dddiceRoomSlug;
 
       if (isHost) {
-        await remove(ref(db, `${ROOM_PATH}/${roomCode}`));
+        // ホストが退出する場合、dddice ルームも削除
+        await Promise.all([
+          remove(ref(db, `${ROOM_PATH}/${roomCode}`)),
+          deleteDddiceRoom(dddiceSlug),
+        ]);
       } else {
         const updatedPlayers = roomData.gameState.players.filter(p => p.id !== playerId);
 
         if (updatedPlayers.length === 0) {
-          await remove(ref(db, `${ROOM_PATH}/${roomCode}`));
+          // 最後のプレイヤーが退出する場合、dddice ルームも削除
+          await Promise.all([
+            remove(ref(db, `${ROOM_PATH}/${roomCode}`)),
+            deleteDddiceRoom(dddiceSlug),
+          ]);
         } else {
           await update(ref(db, `${ROOM_PATH}/${roomCode}/gameState`), {
             players: updatedPlayers,
