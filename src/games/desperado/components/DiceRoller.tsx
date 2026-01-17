@@ -401,13 +401,16 @@ export const DiceRoller = ({
   isSpectator = false,
   forcedResult,
 }: DiceRollerProps) => {
+  // 観戦モードで結果が来たら物理シミュレーションを止める
+  const shouldPausePhysics = !isRolling || (isSpectator && forcedResult !== null && forcedResult !== undefined);
+
   return (
     <div className="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden">
       <Canvas
         shadows
         camera={{ position: [0, 8, 8], fov: 45 }}
       >
-        <Physics gravity={[0, -20, 0]} paused={!isRolling}>
+        <Physics gravity={[0, -20, 0]} paused={shouldPausePhysics}>
           <Scene
             onRollComplete={onRollComplete}
             isRolling={isRolling}
@@ -434,6 +437,24 @@ export const DiceRoller = ({
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-6 py-2
           bg-slate-800/80 rounded-lg text-amber-400 font-bold text-sm">
           ダイスを振っています...
+        </div>
+      )}
+
+      {/* 観戦モードで結果が出た場合、結果をオーバーレイ表示 */}
+      {isSpectator && forcedResult && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+          <div className="bg-slate-800 rounded-xl p-6 text-center">
+            <p className="text-amber-400 text-sm mb-2">結果</p>
+            <div className="flex items-center justify-center gap-4 text-6xl font-bold text-white">
+              <span className="bg-red-600 w-16 h-16 rounded-lg flex items-center justify-center">
+                {forcedResult.die1}
+              </span>
+              <span className="text-slate-500">-</span>
+              <span className="bg-red-600 w-16 h-16 rounded-lg flex items-center justify-center">
+                {forcedResult.die2}
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </div>
