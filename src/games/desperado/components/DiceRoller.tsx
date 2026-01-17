@@ -276,6 +276,45 @@ function Scene({
   const [canReport, setCanReport] = useState(false);
   const hasStartedRoll = useRef(false);
   const hasReportedForcedResult = useRef(false);
+  // 強制結果を保持（useFrameで使用）
+  const forcedResultRef = useRef<{ die1: number; die2: number } | null>(null);
+
+  // forcedResultの変更を追跡
+  useEffect(() => {
+    forcedResultRef.current = forcedResult ?? null;
+  }, [forcedResult]);
+
+  // 観戦モード: forcedResultが来たらダイスを毎フレーム強制位置に固定
+  useFrame(() => {
+    if (!isSpectator || !forcedResultRef.current) return;
+    if (!dice1Ref.current || !dice2Ref.current) return;
+
+    const result = forcedResultRef.current;
+
+    // テーブル上の固定位置に移動
+    dice1Ref.current.setTranslation({ x: -1.5, y: 0.5, z: 0 }, true);
+    dice2Ref.current.setTranslation({ x: 1.5, y: 0.5, z: 0 }, true);
+
+    // 速度をゼロにして止める
+    dice1Ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    dice2Ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    dice1Ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    dice2Ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+
+    // 正しい出目が上を向くように回転を設定
+    const rotation1 = DICE_ROTATIONS[result.die1] || [0, 0, 0];
+    const rotation2 = DICE_ROTATIONS[result.die2] || [0, 0, 0];
+
+    const quat1 = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(rotation1[0], rotation1[1], rotation1[2])
+    );
+    const quat2 = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(rotation2[0], rotation2[1], rotation2[2])
+    );
+
+    dice1Ref.current.setRotation(quat1, true);
+    dice2Ref.current.setRotation(quat2, true);
+  });
 
   // ダイスを振る
   const rollDice = useCallback(() => {
@@ -360,40 +399,13 @@ function Scene({
     }
   }, [dice1Face, dice2Face, onRollComplete, isSpectator]);
 
-  // 観戦モード: 強制結果が来たらダイスを正しい向きに回転
+  // 観戦モード: 強制結果が来たら状態を更新
   useEffect(() => {
     if (isSpectator && forcedResult && !hasReportedForcedResult.current) {
       hasReportedForcedResult.current = true;
       setDice1Face(forcedResult.die1);
       setDice2Face(forcedResult.die2);
       setCanReport(false); // これ以上の報告を止める
-
-      // ダイスを正しい向きに設定
-      if (dice1Ref.current && dice2Ref.current) {
-        // テーブル上の固定位置に移動
-        dice1Ref.current.setTranslation({ x: -1.5, y: 0.5, z: 0 }, true);
-        dice2Ref.current.setTranslation({ x: 1.5, y: 0.5, z: 0 }, true);
-
-        // 速度をゼロにして止める
-        dice1Ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
-        dice2Ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
-        dice1Ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
-        dice2Ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
-
-        // 正しい出目が上を向くように回転を設定
-        const rotation1 = DICE_ROTATIONS[forcedResult.die1] || [0, 0, 0];
-        const rotation2 = DICE_ROTATIONS[forcedResult.die2] || [0, 0, 0];
-
-        const quat1 = new THREE.Quaternion().setFromEuler(
-          new THREE.Euler(rotation1[0], rotation1[1], rotation1[2])
-        );
-        const quat2 = new THREE.Quaternion().setFromEuler(
-          new THREE.Euler(rotation2[0], rotation2[1], rotation2[2])
-        );
-
-        dice1Ref.current.setRotation(quat1, true);
-        dice2Ref.current.setRotation(quat2, true);
-      }
     }
     // forcedResultがnullになったらリセット
     if (!forcedResult) {
@@ -441,8 +453,9 @@ export const DiceRoller = ({
   forcedResult,
   showButton,
 }: DiceRollerProps) => {
-  // 観戦モードで結果が来たら物理シミュレーションを止める
-  const shouldPausePhysics = !isRolling || (isSpectator && forcedResult !== null && forcedResult !== undefined);
+  // ロール中でなければ物理シミュレーションを止める
+  // 観戦者のforcedResult時はuseFrameで位置を強制するため、物理は動かしたまま
+  const shouldPausePhysics = !isRolling;
 
   return (
     <div className="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden">
