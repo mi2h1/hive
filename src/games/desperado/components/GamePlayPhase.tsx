@@ -158,20 +158,29 @@ export const GamePlayPhase = ({
       <div className="min-h-screen bg-black/20 p-4">
         <div className="max-w-2xl mx-auto">
           {/* ヘッダー */}
-          <div className="text-center mb-6">
-            <img
-              src="/boards/images/vec_logo_desperado.svg"
-              alt="Desperado"
-              className="h-8 mx-auto mb-1"
-              style={{ filter: 'brightness(0) invert(1)' }}
-            />
-            <p className="text-amber-400">ラウンド {gameState.currentRound}</p>
-            {gameState.desperadoRolledThisRound && (
-              <p className="text-red-400 font-bold mt-1 animate-pulse">
-                デスペラード発動中！ペナルティ2倍！
-              </p>
-            )}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <img
+                src="/boards/images/vec_logo_desperado.svg"
+                alt="Desperado"
+                className="h-6"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+              <span className="text-amber-400 font-bold">ラウンド {gameState.currentRound}</span>
+            </div>
+            <button
+              onClick={onLeaveRoom}
+              className="px-4 py-2 bg-slate-700/80 hover:bg-slate-600
+                rounded-lg text-slate-300 text-sm font-bold transition-all"
+            >
+              退出
+            </button>
           </div>
+          {gameState.desperadoRolledThisRound && (
+            <p className="text-red-400 font-bold text-center mb-4 animate-pulse">
+              デスペラード発動中！ペナルティ2倍！
+            </p>
+          )}
 
           {/* プレイヤー一覧 */}
           <div className="bg-slate-800/90 rounded-xl p-4 mb-4">
@@ -332,14 +341,6 @@ export const GamePlayPhase = ({
             );
           })()}
 
-          {/* 退出ボタン */}
-          <button
-            onClick={onLeaveRoom}
-            className="w-full mt-4 px-6 py-3 bg-slate-700 hover:bg-slate-600
-              rounded-lg text-slate-300 font-bold transition-all"
-          >
-            退出
-          </button>
         </div>
       </div>
     </div>

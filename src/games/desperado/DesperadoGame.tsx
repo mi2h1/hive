@@ -86,10 +86,9 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
     });
   };
 
-  // 退出
-  const handleLeaveRoom = () => {
+  // 退出（ゲームのトップに戻る）
+  const handleLeaveToGameTop = () => {
     leaveRoom();
-    onBack();
   };
 
   // ロビー画面
@@ -105,7 +104,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
         playerName={playerName}
         onCreateRoom={createRoom}
         onJoinRoom={joinRoom}
-        onLeaveRoom={handleLeaveRoom}
+        onLeaveRoom={handleLeaveToGameTop}
         onStartGame={handleStartGame}
         onBack={onBack}
         debugMode={false}
@@ -122,7 +121,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
         playerId={playerId}
         isHost={isHost}
         onUpdateGameState={updateGameState}
-        onLeaveRoom={handleLeaveRoom}
+        onLeaveRoom={handleLeaveToGameTop}
       />
     );
   }
@@ -134,7 +133,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
         gameState={gameState}
         playerId={playerId}
         onPlayAgain={handlePlayAgain}
-        onLeaveRoom={handleLeaveRoom}
+        onLeaveRoom={handleLeaveToGameTop}
       />
     );
   }
