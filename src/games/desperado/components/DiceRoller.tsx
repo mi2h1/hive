@@ -188,8 +188,8 @@ export const DiceRoller = ({
       console.log('Rolling dice in room:', dddiceRoomSlug);
       // 2つのd6を振る（ルームを明示的に指定）
       await dddiceRef.current.roll([
-        { theme: 'dddice-standard', type: 'd6' },
-        { theme: 'dddice-standard', type: 'd6' },
+        { theme: 'untitled-dice-mkhmye02', type: 'd6' },
+        { theme: 'untitled-dice-mkhmye02', type: 'd6' },
       ], { room: dddiceRoomSlug });
     } catch (err: unknown) {
       console.error('Roll error:', err);
