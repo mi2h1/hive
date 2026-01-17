@@ -192,6 +192,9 @@ export const DiceRoller = ({
     iAmRollingRef.current = true; // 自分がロール中フラグを立てる
 
     try {
+      // 前のダイスをクリアしてから振る
+      dddiceRef.current.clear();
+
       // 2つのd6を振る
       await dddiceRef.current.roll([
         { theme: DICE_THEME, type: 'd6' },
