@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Skull, Heart, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-react';
 import type { GameState, DiceResult } from '../types/game';
-import { getRollRank, getRollDisplayName, findWeakestPlayers, rollDice } from '../lib/dice';
+import { getRollRank, getRollDisplayName, findWeakestPlayers } from '../lib/dice';
+import { DiceRoller } from './DiceRoller';
 
 interface GamePlayPhaseProps {
   gameState: GameState;
@@ -36,16 +37,15 @@ export const GamePlayPhase = ({
   const activePlayers = gameState.players.filter(p => !p.isEliminated);
   const isMyTurn = gameState.currentTurnPlayerId === playerId;
 
-  // ダイスを振る
-  const handleRoll = async () => {
+  // ダイスを振り始める
+  const handleStartRoll = useCallback(() => {
     if (!currentPlayer || currentPlayer.hasRolled || !isMyTurn) return;
-
     setIsRolling(true);
+  }, [currentPlayer, isMyTurn]);
 
-    // アニメーション用の遅延（後で3Dアニメーションに置き換え）
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const result = rollDice();
+  // 3Dダイスの結果を受け取る
+  const handleRollComplete = useCallback((die1: number, die2: number) => {
+    const result: DiceResult = { die1, die2 };
     const rank = getRollRank(result);
     const isDesperado = rank.type === 'desperado';
 
@@ -84,7 +84,7 @@ export const GamePlayPhase = ({
     });
 
     setIsRolling(false);
-  };
+  }, [gameState.players, gameState.turnOrder, gameState.desperadoRolledThisRound, playerId, onUpdateGameState]);
 
   // 次のラウンドへ
   const handleNextRound = () => {
@@ -246,15 +246,11 @@ export const GamePlayPhase = ({
             {gameState.phase === 'rolling' && (
               <>
                 {isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
-                  <button
-                    onClick={handleRoll}
-                    disabled={isRolling}
-                    className="w-full px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500
-                      hover:from-amber-600 hover:to-orange-600 disabled:from-gray-500 disabled:to-gray-600
-                      rounded-lg text-white font-bold text-xl transition-all"
-                  >
-                    {isRolling ? 'ダイスを振っています...' : 'ダイスを振る'}
-                  </button>
+                  <DiceRoller
+                    isRolling={isRolling}
+                    onStartRoll={handleStartRoll}
+                    onRollComplete={handleRollComplete}
+                  />
                 ) : currentPlayer?.hasRolled ? (
                   <div className="text-center text-slate-400 py-4">
                     他のプレイヤーを待っています...
