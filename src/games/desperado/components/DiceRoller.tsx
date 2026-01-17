@@ -67,8 +67,17 @@ export const DiceRoller = ({
 
         // 開始
         await dddice.start();
-        setConnectionStatus('SDK起動完了');
         console.log('dddice SDK started');
+
+        // ゲストユーザーを作成（認証用）
+        try {
+          const guestResponse = await dddice.api?.user?.guest();
+          console.log('Guest user created:', guestResponse);
+        } catch (guestErr) {
+          console.log('Guest user creation failed (may already exist):', guestErr);
+        }
+
+        setConnectionStatus('SDK起動完了');
         setIsSdkReady(true);
       } catch (err) {
         console.error('dddice initialization error:', err);
