@@ -49,13 +49,15 @@ export const GamePlayPhase = ({
   const handleRollComplete = useCallback((die1: number, die2: number) => {
     const result: DiceResult = { die1, die2 };
 
-    // プレイヤーの出目を更新（rerollsRemainingを減らす、まだhasRolledはfalse）
+    // プレイヤーの出目を更新
+    // 振り直しの場合のみrerollsRemainingを減らす（最初のロールでは減らさない）
     const updatedPlayers = gameState.players.map(p => {
       if (p.id === playerId) {
+        const isReroll = p.currentRoll !== null; // 既に出目があれば振り直し
         return {
           ...p,
           currentRoll: result,
-          rerollsRemaining: Math.max(0, (p.rerollsRemaining ?? 2) - 1),
+          rerollsRemaining: isReroll ? Math.max(0, (p.rerollsRemaining ?? 2) - 1) : (p.rerollsRemaining ?? 2),
         };
       }
       return p;
