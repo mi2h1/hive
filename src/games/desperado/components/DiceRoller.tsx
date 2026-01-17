@@ -322,8 +322,10 @@ function Scene({
   useEffect(() => {
     if (isRolling && !hasStartedRoll.current) {
       hasStartedRoll.current = true;
-      // 少し遅延してから振る（物理エンジンの初期化待ち）
-      setTimeout(rollDice, 100);
+      // 物理シミュレーションが再開されるのを待ってから振る
+      requestAnimationFrame(() => {
+        rollDice();
+      });
     }
     if (!isRolling) {
       hasStartedRoll.current = false;
@@ -353,14 +355,14 @@ function Scene({
       <Table />
 
       <Dice
-        position={[-1.5, 3, 0]}
+        position={[-1.5, 0.5, 0]}
         color="#dc2626"
         onStabilized={setDice1Face}
         diceRef={dice1Ref}
         canReport={canReport}
       />
       <Dice
-        position={[1.5, 3, 0]}
+        position={[1.5, 0.5, 0]}
         color="#dc2626"
         onStabilized={setDice2Face}
         diceRef={dice2Ref}
@@ -377,7 +379,7 @@ export const DiceRoller = ({ onRollComplete, isRolling, onStartRoll }: DiceRolle
         shadows
         camera={{ position: [0, 8, 8], fov: 45 }}
       >
-        <Physics gravity={[0, -20, 0]}>
+        <Physics gravity={[0, -20, 0]} paused={!isRolling}>
           <Scene
             onRollComplete={onRollComplete}
             isRolling={isRolling}
