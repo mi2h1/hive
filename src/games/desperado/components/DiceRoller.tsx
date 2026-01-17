@@ -11,6 +11,8 @@ interface DiceRollerProps {
   // 観戦モード用
   isSpectator?: boolean;
   forcedResult?: { die1: number; die2: number } | null;
+  // ボタン表示制御
+  showButton?: boolean;
 }
 
 // サイコロの面のUV座標マッピング（各面に数字を表示）
@@ -400,6 +402,7 @@ export const DiceRoller = ({
   onStartRoll,
   isSpectator = false,
   forcedResult,
+  showButton,
 }: DiceRollerProps) => {
   // 観戦モードで結果が来たら物理シミュレーションを止める
   const shouldPausePhysics = !isRolling || (isSpectator && forcedResult !== null && forcedResult !== undefined);
@@ -420,8 +423,8 @@ export const DiceRoller = ({
         </Physics>
       </Canvas>
 
-      {/* 観戦モードでなく、ロール中でない場合のみボタンを表示 */}
-      {!isSpectator && !isRolling && (
+      {/* ボタン表示 */}
+      {showButton && (
         <button
           onClick={onStartRoll}
           className="absolute bottom-4 left-1/2 -translate-x-1/2 px-8 py-3
@@ -430,14 +433,6 @@ export const DiceRoller = ({
         >
           ダイスを振る
         </button>
-      )}
-
-      {/* 観戦モードの場合のラベル */}
-      {isSpectator && isRolling && !forcedResult && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-6 py-2
-          bg-slate-800/80 rounded-lg text-amber-400 font-bold text-sm">
-          ダイスを振っています...
-        </div>
       )}
 
       {/* 観戦モードで結果が出た場合、結果をオーバーレイ表示 */}

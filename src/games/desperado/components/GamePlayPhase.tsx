@@ -246,78 +246,96 @@ export const GamePlayPhase = ({
             </div>
           </div>
 
-          {/* アクションエリア */}
-          <div className="bg-slate-800/90 rounded-xl p-4">
-            {gameState.phase === 'rolling' && (
-              <>
-                {isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
-                  // 自分のターン: ダイスを振る
-                  <DiceRoller
-                    isRolling={isRolling}
-                    onStartRoll={handleStartRoll}
-                    onRollComplete={handleRollComplete}
-                  />
-                ) : gameState.rollingPlayerId && gameState.rollingPlayerId !== playerId ? (
-                  // 他のプレイヤーがダイスを振っている: 観戦モード
-                  (() => {
-                    const rollingPlayer = gameState.players.find(p => p.id === gameState.rollingPlayerId);
-                    const forcedResult = rollingPlayer?.currentRoll ?? null;
-                    return (
-                      <div>
-                        <p className="text-center text-amber-400 mb-2">
-                          {rollingPlayer?.name}がダイスを振っています
-                        </p>
-                        <DiceRoller
-                          isRolling={true}
-                          onStartRoll={() => {}}
-                          onRollComplete={() => {}}
-                          isSpectator={true}
-                          forcedResult={forcedResult}
-                        />
-                      </div>
-                    );
-                  })()
-                ) : currentPlayer?.hasRolled ? (
-                  <div className="text-center text-slate-400 py-4">
-                    他のプレイヤーを待っています...
-                  </div>
-                ) : (
-                  <div className="text-center text-amber-400 py-4">
-                    {gameState.players.find(p => p.id === gameState.currentTurnPlayerId)?.name}の番です
+          {/* ダイスエリア（常に表示） */}
+          {(gameState.phase === 'rolling' || gameState.phase === 'result') && (() => {
+            // 現在のターンプレイヤー
+            const currentTurnPlayer = gameState.players.find(p => p.id === gameState.currentTurnPlayerId);
+            // 誰かがダイスを振っているか
+            const someoneIsRolling = !!gameState.rollingPlayerId;
+            // 自分が振っているか
+            const iAmRolling = gameState.rollingPlayerId === playerId;
+            // 他の人が振っているか
+            const otherIsRolling = someoneIsRolling && !iAmRolling;
+            // 振っている人
+            const rollingPlayer = gameState.players.find(p => p.id === gameState.rollingPlayerId);
+
+            // 最後に振ったプレイヤー（自分以外）の結果を探す
+            // ターン順で最後に振った人を見つける
+            const otherPlayersWithRolls = gameState.players.filter(
+              p => p.id !== playerId && p.currentRoll && p.hasRolled
+            );
+            const lastOtherRoll = otherPlayersWithRolls.length > 0
+              ? otherPlayersWithRolls[otherPlayersWithRolls.length - 1]?.currentRoll
+              : null;
+
+            // 観戦側に表示する結果
+            // 1. 他の人がまさに振っている最中で結果が出た場合
+            // 2. 他の人が振り終わった結果がある場合
+            const forcedResult = (otherIsRolling && rollingPlayer?.currentRoll)
+              ? rollingPlayer.currentRoll
+              : (!isRolling && lastOtherRoll ? lastOtherRoll : null);
+
+            return (
+              <div className="bg-slate-800/90 rounded-xl p-4 space-y-4">
+                {/* ステータス表示 */}
+                {gameState.phase === 'rolling' && (
+                  <div className="text-center">
+                    {isMyTurn && currentPlayer && !currentPlayer.hasRolled && !isRolling ? (
+                      <p className="text-amber-400 font-bold">あなたの番です</p>
+                    ) : someoneIsRolling ? (
+                      <p className="text-amber-400">
+                        {iAmRolling ? 'ダイスを振っています...' : `${rollingPlayer?.name}がダイスを振っています`}
+                      </p>
+                    ) : currentPlayer?.hasRolled ? (
+                      <p className="text-slate-400">{currentTurnPlayer?.name}の番を待っています...</p>
+                    ) : (
+                      <p className="text-amber-400">{currentTurnPlayer?.name}の番です</p>
+                    )}
                   </div>
                 )}
-              </>
-            )}
 
-            {gameState.phase === 'result' && (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <p className="text-white text-lg mb-2">ラウンド結果</p>
-                  {(() => {
-                    const loserIds = findWeakestPlayers(
-                      activePlayers
-                        .filter(p => p.currentRoll)
-                        .map(p => ({ playerId: p.id, roll: p.currentRoll as DiceResult }))
-                    );
-                    const losers = loserIds.map(id => gameState.players.find(p => p.id === id)?.name).join(', ');
-                    const penalty = gameState.desperadoRolledThisRound ? 2 : 1;
-                    return (
-                      <p className="text-red-400 font-bold">
-                        {losers} が ライフ-{penalty}
-                      </p>
-                    );
-                  })()}
-                </div>
-                <button
-                  onClick={handleNextRound}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
-                    hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
-                >
-                  次のラウンドへ
-                </button>
+                {/* DiceRoller（常に表示） */}
+                <DiceRoller
+                  isRolling={isRolling || otherIsRolling}
+                  onStartRoll={handleStartRoll}
+                  onRollComplete={handleRollComplete}
+                  isSpectator={!isMyTurn || currentPlayer?.hasRolled || gameState.phase === 'result'}
+                  forcedResult={forcedResult}
+                  showButton={gameState.phase === 'rolling' && isMyTurn && currentPlayer && !currentPlayer.hasRolled && !isRolling}
+                />
+
+                {/* 結果表示 */}
+                {gameState.phase === 'result' && (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <p className="text-white text-lg mb-2">ラウンド結果</p>
+                      {(() => {
+                        const loserIds = findWeakestPlayers(
+                          activePlayers
+                            .filter(p => p.currentRoll)
+                            .map(p => ({ playerId: p.id, roll: p.currentRoll as DiceResult }))
+                        );
+                        const losers = loserIds.map(id => gameState.players.find(p => p.id === id)?.name).join(', ');
+                        const penalty = gameState.desperadoRolledThisRound ? 2 : 1;
+                        return (
+                          <p className="text-red-400 font-bold">
+                            {losers} が ライフ-{penalty}
+                          </p>
+                        );
+                      })()}
+                    </div>
+                    <button
+                      onClick={handleNextRound}
+                      className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
+                        hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
+                    >
+                      次のラウンドへ
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })()}
 
           {/* 退出ボタン */}
           <button
