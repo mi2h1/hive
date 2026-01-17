@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import { ThreeDDice, ThreeDDiceRollEvent, type IRoll } from 'dddice-js';
 
 // dddice APIキー
@@ -16,7 +16,12 @@ interface DiceRollerProps {
   rollingPlayerId: string | null;
 }
 
-export const DiceRoller = ({
+// 外部からロールをトリガーするためのハンドル
+export interface DiceRollerHandle {
+  triggerRoll: () => void;
+}
+
+export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   isHost,
   dddiceRoomSlug,
   onDddiceRoomCreated,
@@ -25,7 +30,7 @@ export const DiceRoller = ({
   onStartRoll,
   showButton,
   rollingPlayerId,
-}: DiceRollerProps) => {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dddiceRef = useRef<ThreeDDice | null>(null);
   const [isSdkReady, setIsSdkReady] = useState(false);
@@ -216,6 +221,13 @@ export const DiceRoller = ({
     }
   }, [isConnected, isRolling, onStartRoll, dddiceRoomSlug]);
 
+  // 外部からロールをトリガーするためのハンドルを公開
+  useImperativeHandle(ref, () => ({
+    triggerRoll: () => {
+      handleRoll();
+    },
+  }), [handleRoll]);
+
   return (
     <div className="relative w-full h-64">
       {/* フェルト部分 */}
@@ -228,7 +240,7 @@ export const DiceRoller = ({
         <canvas
           ref={canvasRef}
           className="w-full h-full"
-          style={{ display: 'block' }}
+          style={{ display: 'block', touchAction: 'none' }}
         />
       </div>
 
@@ -260,4 +272,6 @@ export const DiceRoller = ({
       )}
     </div>
   );
-};
+});
+
+DiceRoller.displayName = 'DiceRoller';

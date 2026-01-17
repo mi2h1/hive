@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { Skull, Heart, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-react';
 import type { GameState, DiceResult } from '../types/game';
 import { getRollRank, getRollDisplayName, findWeakestPlayers } from '../lib/dice';
-import { DiceRoller } from './DiceRoller';
+import { DiceRoller, type DiceRollerHandle } from './DiceRoller';
 
 interface GamePlayPhaseProps {
   gameState: GameState;
@@ -36,6 +36,7 @@ export const GamePlayPhase = ({
   const currentPlayer = gameState.players.find(p => p.id === playerId);
   const activePlayers = gameState.players.filter(p => !p.isEliminated);
   const isMyTurn = gameState.currentTurnPlayerId === playerId;
+  const diceRollerRef = useRef<DiceRollerHandle>(null);
 
   // ダイスを振り始める（dddiceに通知）
   const handleStartRoll = useCallback(() => {
@@ -112,6 +113,11 @@ export const GamePlayPhase = ({
   const handleDddiceRoomCreated = useCallback((slug: string) => {
     onUpdateGameState({ dddiceRoomSlug: slug });
   }, [onUpdateGameState]);
+
+  // 振り直し（DiceRollerのtriggerRollを呼ぶ）
+  const handleReroll = useCallback(() => {
+    diceRollerRef.current?.triggerRoll();
+  }, []);
 
   // 次のラウンドへ
   const handleNextRound = () => {
@@ -318,6 +324,7 @@ export const GamePlayPhase = ({
 
                 {/* DiceRoller - dddiceで全員に同期表示 */}
                 <DiceRoller
+                  ref={diceRollerRef}
                   isHost={isHost}
                   dddiceRoomSlug={gameState.dddiceRoomSlug}
                   onDddiceRoomCreated={handleDddiceRoomCreated}
@@ -352,7 +359,7 @@ export const GamePlayPhase = ({
                       <div className="flex gap-3">
                         {(currentPlayer.rerollsRemaining ?? 0) > 0 && (
                           <button
-                            onClick={handleStartRoll}
+                            onClick={handleReroll}
                             className="flex-1 px-6 py-3 bg-slate-600 hover:bg-slate-500
                               rounded-lg text-white font-bold transition-all"
                           >
