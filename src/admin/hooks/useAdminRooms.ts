@@ -36,6 +36,15 @@ interface PolyformPlayer {
   completedBlack: number;
 }
 
+interface DesperadoPlayer {
+  id: string;
+  name: string;
+  lives: number;
+  hasRolled: boolean;
+  isEliminated: boolean;
+  currentRoll?: { die1: number; die2: number } | null;
+}
+
 // AOAの部屋データ型
 interface AoaRoom {
   code: string;
@@ -94,6 +103,21 @@ interface PolyformRoom {
   };
 }
 
+// デスペラードの部屋データ型
+interface DesperadoRoom {
+  code: string;
+  hostId: string;
+  createdAt: number;
+  gameState: {
+    phase: string;
+    currentRound: number;
+    desperadoRolledThisRound: boolean;
+    players: DesperadoPlayer[] | Record<string, DesperadoPlayer>;
+    currentTurnPlayerId?: string | null;
+    winnerId?: string | null;
+  };
+}
+
 export interface AdminMojiHuntPlayerDetail {
   id: string;
   name: string;
@@ -105,7 +129,7 @@ export interface AdminMojiHuntPlayerDetail {
 }
 
 export interface AdminRoom {
-  gameType: 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform-dev';
+  gameType: 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform-dev' | 'desperado';
   code: string;
   hostId: string;
   createdAt: number;
@@ -131,6 +155,10 @@ export interface AdminRoom {
     currentTurnNumber?: number;
     finalRound?: boolean;
     polyformPlayers?: Array<{ id: string; name: string; score: number; completedWhite: number; completedBlack: number }>;
+    // デスペラード
+    desperadoRound?: number;
+    desperadoRolledThisRound?: boolean;
+    desperadoPlayers?: Array<{ id: string; name: string; lives: number; hasRolled: boolean; isEliminated: boolean }>;
   };
 }
 
@@ -145,6 +173,7 @@ export const useAdminRooms = () => {
     const jackalRef = ref(db, 'jackal-rooms');
     const jackalDevRef = ref(db, 'jackal-dev-rooms');
     const polyformDevRef = ref(db, 'polyform-dev-rooms');
+    const desperadoRef = ref(db, 'desperado-rooms');
 
     let aoaRooms: AdminRoom[] = [];
     let mojiHuntRooms: AdminRoom[] = [];
@@ -152,9 +181,10 @@ export const useAdminRooms = () => {
     let jackalRooms: AdminRoom[] = [];
     let jackalDevRooms: AdminRoom[] = [];
     let polyformDevRooms: AdminRoom[] = [];
+    let desperadoRooms: AdminRoom[] = [];
 
     const updateRooms = () => {
-      setRooms([...aoaRooms, ...mojiHuntRooms, ...mojiHuntDevRooms, ...jackalRooms, ...jackalDevRooms, ...polyformDevRooms].sort((a, b) => b.createdAt - a.createdAt));
+      setRooms([...aoaRooms, ...mojiHuntRooms, ...mojiHuntDevRooms, ...jackalRooms, ...jackalDevRooms, ...polyformDevRooms, ...desperadoRooms].sort((a, b) => b.createdAt - a.createdAt));
       setIsLoading(false);
     };
 
@@ -436,6 +466,51 @@ export const useAdminRooms = () => {
       updateRooms();
     });
 
+    // デスペラードの部屋を監視
+    onValue(desperadoRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        desperadoRooms = [];
+        updateRooms();
+        return;
+      }
+
+      const data = snapshot.val();
+      desperadoRooms = Object.entries(data).map(([code, room]) => {
+        const r = room as DesperadoRoom;
+        const rawPlayers = r.gameState?.players;
+        const players: DesperadoPlayer[] = Array.isArray(rawPlayers)
+          ? rawPlayers
+          : Object.values(rawPlayers || {}) as DesperadoPlayer[];
+
+        const currentTurnPlayer = players.find(p => p.id === r.gameState?.currentTurnPlayerId);
+        const eliminatedCount = players.filter(p => p.isEliminated).length;
+
+        return {
+          gameType: 'desperado' as const,
+          code,
+          hostId: r.hostId,
+          createdAt: r.createdAt || 0,
+          phase: r.gameState?.phase || 'unknown',
+          playerCount: players.length,
+          players: players.map(p => ({ id: p.id, name: p.name })),
+          details: {
+            desperadoRound: r.gameState?.currentRound,
+            desperadoRolledThisRound: r.gameState?.desperadoRolledThisRound,
+            currentTurnPlayerName: currentTurnPlayer?.name,
+            eliminatedCount,
+            desperadoPlayers: players.map(p => ({
+              id: p.id,
+              name: p.name,
+              lives: p.lives,
+              hasRolled: p.hasRolled,
+              isEliminated: p.isEliminated,
+            })),
+          },
+        };
+      });
+      updateRooms();
+    });
+
     return () => {
       off(aoaRef);
       off(mojiHuntRef);
@@ -443,6 +518,7 @@ export const useAdminRooms = () => {
       off(jackalRef);
       off(jackalDevRef);
       off(polyformDevRef);
+      off(desperadoRef);
     };
   }, []);
 
@@ -455,6 +531,7 @@ export const useAdminRooms = () => {
       case 'jackal': return `jackal-rooms/${code}`;
       case 'jackal-dev': return `jackal-dev-rooms/${code}`;
       case 'polyform-dev': return `polyform-dev-rooms/${code}`;
+      case 'desperado': return `desperado-rooms/${code}`;
     }
   };
 
