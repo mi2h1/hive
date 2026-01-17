@@ -31,7 +31,7 @@ export const DiceRoller = ({
   const [connectionStatus, setConnectionStatus] = useState('初期化中...');
   const hasHandledRoll = useRef(false);
   const isInitialized = useRef(false);
-  const roomSetupAttempted = useRef(false);
+  const isSettingUpRoom = useRef(false);
 
   // dddice 初期化
   useEffect(() => {
@@ -82,16 +82,30 @@ export const DiceRoller = ({
 
   // ルームの作成または参加
   useEffect(() => {
-    if (!isSdkReady || isConnected || roomSetupAttempted.current) return;
+    // SDK未初期化 or 接続済み or 処理中ならスキップ
+    if (!isSdkReady || isConnected) return;
 
     const dddice = dddiceRef.current;
     if (!dddice) return;
 
-    const setupRoom = async () => {
-      roomSetupAttempted.current = true;
+    // ホストでスラッグがない → ルーム作成
+    // スラッグがある → 参加
+    // どちらでもない → 待機（何もしない）
+    const shouldCreateRoom = isHost && !dddiceRoomSlug;
+    const shouldJoinRoom = !!dddiceRoomSlug;
 
+    if (!shouldCreateRoom && !shouldJoinRoom) {
+      setConnectionStatus('ホストがルームを作成するのを待っています...');
+      return;
+    }
+
+    // 既に処理中なら重複実行を防ぐ
+    if (isSettingUpRoom.current) return;
+    isSettingUpRoom.current = true;
+
+    const setupRoom = async () => {
       try {
-        if (isHost && !dddiceRoomSlug) {
+        if (shouldCreateRoom) {
           // ホスト: 新しいルームを作成
           setConnectionStatus('ルーム作成中...');
           console.log('Creating dddice room...');
@@ -113,9 +127,9 @@ export const DiceRoller = ({
           } else {
             console.error('Failed to create room - no slug returned');
             setConnectionStatus('ルーム作成失敗');
-            roomSetupAttempted.current = false; // リトライ可能に
+            isSettingUpRoom.current = false;
           }
-        } else if (dddiceRoomSlug) {
+        } else if (shouldJoinRoom && dddiceRoomSlug) {
           // 参加者: 既存のルームに参加
           setConnectionStatus('ルームに参加中...');
           console.log('Joining dddice room:', dddiceRoomSlug);
@@ -134,15 +148,11 @@ export const DiceRoller = ({
           setIsConnected(true);
           setConnectionStatus('接続完了');
           console.log('dddice connected to room:', dddiceRoomSlug);
-        } else {
-          // ホストでない＆スラッグがない = ホストがルームを作成するのを待つ
-          setConnectionStatus('ホストがルームを作成するのを待っています...');
-          roomSetupAttempted.current = false; // スラッグが来たらリトライ
         }
       } catch (err) {
         console.error('Room setup error:', err);
         setConnectionStatus('接続エラー');
-        roomSetupAttempted.current = false; // リトライ可能に
+        isSettingUpRoom.current = false;
       }
     };
 
