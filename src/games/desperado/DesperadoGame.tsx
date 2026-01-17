@@ -56,6 +56,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
         ...p,
         currentRoll: null,
         hasRolled: false,
+        rerollsRemaining: 2,
       })),
     });
   };
@@ -82,6 +83,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
         currentRoll: null,
         hasRolled: false,
         isEliminated: false,
+        rerollsRemaining: 2,
       })),
     });
   };

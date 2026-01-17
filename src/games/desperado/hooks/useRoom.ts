@@ -31,6 +31,8 @@ const deleteDddiceRoom = async (slug: string | null | undefined): Promise<void> 
   }
 };
 
+const INITIAL_REROLLS = 2; // 振り直し回数
+
 // 初期プレイヤーを作成
 const createInitialPlayer = (id: string, name: string): Player => ({
   id,
@@ -39,6 +41,7 @@ const createInitialPlayer = (id: string, name: string): Player => ({
   currentRoll: null,
   hasRolled: false,
   isEliminated: false,
+  rerollsRemaining: INITIAL_REROLLS,
 });
 
 // 初期ゲーム状態を作成

@@ -50,7 +50,9 @@ export const RulesModal = ({ onClose }: RulesModalProps) => {
             <h3 className="text-amber-400 font-bold mb-2">ルール</h3>
             <ul className="text-sm space-y-1 list-disc list-inside">
               <li>各プレイヤーはライフ5でスタート</li>
-              <li>全員がダイスを振ったら結果発表</li>
+              <li>1回の番手で<span className="text-amber-400">最大3回まで</span>振れる（2回まで振り直し可能）</li>
+              <li>振った後、「キープ」または「振り直す」を選択</li>
+              <li>全員がキープしたら結果発表</li>
               <li>最弱の出目を出したプレイヤーが<span className="text-red-400">ライフ-1</span></li>
               <li>誰かがデスペラードを出していた場合、ペナルティは<span className="text-red-400">ライフ-2</span></li>
               <li>ライフが0になったら脱落</li>

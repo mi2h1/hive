@@ -43,6 +43,7 @@ export interface Player {
   currentRoll: DiceResult | null;
   hasRolled: boolean;
   isEliminated: boolean;
+  rerollsRemaining: number; // 残り振り直し回数（初期値2）
 }
 
 // ゲーム状態（Firebase同期）

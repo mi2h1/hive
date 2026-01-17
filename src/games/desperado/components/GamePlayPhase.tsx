@@ -44,16 +44,39 @@ export const GamePlayPhase = ({
     onUpdateGameState({ rollingPlayerId: playerId });
   }, [currentPlayer, isMyTurn, playerId, onUpdateGameState]);
 
-  // dddiceからの結果を受け取る
+  // dddiceからの結果を受け取る（振り直し可能な状態に）
   const handleRollComplete = useCallback((die1: number, die2: number) => {
     const result: DiceResult = { die1, die2 };
-    const rank = getRollRank(result);
-    const isDesperado = rank.type === 'desperado';
 
-    // プレイヤーの出目を更新
+    // プレイヤーの出目を更新（rerollsRemainingを減らす、まだhasRolledはfalse）
     const updatedPlayers = gameState.players.map(p => {
       if (p.id === playerId) {
-        return { ...p, currentRoll: result, hasRolled: true };
+        return {
+          ...p,
+          currentRoll: result,
+          rerollsRemaining: Math.max(0, (p.rerollsRemaining ?? 2) - 1),
+        };
+      }
+      return p;
+    });
+
+    onUpdateGameState({
+      players: updatedPlayers,
+      rollingPlayerId: null,
+    });
+  }, [gameState.players, playerId, onUpdateGameState]);
+
+  // 出目をキープして次のプレイヤーへ
+  const handleKeepRoll = useCallback(() => {
+    if (!currentPlayer || !currentPlayer.currentRoll) return;
+
+    const rank = getRollRank(currentPlayer.currentRoll);
+    const isDesperado = rank.type === 'desperado';
+
+    // hasRolledをtrueに
+    const updatedPlayers = gameState.players.map(p => {
+      if (p.id === playerId) {
+        return { ...p, hasRolled: true };
       }
       return p;
     });
@@ -82,9 +105,8 @@ export const GamePlayPhase = ({
       currentTurnPlayerId: allHaveRolled ? null : nextPlayerId,
       desperadoRolledThisRound: gameState.desperadoRolledThisRound || isDesperado,
       phase: allHaveRolled ? 'result' : 'rolling',
-      rollingPlayerId: null,
     });
-  }, [gameState.players, gameState.turnOrder, gameState.desperadoRolledThisRound, playerId, onUpdateGameState]);
+  }, [currentPlayer, gameState.players, gameState.turnOrder, gameState.desperadoRolledThisRound, playerId, onUpdateGameState]);
 
   // dddice ルームが作成された時
   const handleDddiceRoomCreated = useCallback((slug: string) => {
@@ -101,7 +123,7 @@ export const GamePlayPhase = ({
     const loserIds = findWeakestPlayers(rolledPlayers);
     const penalty = gameState.desperadoRolledThisRound ? 2 : 1;
 
-    // ライフを減らす
+    // ライフを減らす & 振り直し回数をリセット
     const updatedPlayers = gameState.players.map(p => {
       if (loserIds.includes(p.id)) {
         const newLives = Math.max(0, p.lives - penalty);
@@ -111,12 +133,14 @@ export const GamePlayPhase = ({
           isEliminated: newLives <= 0,
           currentRoll: null,
           hasRolled: false,
+          rerollsRemaining: 2,
         };
       }
       return {
         ...p,
         currentRoll: null,
         hasRolled: false,
+        rerollsRemaining: 2,
       };
     });
 
@@ -276,7 +300,9 @@ export const GamePlayPhase = ({
                 {/* ステータス表示 */}
                 {gameState.phase === 'rolling' && (
                   <div className="text-center">
-                    {isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
+                    {isMyTurn && currentPlayer && !currentPlayer.hasRolled && currentPlayer.currentRoll ? (
+                      <p className="text-amber-400 font-bold">キープするか振り直すか選んでください</p>
+                    ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
                       <p className="text-amber-400 font-bold">あなたの番です</p>
                     ) : someoneIsRolling ? (
                       <p className="text-amber-400">
@@ -298,9 +324,51 @@ export const GamePlayPhase = ({
                   onRollComplete={handleRollComplete}
                   isMyTurn={isMyTurn && !currentPlayer?.hasRolled && gameState.phase === 'rolling'}
                   onStartRoll={handleStartRoll}
-                  showButton={!!(gameState.phase === 'rolling' && isMyTurn && currentPlayer && !currentPlayer.hasRolled)}
+                  showButton={!!(
+                    gameState.phase === 'rolling' &&
+                    isMyTurn &&
+                    currentPlayer &&
+                    !currentPlayer.hasRolled &&
+                    !currentPlayer.currentRoll // まだ振っていない場合のみ「ダイスを振る」表示
+                  )}
                   rollingPlayerId={gameState.rollingPlayerId}
                 />
+
+                {/* 振り直し/キープ選択（自分のターンで、振った後、まだ確定していない場合） */}
+                {gameState.phase === 'rolling' &&
+                  isMyTurn &&
+                  currentPlayer &&
+                  !currentPlayer.hasRolled &&
+                  currentPlayer.currentRoll && (
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <p className="text-white font-bold">
+                          {getRollDisplayName(currentPlayer.currentRoll)}
+                        </p>
+                        <p className="text-slate-400 text-sm">
+                          残り振り直し: {currentPlayer.rerollsRemaining ?? 0}回
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        {(currentPlayer.rerollsRemaining ?? 0) > 0 && (
+                          <button
+                            onClick={handleStartRoll}
+                            className="flex-1 px-6 py-3 bg-slate-600 hover:bg-slate-500
+                              rounded-lg text-white font-bold transition-all"
+                          >
+                            振り直す
+                          </button>
+                        )}
+                        <button
+                          onClick={handleKeepRoll}
+                          className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
+                            hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
+                        >
+                          キープ
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                 {/* 結果表示 */}
                 {gameState.phase === 'result' && (
