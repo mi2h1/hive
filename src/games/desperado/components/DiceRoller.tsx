@@ -214,16 +214,32 @@ export const DiceRoller = ({
   }, [isConnected, isRolling, onStartRoll, dddiceRoomSlug]);
 
   return (
-    <div className="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden">
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full"
-        style={{ display: 'block' }}
-      />
+    <div className="relative w-full h-64">
+      {/* ポーカーテーブル風フレーム */}
+      <div
+        className="absolute inset-0 rounded-[50%/40%] bg-gradient-to-b from-amber-800 via-amber-900 to-amber-950 p-2 shadow-2xl"
+        style={{
+          boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.5)',
+        }}
+      >
+        {/* フェルト部分 */}
+        <div
+          className="w-full h-full rounded-[50%/40%] bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 overflow-hidden"
+          style={{
+            boxShadow: 'inset 0 4px 16px rgba(0,0,0,0.4), inset 0 -2px 8px rgba(255,255,255,0.1)',
+          }}
+        >
+          <canvas
+            ref={canvasRef}
+            className="w-full h-full"
+            style={{ display: 'block' }}
+          />
+        </div>
+      </div>
 
       {/* 接続中表示 */}
       {!isConnected && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+        <div className="absolute inset-0 flex items-center justify-center rounded-[50%/40%] bg-black/50">
           <p className="text-amber-400 animate-pulse">{connectionStatus}</p>
         </div>
       )}
@@ -232,9 +248,10 @@ export const DiceRoller = ({
       {showButton && isConnected && isMyTurn && !isRolling && (
         <button
           onClick={handleRoll}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 px-8 py-3
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-3
             bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600
-            rounded-lg text-white font-bold text-lg transition-all shadow-lg"
+            rounded-full text-white font-bold text-lg transition-all shadow-lg
+            border-2 border-amber-300/30"
         >
           ダイスを振る
         </button>
@@ -242,8 +259,8 @@ export const DiceRoller = ({
 
       {/* ロール中表示 */}
       {isRolling && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-          <p className="text-amber-400 animate-pulse">ダイスを振っています...</p>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+          <p className="text-amber-300 animate-pulse font-bold">ダイスを振っています...</p>
         </div>
       )}
     </div>
