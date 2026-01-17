@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Skull, Heart, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-react';
-import type { GameState, DiceResult, DiceAnimation } from '../types/game';
+import type { GameState, DiceResult } from '../types/game';
 import { getRollRank, getRollDisplayName, findWeakestPlayers } from '../lib/dice';
 import { DiceRoller } from './DiceRoller';
 
 interface GamePlayPhaseProps {
   gameState: GameState;
   playerId: string;
+  roomCode: string;
   onUpdateGameState: (state: Partial<GameState>) => void;
   onLeaveRoom: () => void;
 }
@@ -28,25 +29,23 @@ const DiceIcon = ({ value, className }: { value: number; className?: string }) =
 export const GamePlayPhase = ({
   gameState,
   playerId,
+  roomCode,
   onUpdateGameState,
   onLeaveRoom,
 }: GamePlayPhaseProps) => {
-  const [isRolling, setIsRolling] = useState(false);
-
   const currentPlayer = gameState.players.find(p => p.id === playerId);
   const activePlayers = gameState.players.filter(p => !p.isEliminated);
   const isMyTurn = gameState.currentTurnPlayerId === playerId;
 
-  // ダイスを振り始める
+  // ダイスを振り始める（dddiceに通知）
   const handleStartRoll = useCallback(() => {
     if (!currentPlayer || currentPlayer.hasRolled || !isMyTurn) return;
-    setIsRolling(true);
     // 他のプレイヤーに「振り始めた」ことを通知
     onUpdateGameState({ rollingPlayerId: playerId });
   }, [currentPlayer, isMyTurn, playerId, onUpdateGameState]);
 
-  // 3Dダイスの結果を受け取る（アニメーションデータ付き）
-  const handleRollComplete = useCallback((die1: number, die2: number, animation: DiceAnimation) => {
+  // dddiceからの結果を受け取る
+  const handleRollComplete = useCallback((die1: number, die2: number) => {
     const result: DiceResult = { die1, die2 };
     const rank = getRollRank(result);
     const isDesperado = rank.type === 'desperado';
@@ -83,11 +82,8 @@ export const GamePlayPhase = ({
       currentTurnPlayerId: allHaveRolled ? null : nextPlayerId,
       desperadoRolledThisRound: gameState.desperadoRolledThisRound || isDesperado,
       phase: allHaveRolled ? 'result' : 'rolling',
-      rollingPlayerId: null, // ロール完了を通知
-      diceAnimation: animation, // キーフレームアニメーションをFirebaseに送信
+      rollingPlayerId: null,
     });
-
-    setIsRolling(false);
   }, [gameState.players, gameState.turnOrder, gameState.desperadoRolledThisRound, playerId, onUpdateGameState]);
 
   // 次のラウンドへ
@@ -129,7 +125,6 @@ export const GamePlayPhase = ({
         phase: 'game_end',
         winnerId: remainingPlayers[0]?.id ?? null,
         rollingPlayerId: null,
-        diceAnimation: null,
       });
     } else {
       // 次のラウンド開始
@@ -149,7 +144,6 @@ export const GamePlayPhase = ({
         turnOrder: newTurnOrder,
         lastLoser: loserIds[0] ?? null,
         rollingPlayerId: null,
-        diceAnimation: null,
       });
     }
   };
@@ -255,27 +249,19 @@ export const GamePlayPhase = ({
             const currentTurnPlayer = gameState.players.find(p => p.id === gameState.currentTurnPlayerId);
             // 誰かがダイスを振っているか
             const someoneIsRolling = !!gameState.rollingPlayerId;
-            // 自分が振っているか
-            const iAmRolling = gameState.rollingPlayerId === playerId;
-            // 他の人が振っているか
-            const otherIsRolling = someoneIsRolling && !iAmRolling;
             // 振っている人
             const rollingPlayer = gameState.players.find(p => p.id === gameState.rollingPlayerId);
-
-            // 観戦者用のアニメーションデータ
-            // 自分が振っていないときにアニメーションデータがあれば再生
-            const spectatorAnimation = !iAmRolling ? gameState.diceAnimation : null;
 
             return (
               <div className="bg-slate-800/90 rounded-xl p-4 space-y-4">
                 {/* ステータス表示 */}
                 {gameState.phase === 'rolling' && (
                   <div className="text-center">
-                    {isMyTurn && currentPlayer && !currentPlayer.hasRolled && !isRolling ? (
+                    {isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
                       <p className="text-amber-400 font-bold">あなたの番です</p>
                     ) : someoneIsRolling ? (
                       <p className="text-amber-400">
-                        {iAmRolling ? 'ダイスを振っています...' : `${rollingPlayer?.name}がダイスを振っています`}
+                        {`${rollingPlayer?.name}がダイスを振っています`}
                       </p>
                     ) : currentPlayer?.hasRolled ? (
                       <p className="text-slate-400">{currentTurnPlayer?.name}の番を待っています...</p>
@@ -285,14 +271,13 @@ export const GamePlayPhase = ({
                   </div>
                 )}
 
-                {/* DiceRoller（常に表示） */}
+                {/* DiceRoller - dddiceで全員に同期表示 */}
                 <DiceRoller
-                  isRolling={isRolling || otherIsRolling}
-                  onStartRoll={handleStartRoll}
+                  roomCode={roomCode}
                   onRollComplete={handleRollComplete}
-                  isSpectator={!isMyTurn || currentPlayer?.hasRolled || gameState.phase === 'result'}
-                  animation={spectatorAnimation}
-                  showButton={gameState.phase === 'rolling' && isMyTurn && currentPlayer && !currentPlayer.hasRolled && !isRolling}
+                  isMyTurn={isMyTurn && !currentPlayer?.hasRolled && gameState.phase === 'rolling'}
+                  onStartRoll={handleStartRoll}
+                  showButton={!!(gameState.phase === 'rolling' && isMyTurn && currentPlayer && !currentPlayer.hasRolled)}
                 />
 
                 {/* 結果表示 */}

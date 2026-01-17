@@ -52,7 +52,6 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
       turnOrder: shuffledOrder,
       currentTurnPlayerId: shuffledOrder[0],
       rollingPlayerId: null,
-      diceAnimation: null,
       players: players.map(p => ({
         ...p,
         currentRoll: null,
@@ -77,7 +76,6 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
       winnerId: null,
       lastLoser: null,
       rollingPlayerId: null,
-      diceAnimation: null,
       players: players.map(p => ({
         ...p,
         lives: INITIAL_LIVES,
@@ -117,11 +115,12 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
   }
 
   // ゲームプレイ画面
-  if ((phase === 'rolling' || phase === 'result') && gameState && playerId) {
+  if ((phase === 'rolling' || phase === 'result') && gameState && playerId && roomCode) {
     return (
       <GamePlayPhase
         gameState={gameState}
         playerId={playerId}
+        roomCode={roomCode}
         onUpdateGameState={updateGameState}
         onLeaveRoom={handleLeaveRoom}
       />
