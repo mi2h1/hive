@@ -32,6 +32,12 @@ export const DiceRoller = ({
   const hasHandledRoll = useRef(false);
   const isInitialized = useRef(false);
   const isSettingUpRoom = useRef(false);
+  const onRollCompleteRef = useRef(onRollComplete);
+
+  // コールバックを常に最新に保つ
+  useEffect(() => {
+    onRollCompleteRef.current = onRollComplete;
+  }, [onRollComplete]);
 
   // dddice 初期化
   useEffect(() => {
@@ -54,7 +60,7 @@ export const DiceRoller = ({
           if (dice.length >= 2) {
             const die1 = dice[0]?.value ?? 1;
             const die2 = dice[1]?.value ?? 1;
-            onRollComplete(die1, die2);
+            onRollCompleteRef.current(die1, die2);
           }
           setIsRolling(false);
         });
@@ -78,7 +84,8 @@ export const DiceRoller = ({
         dddiceRef.current = null;
       }
     };
-  }, [onRollComplete]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 一度だけ初期化
 
   // ルームの作成または参加
   useEffect(() => {
