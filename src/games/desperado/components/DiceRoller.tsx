@@ -3,51 +3,41 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { RigidBody, Physics, CuboidCollider } from '@react-three/rapier';
 import type { RapierRigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
+import type { DiceAnimation, DiceKeyframe } from '../types/game';
 
 interface DiceRollerProps {
-  onRollComplete: (die1: number, die2: number) => void;
+  onRollComplete: (die1: number, die2: number, animation: DiceAnimation) => void;
   isRolling: boolean;
   onStartRoll: () => void;
   // 観戦モード用
   isSpectator?: boolean;
-  forcedResult?: { die1: number; die2: number } | null;
+  animation?: DiceAnimation | null;
   // ボタン表示制御
   showButton?: boolean;
 }
 
+// キーフレーム記録間隔（ms）- 約20fpsで記録
+const KEYFRAME_INTERVAL = 50;
+
 // サイコロの面のUV座標マッピング（各面に数字を表示）
-// 標準的なサイコロ: 対面の合計が7（1-6, 2-5, 3-4）
 const DICE_FACES = {
-  // Three.jsの立方体の面順序: +X, -X, +Y, -Y, +Z, -Z
-  // 標準サイコロ配置: 1が上、6が下、2が前
-  posX: 3, // 右面
-  negX: 4, // 左面
-  posY: 1, // 上面
-  negY: 6, // 下面
-  posZ: 2, // 前面
-  negZ: 5, // 後面
+  posX: 3, negX: 4, posY: 1, negY: 6, posZ: 2, negZ: 5,
 };
 
 // サイコロの上面を判定
 function getDiceTopFace(rotation: THREE.Euler): number {
   const up = new THREE.Vector3(0, 1, 0);
-
-  // 各面の法線ベクトル
   const normals = [
-    { face: DICE_FACES.posY, normal: new THREE.Vector3(0, 1, 0) },  // +Y (1)
-    { face: DICE_FACES.negY, normal: new THREE.Vector3(0, -1, 0) }, // -Y (6)
-    { face: DICE_FACES.posX, normal: new THREE.Vector3(1, 0, 0) },  // +X (3)
-    { face: DICE_FACES.negX, normal: new THREE.Vector3(-1, 0, 0) }, // -X (4)
-    { face: DICE_FACES.posZ, normal: new THREE.Vector3(0, 0, 1) },  // +Z (2)
-    { face: DICE_FACES.negZ, normal: new THREE.Vector3(0, 0, -1) }, // -Z (5)
+    { face: DICE_FACES.posY, normal: new THREE.Vector3(0, 1, 0) },
+    { face: DICE_FACES.negY, normal: new THREE.Vector3(0, -1, 0) },
+    { face: DICE_FACES.posX, normal: new THREE.Vector3(1, 0, 0) },
+    { face: DICE_FACES.negX, normal: new THREE.Vector3(-1, 0, 0) },
+    { face: DICE_FACES.posZ, normal: new THREE.Vector3(0, 0, 1) },
+    { face: DICE_FACES.negZ, normal: new THREE.Vector3(0, 0, -1) },
   ];
-
-  // 回転を適用
   const quaternion = new THREE.Quaternion().setFromEuler(rotation);
-
   let maxDot = -Infinity;
   let topFace = 1;
-
   for (const { face, normal } of normals) {
     const rotatedNormal = normal.clone().applyQuaternion(quaternion);
     const dot = rotatedNormal.dot(up);
@@ -56,149 +46,64 @@ function getDiceTopFace(rotation: THREE.Euler): number {
       topFace = face;
     }
   }
-
   return topFace;
 }
 
-// サイコロメッシュ
-function Dice({
+// サイコロのマテリアルを作成
+function createDiceMaterials(color: string): THREE.MeshStandardMaterial[] {
+  const faceValues = [
+    DICE_FACES.posX, DICE_FACES.negX, DICE_FACES.posY,
+    DICE_FACES.negY, DICE_FACES.posZ, DICE_FACES.negZ,
+  ];
+
+  return faceValues.map((value) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, 124, 124);
+
+    ctx.fillStyle = '#ffffff';
+    const dotRadius = 12;
+    const center = 64;
+    const offset = 32;
+
+    const drawDot = (x: number, y: number) => {
+      ctx.beginPath();
+      ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    switch (value) {
+      case 1: drawDot(center, center); break;
+      case 2: drawDot(center - offset, center - offset); drawDot(center + offset, center + offset); break;
+      case 3: drawDot(center - offset, center - offset); drawDot(center, center); drawDot(center + offset, center + offset); break;
+      case 4: drawDot(center - offset, center - offset); drawDot(center + offset, center - offset); drawDot(center - offset, center + offset); drawDot(center + offset, center + offset); break;
+      case 5: drawDot(center - offset, center - offset); drawDot(center + offset, center - offset); drawDot(center, center); drawDot(center - offset, center + offset); drawDot(center + offset, center + offset); break;
+      case 6: drawDot(center - offset, center - offset); drawDot(center - offset, center); drawDot(center - offset, center + offset); drawDot(center + offset, center - offset); drawDot(center + offset, center); drawDot(center + offset, center + offset); break;
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    return new THREE.MeshStandardMaterial({ map: texture });
+  });
+}
+
+// ===== 物理シミュレーション用サイコロ =====
+function PhysicsDice({
   position,
   color,
-  onStabilized,
   diceRef,
-  canReport,
 }: {
   position: [number, number, number];
   color: string;
-  onStabilized: (face: number) => void;
   diceRef: React.RefObject<RapierRigidBody | null>;
-  canReport: boolean;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [isStable, setIsStable] = useState(false);
-  const stableFrames = useRef(0);
-  const hasReported = useRef(false);
-
-  // canReportがfalseになったらリセット（次のロールに備える）
-  useEffect(() => {
-    if (!canReport) {
-      hasReported.current = false;
-      stableFrames.current = 0;
-      setIsStable(false);
-    }
-  }, [canReport]);
-
-  // サイコロのテクスチャを作成
-  const materials = useRef<THREE.MeshStandardMaterial[]>([]);
-
-  useEffect(() => {
-    // 各面のテクスチャを作成
-    const faceValues = [
-      DICE_FACES.posX, // 右
-      DICE_FACES.negX, // 左
-      DICE_FACES.posY, // 上
-      DICE_FACES.negY, // 下
-      DICE_FACES.posZ, // 前
-      DICE_FACES.negZ, // 後
-    ];
-
-    materials.current = faceValues.map((value) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 128;
-      canvas.height = 128;
-      const ctx = canvas.getContext('2d')!;
-
-      // 背景
-      ctx.fillStyle = color;
-      ctx.fillRect(0, 0, 128, 128);
-
-      // 枠線
-      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(2, 2, 124, 124);
-
-      // ドットを描画
-      ctx.fillStyle = '#ffffff';
-      const dotRadius = 12;
-      const center = 64;
-      const offset = 32;
-
-      const drawDot = (x: number, y: number) => {
-        ctx.beginPath();
-        ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
-        ctx.fill();
-      };
-
-      // 各数字のドット配置
-      switch (value) {
-        case 1:
-          drawDot(center, center);
-          break;
-        case 2:
-          drawDot(center - offset, center - offset);
-          drawDot(center + offset, center + offset);
-          break;
-        case 3:
-          drawDot(center - offset, center - offset);
-          drawDot(center, center);
-          drawDot(center + offset, center + offset);
-          break;
-        case 4:
-          drawDot(center - offset, center - offset);
-          drawDot(center + offset, center - offset);
-          drawDot(center - offset, center + offset);
-          drawDot(center + offset, center + offset);
-          break;
-        case 5:
-          drawDot(center - offset, center - offset);
-          drawDot(center + offset, center - offset);
-          drawDot(center, center);
-          drawDot(center - offset, center + offset);
-          drawDot(center + offset, center + offset);
-          break;
-        case 6:
-          drawDot(center - offset, center - offset);
-          drawDot(center - offset, center);
-          drawDot(center - offset, center + offset);
-          drawDot(center + offset, center - offset);
-          drawDot(center + offset, center);
-          drawDot(center + offset, center + offset);
-          break;
-      }
-
-      const texture = new THREE.CanvasTexture(canvas);
-      return new THREE.MeshStandardMaterial({ map: texture });
-    });
-  }, [color]);
-
-  useFrame(() => {
-    // canReportがtrueになるまで（ボタンが押されるまで）は報告しない
-    if (!diceRef.current || hasReported.current || !canReport) return;
-
-    const velocity = diceRef.current.linvel();
-    const angVel = diceRef.current.angvel();
-    const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2 + velocity.z ** 2);
-    const angSpeed = Math.sqrt(angVel.x ** 2 + angVel.y ** 2 + angVel.z ** 2);
-
-    // サイコロが安定したかチェック
-    if (speed < 0.1 && angSpeed < 0.1) {
-      stableFrames.current++;
-      if (stableFrames.current > 30 && !isStable) {
-        setIsStable(true);
-        hasReported.current = true;
-
-        // 上面を判定
-        const rotation = diceRef.current.rotation();
-        const euler = new THREE.Euler().setFromQuaternion(
-          new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w)
-        );
-        const topFace = getDiceTopFace(euler);
-        onStabilized(topFace);
-      }
-    } else {
-      stableFrames.current = 0;
-    }
-  });
+  const materials = useRef<THREE.MeshStandardMaterial[]>(createDiceMaterials(color));
 
   return (
     <RigidBody
@@ -210,18 +115,28 @@ function Dice({
       linearDamping={0.5}
       angularDamping={0.5}
     >
-      <mesh ref={meshRef} castShadow receiveShadow material={materials.current}>
+      <mesh castShadow receiveShadow material={materials.current}>
         <boxGeometry args={[1, 1, 1]} />
       </mesh>
     </RigidBody>
   );
 }
 
-// テーブル
-function Table() {
+// ===== キーフレーム再生用サイコロ =====
+function PlaybackDice({ color }: { color: string }) {
+  const materials = useRef<THREE.MeshStandardMaterial[]>(createDiceMaterials(color));
+
+  return (
+    <mesh castShadow receiveShadow material={materials.current}>
+      <boxGeometry args={[1, 1, 1]} />
+    </mesh>
+  );
+}
+
+// テーブル（物理あり）
+function PhysicsTable() {
   return (
     <>
-      {/* 床 */}
       <RigidBody type="fixed" position={[0, -0.5, 0]}>
         <CuboidCollider args={[10, 0.5, 10]} />
         <mesh receiveShadow>
@@ -229,42 +144,62 @@ function Table() {
           <meshStandardMaterial color="#2d4a3e" />
         </mesh>
       </RigidBody>
-
-      {/* 壁（サイコロが転がり出ないように） */}
-      <RigidBody type="fixed" position={[0, 1, -5]}>
-        <CuboidCollider args={[10, 2, 0.1]} />
-      </RigidBody>
-      <RigidBody type="fixed" position={[0, 1, 5]}>
-        <CuboidCollider args={[10, 2, 0.1]} />
-      </RigidBody>
-      <RigidBody type="fixed" position={[-5, 1, 0]}>
-        <CuboidCollider args={[0.1, 2, 10]} />
-      </RigidBody>
-      <RigidBody type="fixed" position={[5, 1, 0]}>
-        <CuboidCollider args={[0.1, 2, 10]} />
-      </RigidBody>
+      <RigidBody type="fixed" position={[0, 1, -5]}><CuboidCollider args={[10, 2, 0.1]} /></RigidBody>
+      <RigidBody type="fixed" position={[0, 1, 5]}><CuboidCollider args={[10, 2, 0.1]} /></RigidBody>
+      <RigidBody type="fixed" position={[-5, 1, 0]}><CuboidCollider args={[0.1, 2, 10]} /></RigidBody>
+      <RigidBody type="fixed" position={[5, 1, 0]}><CuboidCollider args={[0.1, 2, 10]} /></RigidBody>
     </>
   );
 }
 
-// シーン（自分がダイスを振るときのみ使用）
-function Scene({
-  onRollComplete,
+// テーブル（表示のみ）
+function StaticTable() {
+  return (
+    <mesh receiveShadow position={[0, -0.5, 0]}>
+      <boxGeometry args={[20, 1, 20]} />
+      <meshStandardMaterial color="#2d4a3e" />
+    </mesh>
+  );
+}
+
+// 照明
+function Lights() {
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 10, 5]} intensity={1} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+      <pointLight position={[-5, 5, -5]} intensity={0.5} />
+    </>
+  );
+}
+
+// ===== 物理シミュレーション＆キーフレーム記録シーン =====
+function RecordingScene({
+  onComplete,
   isRolling,
 }: {
-  onRollComplete: (die1: number, die2: number) => void;
+  onComplete: (die1: number, die2: number, animation: DiceAnimation) => void;
   isRolling: boolean;
 }) {
   const dice1Ref = useRef<RapierRigidBody>(null);
   const dice2Ref = useRef<RapierRigidBody>(null);
-  const [dice1Face, setDice1Face] = useState<number | null>(null);
-  const [dice2Face, setDice2Face] = useState<number | null>(null);
-  const [canReport, setCanReport] = useState(false);
+  const keyframesRef = useRef<DiceKeyframe[]>([]);
+  const startTimeRef = useRef<number>(0);
+  const lastKeyframeTimeRef = useRef<number>(0);
+  const stableFrames = useRef(0);
+  const hasCompleted = useRef(false);
   const hasStartedRoll = useRef(false);
 
   // ダイスを振る
   const rollDice = useCallback(() => {
     if (!dice1Ref.current || !dice2Ref.current) return;
+
+    // リセット
+    keyframesRef.current = [];
+    startTimeRef.current = performance.now();
+    lastKeyframeTimeRef.current = 0;
+    stableFrames.current = 0;
+    hasCompleted.current = false;
 
     // 位置をリセット
     dice1Ref.current.setTranslation({ x: -1.5, y: 5, z: 0 }, true);
@@ -272,160 +207,208 @@ function Scene({
 
     // ランダムな回転
     const randomRotation1 = new THREE.Quaternion().setFromEuler(
-      new THREE.Euler(
-        Math.random() * Math.PI * 2,
-        Math.random() * Math.PI * 2,
-        Math.random() * Math.PI * 2
-      )
+      new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2)
     );
     const randomRotation2 = new THREE.Quaternion().setFromEuler(
-      new THREE.Euler(
-        Math.random() * Math.PI * 2,
-        Math.random() * Math.PI * 2,
-        Math.random() * Math.PI * 2
-      )
+      new THREE.Euler(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2)
     );
     dice1Ref.current.setRotation(randomRotation1, true);
     dice2Ref.current.setRotation(randomRotation2, true);
 
     // ランダムな初速
-    const impulse1 = {
-      x: (Math.random() - 0.5) * 5,
-      y: -2,
-      z: (Math.random() - 0.5) * 5,
-    };
-    const impulse2 = {
-      x: (Math.random() - 0.5) * 5,
-      y: -2,
-      z: (Math.random() - 0.5) * 5,
-    };
-    dice1Ref.current.setLinvel(impulse1, true);
-    dice2Ref.current.setLinvel(impulse2, true);
+    dice1Ref.current.setLinvel({ x: (Math.random() - 0.5) * 5, y: -2, z: (Math.random() - 0.5) * 5 }, true);
+    dice2Ref.current.setLinvel({ x: (Math.random() - 0.5) * 5, y: -2, z: (Math.random() - 0.5) * 5 }, true);
 
     // ランダムな回転速度
-    const torque1 = {
-      x: (Math.random() - 0.5) * 20,
-      y: (Math.random() - 0.5) * 20,
-      z: (Math.random() - 0.5) * 20,
-    };
-    const torque2 = {
-      x: (Math.random() - 0.5) * 20,
-      y: (Math.random() - 0.5) * 20,
-      z: (Math.random() - 0.5) * 20,
-    };
-    dice1Ref.current.setAngvel(torque1, true);
-    dice2Ref.current.setAngvel(torque2, true);
-
-    // 状態リセット
-    setDice1Face(null);
-    setDice2Face(null);
-    // 少し遅延してからcanReportをtrueに（ダイスが動き始めてから）
-    setTimeout(() => setCanReport(true), 200);
+    dice1Ref.current.setAngvel({ x: (Math.random() - 0.5) * 20, y: (Math.random() - 0.5) * 20, z: (Math.random() - 0.5) * 20 }, true);
+    dice2Ref.current.setAngvel({ x: (Math.random() - 0.5) * 20, y: (Math.random() - 0.5) * 20, z: (Math.random() - 0.5) * 20 }, true);
   }, []);
 
   // isRollingが true になったら振る
   useEffect(() => {
     if (isRolling && !hasStartedRoll.current) {
       hasStartedRoll.current = true;
-      // 物理シミュレーションが再開されるのを待ってから振る
-      requestAnimationFrame(() => {
-        rollDice();
-      });
+      requestAnimationFrame(() => rollDice());
     }
     if (!isRolling) {
       hasStartedRoll.current = false;
-      setCanReport(false);
     }
   }, [isRolling, rollDice]);
 
-  // 両方のサイコロが安定したら結果を返す
-  useEffect(() => {
-    if (dice1Face !== null && dice2Face !== null) {
-      onRollComplete(dice1Face, dice2Face);
+  // 毎フレーム: キーフレーム記録 & 安定判定
+  useFrame(() => {
+    if (!isRolling || hasCompleted.current) return;
+    if (!dice1Ref.current || !dice2Ref.current) return;
+
+    const now = performance.now();
+    const elapsed = now - startTimeRef.current;
+
+    // キーフレーム記録
+    if (elapsed - lastKeyframeTimeRef.current >= KEYFRAME_INTERVAL) {
+      lastKeyframeTimeRef.current = elapsed;
+
+      const pos1 = dice1Ref.current.translation();
+      const rot1 = dice1Ref.current.rotation();
+      const pos2 = dice2Ref.current.translation();
+      const rot2 = dice2Ref.current.rotation();
+
+      keyframesRef.current.push({
+        t: Math.round(elapsed),
+        d1: {
+          p: [Math.round(pos1.x * 100) / 100, Math.round(pos1.y * 100) / 100, Math.round(pos1.z * 100) / 100],
+          r: [Math.round(rot1.x * 1000) / 1000, Math.round(rot1.y * 1000) / 1000, Math.round(rot1.z * 1000) / 1000, Math.round(rot1.w * 1000) / 1000],
+        },
+        d2: {
+          p: [Math.round(pos2.x * 100) / 100, Math.round(pos2.y * 100) / 100, Math.round(pos2.z * 100) / 100],
+          r: [Math.round(rot2.x * 1000) / 1000, Math.round(rot2.y * 1000) / 1000, Math.round(rot2.z * 1000) / 1000, Math.round(rot2.w * 1000) / 1000],
+        },
+      });
     }
-  }, [dice1Face, dice2Face, onRollComplete]);
+
+    // 安定判定
+    const vel1 = dice1Ref.current.linvel();
+    const vel2 = dice2Ref.current.linvel();
+    const angVel1 = dice1Ref.current.angvel();
+    const angVel2 = dice2Ref.current.angvel();
+
+    const speed1 = Math.sqrt(vel1.x ** 2 + vel1.y ** 2 + vel1.z ** 2);
+    const speed2 = Math.sqrt(vel2.x ** 2 + vel2.y ** 2 + vel2.z ** 2);
+    const angSpeed1 = Math.sqrt(angVel1.x ** 2 + angVel1.y ** 2 + angVel1.z ** 2);
+    const angSpeed2 = Math.sqrt(angVel2.x ** 2 + angVel2.y ** 2 + angVel2.z ** 2);
+
+    if (speed1 < 0.1 && speed2 < 0.1 && angSpeed1 < 0.1 && angSpeed2 < 0.1) {
+      stableFrames.current++;
+      if (stableFrames.current > 30) {
+        hasCompleted.current = true;
+
+        // 最終キーフレームを追加
+        const pos1 = dice1Ref.current.translation();
+        const rot1 = dice1Ref.current.rotation();
+        const pos2 = dice2Ref.current.translation();
+        const rot2 = dice2Ref.current.rotation();
+
+        keyframesRef.current.push({
+          t: Math.round(elapsed),
+          d1: {
+            p: [Math.round(pos1.x * 100) / 100, Math.round(pos1.y * 100) / 100, Math.round(pos1.z * 100) / 100],
+            r: [Math.round(rot1.x * 1000) / 1000, Math.round(rot1.y * 1000) / 1000, Math.round(rot1.z * 1000) / 1000, Math.round(rot1.w * 1000) / 1000],
+          },
+          d2: {
+            p: [Math.round(pos2.x * 100) / 100, Math.round(pos2.y * 100) / 100, Math.round(pos2.z * 100) / 100],
+            r: [Math.round(rot2.x * 1000) / 1000, Math.round(rot2.y * 1000) / 1000, Math.round(rot2.z * 1000) / 1000, Math.round(rot2.w * 1000) / 1000],
+          },
+        });
+
+        // 出目を判定
+        const euler1 = new THREE.Euler().setFromQuaternion(new THREE.Quaternion(rot1.x, rot1.y, rot1.z, rot1.w));
+        const euler2 = new THREE.Euler().setFromQuaternion(new THREE.Quaternion(rot2.x, rot2.y, rot2.z, rot2.w));
+        const die1 = getDiceTopFace(euler1);
+        const die2 = getDiceTopFace(euler2);
+
+        onComplete(die1, die2, {
+          frames: keyframesRef.current,
+          result: { die1, die2 },
+        });
+      }
+    } else {
+      stableFrames.current = 0;
+    }
+  });
 
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <directionalLight
-        position={[5, 10, 5]}
-        intensity={1}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-      />
-      <pointLight position={[-5, 5, -5]} intensity={0.5} />
-
-      <Table />
-
-      <Dice
-        position={[-1.5, 0.5, 0]}
-        color="#dc2626"
-        onStabilized={setDice1Face}
-        diceRef={dice1Ref}
-        canReport={canReport}
-      />
-      <Dice
-        position={[1.5, 0.5, 0]}
-        color="#dc2626"
-        onStabilized={setDice2Face}
-        diceRef={dice2Ref}
-        canReport={canReport}
-      />
+      <Lights />
+      <PhysicsTable />
+      <PhysicsDice position={[-1.5, 0.5, 0]} color="#dc2626" diceRef={dice1Ref} />
+      <PhysicsDice position={[1.5, 0.5, 0]} color="#dc2626" diceRef={dice2Ref} />
     </>
   );
 }
 
-// 2D ダイス表示（観戦用）
-function DiceDisplay({ value }: { value: number }) {
-  // ダイスの目をドットで表現
-  const dots: [number, number][] = [];
-  const positions = {
-    center: [50, 50] as [number, number],
-    topLeft: [25, 25] as [number, number],
-    topRight: [75, 25] as [number, number],
-    middleLeft: [25, 50] as [number, number],
-    middleRight: [75, 50] as [number, number],
-    bottomLeft: [25, 75] as [number, number],
-    bottomRight: [75, 75] as [number, number],
-  };
+// ===== キーフレーム再生シーン =====
+function PlaybackScene({ animation }: { animation: DiceAnimation }) {
+  const dice1Ref = useRef<THREE.Group>(null);
+  const dice2Ref = useRef<THREE.Group>(null);
+  const startTimeRef = useRef<number | null>(null);
 
-  switch (value) {
-    case 1:
-      dots.push(positions.center);
-      break;
-    case 2:
-      dots.push(positions.topLeft, positions.bottomRight);
-      break;
-    case 3:
-      dots.push(positions.topLeft, positions.center, positions.bottomRight);
-      break;
-    case 4:
-      dots.push(positions.topLeft, positions.topRight, positions.bottomLeft, positions.bottomRight);
-      break;
-    case 5:
-      dots.push(positions.topLeft, positions.topRight, positions.center, positions.bottomLeft, positions.bottomRight);
-      break;
-    case 6:
-      dots.push(positions.topLeft, positions.topRight, positions.middleLeft, positions.middleRight, positions.bottomLeft, positions.bottomRight);
-      break;
-  }
+  useFrame(() => {
+    if (!dice1Ref.current || !dice2Ref.current || animation.frames.length === 0) return;
+
+    if (startTimeRef.current === null) {
+      startTimeRef.current = performance.now();
+    }
+
+    const elapsed = performance.now() - startTimeRef.current;
+    const frames = animation.frames;
+
+    // 現在のフレームを探す
+    let frameIndex = 0;
+    for (let i = 0; i < frames.length - 1; i++) {
+      if (elapsed >= frames[i].t && elapsed < frames[i + 1].t) {
+        frameIndex = i;
+        break;
+      }
+      if (elapsed >= frames[frames.length - 1].t) {
+        frameIndex = frames.length - 1;
+      }
+    }
+
+    const currentFrame = frames[frameIndex];
+    const nextFrame = frames[Math.min(frameIndex + 1, frames.length - 1)];
+
+    // 補間係数
+    const frameDuration = nextFrame.t - currentFrame.t;
+    const t = frameDuration > 0 ? Math.min((elapsed - currentFrame.t) / frameDuration, 1) : 1;
+
+    // 線形補間で位置を設定
+    dice1Ref.current.position.set(
+      currentFrame.d1.p[0] + (nextFrame.d1.p[0] - currentFrame.d1.p[0]) * t,
+      currentFrame.d1.p[1] + (nextFrame.d1.p[1] - currentFrame.d1.p[1]) * t,
+      currentFrame.d1.p[2] + (nextFrame.d1.p[2] - currentFrame.d1.p[2]) * t
+    );
+    dice2Ref.current.position.set(
+      currentFrame.d2.p[0] + (nextFrame.d2.p[0] - currentFrame.d2.p[0]) * t,
+      currentFrame.d2.p[1] + (nextFrame.d2.p[1] - currentFrame.d2.p[1]) * t,
+      currentFrame.d2.p[2] + (nextFrame.d2.p[2] - currentFrame.d2.p[2]) * t
+    );
+
+    // 球面線形補間で回転を設定
+    const quat1From = new THREE.Quaternion(currentFrame.d1.r[0], currentFrame.d1.r[1], currentFrame.d1.r[2], currentFrame.d1.r[3]);
+    const quat1To = new THREE.Quaternion(nextFrame.d1.r[0], nextFrame.d1.r[1], nextFrame.d1.r[2], nextFrame.d1.r[3]);
+    const quat2From = new THREE.Quaternion(currentFrame.d2.r[0], currentFrame.d2.r[1], currentFrame.d2.r[2], currentFrame.d2.r[3]);
+    const quat2To = new THREE.Quaternion(nextFrame.d2.r[0], nextFrame.d2.r[1], nextFrame.d2.r[2], nextFrame.d2.r[3]);
+
+    dice1Ref.current.quaternion.slerpQuaternions(quat1From, quat1To, t);
+    dice2Ref.current.quaternion.slerpQuaternions(quat2From, quat2To, t);
+  });
 
   return (
-    <div className="w-20 h-20 bg-red-600 rounded-lg relative shadow-lg border-2 border-red-700">
-      {dots.map(([x, y], i) => (
-        <div
-          key={i}
-          className="absolute w-4 h-4 bg-white rounded-full"
-          style={{
-            left: `${x}%`,
-            top: `${y}%`,
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
-      ))}
-    </div>
+    <>
+      <Lights />
+      <StaticTable />
+      <group ref={dice1Ref} position={[-1.5, 0.5, 0]}>
+        <PlaybackDice color="#dc2626" />
+      </group>
+      <group ref={dice2Ref} position={[1.5, 0.5, 0]}>
+        <PlaybackDice color="#dc2626" />
+      </group>
+    </>
+  );
+}
+
+// ===== 待機シーン =====
+function IdleScene() {
+  return (
+    <>
+      <Lights />
+      <StaticTable />
+      <group position={[-1.5, 0.5, 0]}>
+        <PlaybackDice color="#dc2626" />
+      </group>
+      <group position={[1.5, 0.5, 0]}>
+        <PlaybackDice color="#dc2626" />
+      </group>
+    </>
   );
 }
 
@@ -434,58 +417,49 @@ export const DiceRoller = ({
   isRolling,
   onStartRoll,
   isSpectator = false,
-  forcedResult,
+  animation,
   showButton,
 }: DiceRollerProps) => {
-  // ロール中でなければ物理シミュレーションを止める
-  const shouldPausePhysics = !isRolling;
+  const [playbackKey, setPlaybackKey] = useState(0);
 
-  // 観戦者モード: 2D表示
+  // animationが変わったらキーをリセット（再生を最初から）
+  useEffect(() => {
+    if (animation) {
+      setPlaybackKey(prev => prev + 1);
+    }
+  }, [animation]);
+
+  // 観戦者モード
   if (isSpectator) {
     return (
-      <div className="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center">
-        {forcedResult ? (
-          // 結果が出た場合
-          <div className="flex items-center gap-6">
-            <DiceDisplay value={forcedResult.die1} />
-            <DiceDisplay value={forcedResult.die2} />
-          </div>
-        ) : isRolling ? (
-          // 誰かがダイスを振っている最中
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-6 mb-4">
-              <div className="w-20 h-20 bg-red-600 rounded-lg animate-bounce shadow-lg" style={{ animationDelay: '0ms' }} />
-              <div className="w-20 h-20 bg-red-600 rounded-lg animate-bounce shadow-lg" style={{ animationDelay: '150ms' }} />
-            </div>
+      <div className="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden">
+        <Canvas shadows camera={{ position: [0, 8, 8], fov: 45 }}>
+          {animation ? (
+            <PlaybackScene key={playbackKey} animation={animation} />
+          ) : isRolling ? (
+            <IdleScene />
+          ) : (
+            <IdleScene />
+          )}
+        </Canvas>
+        {isRolling && !animation && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
             <p className="text-amber-400 animate-pulse">ダイスを振っています...</p>
-          </div>
-        ) : (
-          // 待機中
-          <div className="flex items-center gap-6 opacity-50">
-            <DiceDisplay value={1} />
-            <DiceDisplay value={1} />
           </div>
         )}
       </div>
     );
   }
 
-  // 自分がダイスを振るモード: 3D表示
+  // 自分がダイスを振るモード
   return (
     <div className="relative w-full h-64 bg-slate-900 rounded-xl overflow-hidden">
-      <Canvas
-        shadows
-        camera={{ position: [0, 8, 8], fov: 45 }}
-      >
-        <Physics gravity={[0, -20, 0]} paused={shouldPausePhysics}>
-          <Scene
-            onRollComplete={onRollComplete}
-            isRolling={isRolling}
-          />
+      <Canvas shadows camera={{ position: [0, 8, 8], fov: 45 }}>
+        <Physics gravity={[0, -20, 0]} paused={!isRolling}>
+          <RecordingScene onComplete={onRollComplete} isRolling={isRolling} />
         </Physics>
       </Canvas>
 
-      {/* ボタン表示 */}
       {showButton && (
         <button
           onClick={onStartRoll}

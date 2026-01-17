@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Skull, Heart, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-react';
-import type { GameState, DiceResult } from '../types/game';
+import type { GameState, DiceResult, DiceAnimation } from '../types/game';
 import { getRollRank, getRollDisplayName, findWeakestPlayers } from '../lib/dice';
 import { DiceRoller } from './DiceRoller';
 
@@ -45,8 +45,8 @@ export const GamePlayPhase = ({
     onUpdateGameState({ rollingPlayerId: playerId });
   }, [currentPlayer, isMyTurn, playerId, onUpdateGameState]);
 
-  // 3Dダイスの結果を受け取る
-  const handleRollComplete = useCallback((die1: number, die2: number) => {
+  // 3Dダイスの結果を受け取る（アニメーションデータ付き）
+  const handleRollComplete = useCallback((die1: number, die2: number, animation: DiceAnimation) => {
     const result: DiceResult = { die1, die2 };
     const rank = getRollRank(result);
     const isDesperado = rank.type === 'desperado';
@@ -84,6 +84,7 @@ export const GamePlayPhase = ({
       desperadoRolledThisRound: gameState.desperadoRolledThisRound || isDesperado,
       phase: allHaveRolled ? 'result' : 'rolling',
       rollingPlayerId: null, // ロール完了を通知
+      diceAnimation: animation, // キーフレームアニメーションをFirebaseに送信
     });
 
     setIsRolling(false);
@@ -128,6 +129,7 @@ export const GamePlayPhase = ({
         phase: 'game_end',
         winnerId: remainingPlayers[0]?.id ?? null,
         rollingPlayerId: null,
+        diceAnimation: null,
       });
     } else {
       // 次のラウンド開始
@@ -147,6 +149,7 @@ export const GamePlayPhase = ({
         turnOrder: newTurnOrder,
         lastLoser: loserIds[0] ?? null,
         rollingPlayerId: null,
+        diceAnimation: null,
       });
     }
   };
@@ -259,21 +262,9 @@ export const GamePlayPhase = ({
             // 振っている人
             const rollingPlayer = gameState.players.find(p => p.id === gameState.rollingPlayerId);
 
-            // 最後に振ったプレイヤー（自分以外）の結果を探す
-            // ターン順で最後に振った人を見つける
-            const otherPlayersWithRolls = gameState.players.filter(
-              p => p.id !== playerId && p.currentRoll && p.hasRolled
-            );
-            const lastOtherRoll = otherPlayersWithRolls.length > 0
-              ? otherPlayersWithRolls[otherPlayersWithRolls.length - 1]?.currentRoll
-              : null;
-
-            // 観戦側に表示する結果
-            // 1. 他の人がまさに振っている最中で結果が出た場合
-            // 2. 他の人が振り終わった結果がある場合
-            const forcedResult = (otherIsRolling && rollingPlayer?.currentRoll)
-              ? rollingPlayer.currentRoll
-              : (!isRolling && lastOtherRoll ? lastOtherRoll : null);
+            // 観戦者用のアニメーションデータ
+            // 自分が振っていないときにアニメーションデータがあれば再生
+            const spectatorAnimation = !iAmRolling ? gameState.diceAnimation : null;
 
             return (
               <div className="bg-slate-800/90 rounded-xl p-4 space-y-4">
@@ -300,7 +291,7 @@ export const GamePlayPhase = ({
                   onStartRoll={handleStartRoll}
                   onRollComplete={handleRollComplete}
                   isSpectator={!isMyTurn || currentPlayer?.hasRolled || gameState.phase === 'result'}
-                  forcedResult={forcedResult}
+                  animation={spectatorAnimation}
                   showButton={gameState.phase === 'rolling' && isMyTurn && currentPlayer && !currentPlayer.hasRolled && !isRolling}
                 />
 

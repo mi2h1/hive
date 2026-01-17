@@ -7,6 +7,25 @@ export interface DiceResult {
   die2: number; // 1-6
 }
 
+// ダイスの位置・回転（キーフレーム用）
+export interface DiceTransform {
+  p: [number, number, number]; // position
+  r: [number, number, number, number]; // rotation (quaternion)
+}
+
+// キーフレーム（1フレーム分）
+export interface DiceKeyframe {
+  t: number; // time (ms)
+  d1: DiceTransform; // dice1
+  d2: DiceTransform; // dice2
+}
+
+// ダイスアニメーションデータ
+export interface DiceAnimation {
+  frames: DiceKeyframe[];
+  result: DiceResult;
+}
+
 // 出目の種類
 export type RollType = 'desperado' | 'doubles' | 'normal';
 
@@ -38,6 +57,7 @@ export interface GameState {
   winnerId: string | null;
   // ダイスアニメーション同期用
   rollingPlayerId: string | null; // 現在ダイスを振っているプレイヤーID
+  diceAnimation: DiceAnimation | null; // キーフレームアニメーションデータ
 }
 
 // 部屋データ
