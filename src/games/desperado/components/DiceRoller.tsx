@@ -3,6 +3,7 @@ import { ThreeDDice, ThreeDDiceRollEvent, type IRoll } from 'dddice-js';
 
 // dddice APIキー
 const DDDICE_API_KEY = 'lu5TTPrLRZ4JcL2t7PwE9xBnkdltDqhlwyk33XnUdb7bd065';
+const DICE_THEME = 'untitled-dice-mkhmye02';
 
 interface DiceRollerProps {
   isHost: boolean;
@@ -29,7 +30,7 @@ export const DiceRoller = ({
   const [isConnected, setIsConnected] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('初期化中...');
-  const hasHandledRoll = useRef(false);
+  const lastRollUuid = useRef<string | null>(null);
   const isInitialized = useRef(false);
   const isSettingUpRoom = useRef(false);
   const onRollCompleteRef = useRef(onRollComplete);
@@ -47,13 +48,20 @@ export const DiceRoller = ({
     const initDddice = async () => {
       try {
         setConnectionStatus('SDK初期化中...');
-        const dddice = new ThreeDDice(canvasRef.current!, DDDICE_API_KEY);
+
+        // ダイスサイズを大きく設定
+        const dddice = new ThreeDDice(canvasRef.current!, DDDICE_API_KEY, {
+          dice: {
+            size: 1.5, // デフォルトより大きく
+          },
+        });
         dddiceRef.current = dddice;
 
         // ロール完了イベントをリッスン
         dddice.on(ThreeDDiceRollEvent.RollFinished, (roll: IRoll) => {
-          if (hasHandledRoll.current) return;
-          hasHandledRoll.current = true;
+          // 同じロールを複数回処理しない
+          if (lastRollUuid.current === roll.uuid) return;
+          lastRollUuid.current = roll.uuid;
 
           // d6のダイスの結果を取得
           const dice = roll.values || [];
@@ -65,9 +73,18 @@ export const DiceRoller = ({
           setIsRolling(false);
         });
 
-        // APIキーで開始（ゲストユーザー作成は不要）
+        // SDK開始
         await dddice.start();
-        console.log('dddice SDK started with API key');
+
+        // テーマをプリロード（ディレイ軽減）
+        try {
+          const theme = await dddice.api?.theme?.get(DICE_THEME);
+          if (theme?.data) {
+            dddice.loadTheme(theme.data);
+          }
+        } catch {
+          // テーマ取得失敗は無視
+        }
 
         setConnectionStatus('SDK起動完了');
         setIsSdkReady(true);
@@ -90,15 +107,7 @@ export const DiceRoller = ({
 
   // ルームの作成または参加
   useEffect(() => {
-    console.log('[DiceRoller] useEffect triggered:', {
-      isSdkReady,
-      isConnected,
-      isHost,
-      dddiceRoomSlug,
-      hasDddice: !!dddiceRef.current,
-    });
-
-    // SDK未初期化 or 接続済み or 処理中ならスキップ
+    // SDK未初期化 or 接続済みならスキップ
     if (!isSdkReady || isConnected) return;
 
     const dddice = dddiceRef.current;
@@ -106,10 +115,9 @@ export const DiceRoller = ({
 
     // ホストでスラッグがない → ルーム作成
     // スラッグがある → 参加
-    // どちらでもない → 待機（何もしない）
+    // どちらでもない → 待機
     const shouldCreateRoom = isHost && !dddiceRoomSlug;
     const shouldJoinRoom = !!dddiceRoomSlug;
-    console.log('[DiceRoller] shouldCreateRoom:', shouldCreateRoom, 'shouldJoinRoom:', shouldJoinRoom);
 
     if (!shouldCreateRoom && !shouldJoinRoom) {
       setConnectionStatus('ホストがルームを作成するのを待っています...');
@@ -125,12 +133,10 @@ export const DiceRoller = ({
         if (shouldCreateRoom) {
           // ホスト: 新しいルームを作成
           setConnectionStatus('ルーム作成中...');
-          console.log('Creating dddice room...');
 
           const response = await dddice.api?.room?.create();
           if (response?.data?.slug) {
             const newSlug = response.data.slug;
-            console.log('dddice room created:', newSlug);
 
             // Firebaseにスラッグを保存
             onDddiceRoomCreated(newSlug);
@@ -140,31 +146,24 @@ export const DiceRoller = ({
             dddice.connect(newSlug);
             setIsConnected(true);
             setConnectionStatus('接続完了');
-            console.log('dddice connected to room:', newSlug);
           } else {
-            console.error('Failed to create room - no slug returned');
             setConnectionStatus('ルーム作成失敗');
             isSettingUpRoom.current = false;
           }
         } else if (shouldJoinRoom && dddiceRoomSlug) {
           // 参加者: 既存のルームに参加
           setConnectionStatus('ルームに参加中...');
-          console.log('Joining dddice room:', dddiceRoomSlug);
 
           try {
-            // まずルームに参加（パーティシパントとして登録）
             await dddice.api?.room?.join(dddiceRoomSlug);
-            console.log('Joined room as participant');
-          } catch (joinErr) {
+          } catch {
             // 既に参加している場合はエラーを無視
-            console.log('Join room result:', joinErr);
           }
 
           // WebSocket接続
           dddice.connect(dddiceRoomSlug);
           setIsConnected(true);
           setConnectionStatus('接続完了');
-          console.log('dddice connected to room:', dddiceRoomSlug);
         }
       } catch (err) {
         console.error('Room setup error:', err);
@@ -182,23 +181,15 @@ export const DiceRoller = ({
 
     onStartRoll();
     setIsRolling(true);
-    hasHandledRoll.current = false;
 
     try {
-      console.log('Rolling dice in room:', dddiceRoomSlug);
-      // 2つのd6を振る（ルームを明示的に指定）
+      // 2つのd6を振る
       await dddiceRef.current.roll([
-        { theme: 'untitled-dice-mkhmye02', type: 'd6' },
-        { theme: 'untitled-dice-mkhmye02', type: 'd6' },
+        { theme: DICE_THEME, type: 'd6' },
+        { theme: DICE_THEME, type: 'd6' },
       ], { room: dddiceRoomSlug });
-    } catch (err: unknown) {
+    } catch (err) {
       console.error('Roll error:', err);
-      // エラーレスポンスの詳細を表示
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosErr = err as { response?: { data?: unknown; status?: number; headers?: unknown } };
-        console.error('Response data (full):', JSON.stringify(axiosErr.response?.data, null, 2));
-        console.error('Response status:', axiosErr.response?.status);
-      }
       setIsRolling(false);
     }
   }, [isConnected, isRolling, onStartRoll, dddiceRoomSlug]);

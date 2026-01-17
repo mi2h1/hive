@@ -33,8 +33,6 @@ export const GamePlayPhase = ({
   onUpdateGameState,
   onLeaveRoom,
 }: GamePlayPhaseProps) => {
-  console.log('[GamePlayPhase] render, dddiceRoomSlug:', gameState.dddiceRoomSlug, 'isHost:', isHost);
-
   const currentPlayer = gameState.players.find(p => p.id === playerId);
   const activePlayers = gameState.players.filter(p => !p.isEliminated);
   const isMyTurn = gameState.currentTurnPlayerId === playerId;
@@ -90,7 +88,6 @@ export const GamePlayPhase = ({
 
   // dddice ルームが作成された時
   const handleDddiceRoomCreated = useCallback((slug: string) => {
-    console.log('[GamePlayPhase] handleDddiceRoomCreated called with slug:', slug);
     onUpdateGameState({ dddiceRoomSlug: slug });
   }, [onUpdateGameState]);
 
