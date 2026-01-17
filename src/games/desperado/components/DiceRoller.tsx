@@ -13,6 +13,7 @@ interface DiceRollerProps {
   isMyTurn: boolean;
   onStartRoll: () => void;
   showButton: boolean;
+  rollingPlayerId: string | null;
 }
 
 export const DiceRoller = ({
@@ -23,6 +24,7 @@ export const DiceRoller = ({
   isMyTurn,
   onStartRoll,
   showButton,
+  rollingPlayerId,
 }: DiceRollerProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dddiceRef = useRef<ThreeDDice | null>(null);
@@ -42,6 +44,13 @@ export const DiceRoller = ({
     onRollCompleteRef.current = onRollComplete;
   }, [onRollComplete]);
 
+  // 誰かがロールを開始したらダイスをクリア
+  useEffect(() => {
+    if (rollingPlayerId && dddiceRef.current) {
+      dddiceRef.current.clear();
+    }
+  }, [rollingPlayerId]);
+
   // dddice 初期化
   useEffect(() => {
     if (!canvasRef.current || isInitialized.current) return;
@@ -58,11 +67,6 @@ export const DiceRoller = ({
           },
         });
         dddiceRef.current = dddice;
-
-        // ロール開始イベントをリッスン（全員でダイスをクリア）
-        dddice.on(ThreeDDiceRollEvent.RollStarted, () => {
-          dddice.clear();
-        });
 
         // ロール完了イベントをリッスン
         dddice.on(ThreeDDiceRollEvent.RollFinished, (roll: IRoll) => {

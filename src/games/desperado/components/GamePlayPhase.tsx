@@ -285,6 +285,7 @@ export const GamePlayPhase = ({
                   isMyTurn={isMyTurn && !currentPlayer?.hasRolled && gameState.phase === 'rolling'}
                   onStartRoll={handleStartRoll}
                   showButton={!!(gameState.phase === 'rolling' && isMyTurn && currentPlayer && !currentPlayer.hasRolled)}
+                  rollingPlayerId={gameState.rollingPlayerId}
                 />
 
                 {/* 結果表示 */}
