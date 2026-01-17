@@ -34,6 +34,8 @@ export const DiceRoller = ({
   const isInitialized = useRef(false);
   const isSettingUpRoom = useRef(false);
   const onRollCompleteRef = useRef(onRollComplete);
+  // 自分がロール中かどうかを追跡（イベントハンドラ内で参照）
+  const iAmRollingRef = useRef(false);
 
   // コールバックを常に最新に保つ
   useEffect(() => {
@@ -52,7 +54,7 @@ export const DiceRoller = ({
         // ダイスサイズを大きく設定
         const dddice = new ThreeDDice(canvasRef.current!, DDDICE_API_KEY, {
           dice: {
-            size: 1.5, // デフォルトより大きく
+            size: 2.5, // さらに大きく
           },
         });
         dddiceRef.current = dddice;
@@ -63,12 +65,16 @@ export const DiceRoller = ({
           if (lastRollUuid.current === roll.uuid) return;
           lastRollUuid.current = roll.uuid;
 
-          // d6のダイスの結果を取得
-          const dice = roll.values || [];
-          if (dice.length >= 2) {
-            const die1 = dice[0]?.value ?? 1;
-            const die2 = dice[1]?.value ?? 1;
-            onRollCompleteRef.current(die1, die2);
+          // 自分がロールした場合のみゲーム状態を更新
+          // 他のプレイヤーのロールはアニメーションだけ見る
+          if (iAmRollingRef.current) {
+            const dice = roll.values || [];
+            if (dice.length >= 2) {
+              const die1 = dice[0]?.value ?? 1;
+              const die2 = dice[1]?.value ?? 1;
+              onRollCompleteRef.current(die1, die2);
+            }
+            iAmRollingRef.current = false;
           }
           setIsRolling(false);
         });
@@ -81,6 +87,8 @@ export const DiceRoller = ({
           const theme = await dddice.api?.theme?.get(DICE_THEME);
           if (theme?.data) {
             dddice.loadTheme(theme.data);
+            // テーマリソースもプリロード
+            dddice.loadThemeResources(DICE_THEME);
           }
         } catch {
           // テーマ取得失敗は無視
@@ -181,6 +189,7 @@ export const DiceRoller = ({
 
     onStartRoll();
     setIsRolling(true);
+    iAmRollingRef.current = true; // 自分がロール中フラグを立てる
 
     try {
       // 2つのd6を振る
@@ -191,6 +200,7 @@ export const DiceRoller = ({
     } catch (err) {
       console.error('Roll error:', err);
       setIsRolling(false);
+      iAmRollingRef.current = false;
     }
   }, [isConnected, isRolling, onStartRoll, dddiceRoomSlug]);
 
