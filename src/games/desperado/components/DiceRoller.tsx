@@ -59,6 +59,11 @@ export const DiceRoller = ({
         });
         dddiceRef.current = dddice;
 
+        // ロール開始イベントをリッスン（全員でダイスをクリア）
+        dddice.on(ThreeDDiceRollEvent.RollStarted, () => {
+          dddice.clear();
+        });
+
         // ロール完了イベントをリッスン
         dddice.on(ThreeDDiceRollEvent.RollFinished, (roll: IRoll) => {
           // 同じロールを複数回処理しない
@@ -192,10 +197,7 @@ export const DiceRoller = ({
     iAmRollingRef.current = true; // 自分がロール中フラグを立てる
 
     try {
-      // 前のダイスをクリアしてから振る
-      dddiceRef.current.clear();
-
-      // 2つのd6を振る
+      // 2つのd6を振る（クリアは RollStarted イベントで全員同期される）
       await dddiceRef.current.roll([
         { theme: DICE_THEME, type: 'd6' },
         { theme: DICE_THEME, type: 'd6' },
