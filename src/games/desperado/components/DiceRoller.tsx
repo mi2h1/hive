@@ -28,6 +28,16 @@ const DICE_FACES = {
   negZ: 5, // 後面
 };
 
+// 各出目を上面にするための回転（Euler角）
+const DICE_ROTATIONS: Record<number, [number, number, number]> = {
+  1: [0, 0, 0],                          // 1が上（デフォルト）
+  2: [-Math.PI / 2, 0, 0],               // 2が上
+  3: [0, 0, Math.PI / 2],                // 3が上
+  4: [0, 0, -Math.PI / 2],               // 4が上
+  5: [Math.PI / 2, 0, 0],                // 5が上
+  6: [Math.PI, 0, 0],                    // 6が上
+};
+
 // サイコロの上面を判定
 function getDiceTopFace(rotation: THREE.Euler): number {
   const up = new THREE.Vector3(0, 1, 0);
@@ -350,13 +360,40 @@ function Scene({
     }
   }, [dice1Face, dice2Face, onRollComplete, isSpectator]);
 
-  // 観戦モード: 強制結果が来たら即座にセット
+  // 観戦モード: 強制結果が来たらダイスを正しい向きに回転
   useEffect(() => {
     if (isSpectator && forcedResult && !hasReportedForcedResult.current) {
       hasReportedForcedResult.current = true;
       setDice1Face(forcedResult.die1);
       setDice2Face(forcedResult.die2);
       setCanReport(false); // これ以上の報告を止める
+
+      // ダイスを正しい向きに設定
+      if (dice1Ref.current && dice2Ref.current) {
+        // テーブル上の固定位置に移動
+        dice1Ref.current.setTranslation({ x: -1.5, y: 0.5, z: 0 }, true);
+        dice2Ref.current.setTranslation({ x: 1.5, y: 0.5, z: 0 }, true);
+
+        // 速度をゼロにして止める
+        dice1Ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        dice2Ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        dice1Ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        dice2Ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+
+        // 正しい出目が上を向くように回転を設定
+        const rotation1 = DICE_ROTATIONS[forcedResult.die1] || [0, 0, 0];
+        const rotation2 = DICE_ROTATIONS[forcedResult.die2] || [0, 0, 0];
+
+        const quat1 = new THREE.Quaternion().setFromEuler(
+          new THREE.Euler(rotation1[0], rotation1[1], rotation1[2])
+        );
+        const quat2 = new THREE.Quaternion().setFromEuler(
+          new THREE.Euler(rotation2[0], rotation2[1], rotation2[2])
+        );
+
+        dice1Ref.current.setRotation(quat1, true);
+        dice2Ref.current.setRotation(quat2, true);
+      }
     }
     // forcedResultがnullになったらリセット
     if (!forcedResult) {
@@ -435,23 +472,6 @@ export const DiceRoller = ({
         </button>
       )}
 
-      {/* 観戦モードで結果が出た場合、結果をオーバーレイ表示 */}
-      {isSpectator && forcedResult && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="bg-slate-800 rounded-xl p-6 text-center">
-            <p className="text-amber-400 text-sm mb-2">結果</p>
-            <div className="flex items-center justify-center gap-4 text-6xl font-bold text-white">
-              <span className="bg-red-600 w-16 h-16 rounded-lg flex items-center justify-center">
-                {forcedResult.die1}
-              </span>
-              <span className="text-slate-500">-</span>
-              <span className="bg-red-600 w-16 h-16 rounded-lg flex items-center justify-center">
-                {forcedResult.die2}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
