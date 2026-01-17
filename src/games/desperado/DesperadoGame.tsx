@@ -115,12 +115,12 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
   }
 
   // ゲームプレイ画面
-  if ((phase === 'rolling' || phase === 'result') && gameState && playerId && roomCode) {
+  if ((phase === 'rolling' || phase === 'result') && gameState && playerId) {
     return (
       <GamePlayPhase
         gameState={gameState}
         playerId={playerId}
-        roomCode={roomCode}
+        isHost={isHost}
         onUpdateGameState={updateGameState}
         onLeaveRoom={handleLeaveRoom}
       />

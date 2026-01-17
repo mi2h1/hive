@@ -7,7 +7,7 @@ import { DiceRoller } from './DiceRoller';
 interface GamePlayPhaseProps {
   gameState: GameState;
   playerId: string;
-  roomCode: string;
+  isHost: boolean;
   onUpdateGameState: (state: Partial<GameState>) => void;
   onLeaveRoom: () => void;
 }
@@ -29,7 +29,7 @@ const DiceIcon = ({ value, className }: { value: number; className?: string }) =
 export const GamePlayPhase = ({
   gameState,
   playerId,
-  roomCode,
+  isHost,
   onUpdateGameState,
   onLeaveRoom,
 }: GamePlayPhaseProps) => {
@@ -85,6 +85,11 @@ export const GamePlayPhase = ({
       rollingPlayerId: null,
     });
   }, [gameState.players, gameState.turnOrder, gameState.desperadoRolledThisRound, playerId, onUpdateGameState]);
+
+  // dddice ルームが作成された時
+  const handleDddiceRoomCreated = useCallback((slug: string) => {
+    onUpdateGameState({ dddiceRoomSlug: slug });
+  }, [onUpdateGameState]);
 
   // 次のラウンドへ
   const handleNextRound = () => {
@@ -273,7 +278,9 @@ export const GamePlayPhase = ({
 
                 {/* DiceRoller - dddiceで全員に同期表示 */}
                 <DiceRoller
-                  roomCode={roomCode}
+                  isHost={isHost}
+                  dddiceRoomSlug={gameState.dddiceRoomSlug}
+                  onDddiceRoomCreated={handleDddiceRoomCreated}
                   onRollComplete={handleRollComplete}
                   isMyTurn={isMyTurn && !currentPlayer?.hasRolled && gameState.phase === 'rolling'}
                   onStartRoll={handleStartRoll}

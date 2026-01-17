@@ -57,7 +57,7 @@ export interface GameState {
   winnerId: string | null;
   // ダイスアニメーション同期用
   rollingPlayerId: string | null; // 現在ダイスを振っているプレイヤーID
-  diceAnimation: DiceAnimation | null; // キーフレームアニメーションデータ
+  dddiceRoomSlug: string | null; // dddice のルームスラッグ
 }
 
 // 部屋データ
