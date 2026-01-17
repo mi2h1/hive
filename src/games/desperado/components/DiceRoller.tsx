@@ -25,11 +25,13 @@ export const DiceRoller = ({
 }: DiceRollerProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dddiceRef = useRef<ThreeDDice | null>(null);
+  const [isSdkReady, setIsSdkReady] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('初期化中...');
   const hasHandledRoll = useRef(false);
   const isInitialized = useRef(false);
+  const roomSetupAttempted = useRef(false);
 
   // dddice 初期化
   useEffect(() => {
@@ -61,6 +63,7 @@ export const DiceRoller = ({
         await dddice.start();
         setConnectionStatus('SDK起動完了');
         console.log('dddice SDK started');
+        setIsSdkReady(true);
       } catch (err) {
         console.error('dddice initialization error:', err);
         setConnectionStatus('SDK初期化エラー');
@@ -79,10 +82,14 @@ export const DiceRoller = ({
 
   // ルームの作成または参加
   useEffect(() => {
+    if (!isSdkReady || isConnected || roomSetupAttempted.current) return;
+
     const dddice = dddiceRef.current;
-    if (!dddice || isConnected) return;
+    if (!dddice) return;
 
     const setupRoom = async () => {
+      roomSetupAttempted.current = true;
+
       try {
         if (isHost && !dddiceRoomSlug) {
           // ホスト: 新しいルームを作成
@@ -106,6 +113,7 @@ export const DiceRoller = ({
           } else {
             console.error('Failed to create room - no slug returned');
             setConnectionStatus('ルーム作成失敗');
+            roomSetupAttempted.current = false; // リトライ可能に
           }
         } else if (dddiceRoomSlug) {
           // 参加者: 既存のルームに参加
@@ -129,17 +137,17 @@ export const DiceRoller = ({
         } else {
           // ホストでない＆スラッグがない = ホストがルームを作成するのを待つ
           setConnectionStatus('ホストがルームを作成するのを待っています...');
+          roomSetupAttempted.current = false; // スラッグが来たらリトライ
         }
       } catch (err) {
         console.error('Room setup error:', err);
         setConnectionStatus('接続エラー');
+        roomSetupAttempted.current = false; // リトライ可能に
       }
     };
 
-    // SDKが起動してから少し待ってルーム設定
-    const timer = setTimeout(setupRoom, 500);
-    return () => clearTimeout(timer);
-  }, [isHost, dddiceRoomSlug, isConnected, onDddiceRoomCreated]);
+    setupRoom();
+  }, [isSdkReady, isHost, dddiceRoomSlug, isConnected, onDddiceRoomCreated]);
 
   // ダイスを振る
   const handleRoll = useCallback(async () => {
