@@ -385,7 +385,12 @@ function App() {
           {/* デスペラード */}
           <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-amber-500 transition-all">
             <div className="h-40 bg-gradient-to-br from-amber-600 to-red-600 flex items-center justify-center">
-              <span className="text-3xl font-bold text-white">Desperado</span>
+              <img
+                src="/boards/images/vec_logo_desperado.svg"
+                alt="Desperado"
+                className="h-12"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
             </div>
             <div className="p-4">
               <h2 className="text-lg font-bold text-white mb-2">デスペラード</h2>
@@ -394,10 +399,11 @@ function App() {
               </p>
               <div className="flex gap-2">
                 <button
-                  disabled
-                  className="flex-1 px-4 py-2 bg-slate-600 rounded-lg text-slate-400 font-bold cursor-not-allowed"
+                  onClick={() => selectGame('desperado')}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-500 to-red-500
+                    hover:from-amber-600 hover:to-red-600 rounded-lg text-white font-bold transition-all"
                 >
-                  開発中
+                  遊ぶ
                 </button>
               </div>
             </div>

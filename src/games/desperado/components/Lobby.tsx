@@ -73,7 +73,12 @@ export const Lobby = ({
                 >
                   <HelpCircle className="w-5 h-5" />
                 </button>
-                <h1 className="text-4xl font-bold text-white mb-2">Desperado</h1>
+                <img
+                  src="/boards/images/vec_logo_desperado.svg"
+                  alt="Desperado"
+                  className="h-10 mx-auto mb-2"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
                 <p className="text-amber-400 text-sm">ダイスバトルゲーム</p>
               </div>
 
@@ -197,7 +202,12 @@ export const Lobby = ({
               >
                 <HelpCircle className="w-5 h-5" />
               </button>
-              <h1 className="text-5xl font-bold text-white text-center mb-2">Desperado</h1>
+              <img
+                src="/boards/images/vec_logo_desperado.svg"
+                alt="Desperado"
+                className="h-12 mx-auto mb-2"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
               <p className="text-amber-400 text-center text-sm">ダイスバトルゲーム</p>
             </div>
             <div className="text-slate-400 text-center mb-6">

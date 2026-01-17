@@ -159,7 +159,12 @@ export const GamePlayPhase = ({
         <div className="max-w-2xl mx-auto">
           {/* ヘッダー */}
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-white mb-1">Desperado</h1>
+            <img
+              src="/boards/images/vec_logo_desperado.svg"
+              alt="Desperado"
+              className="h-8 mx-auto mb-1"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
             <p className="text-amber-400">ラウンド {gameState.currentRound}</p>
             {gameState.desperadoRolledThisRound && (
               <p className="text-red-400 font-bold mt-1 animate-pulse">
