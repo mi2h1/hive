@@ -69,10 +69,15 @@ export const DiceRoller = ({
         await dddice.start();
         console.log('dddice SDK started');
 
-        // ゲストユーザーを作成（認証用）
+        // ゲストユーザーを作成し、返されたトークンを使用
         try {
           const guestResponse = await dddice.api?.user?.guest();
           console.log('Guest user created:', guestResponse);
+          if (guestResponse?.data) {
+            // 新しいトークンでSDKを再初期化
+            dddice.apiKey = guestResponse.data;
+            console.log('API key updated to guest token');
+          }
         } catch (guestErr) {
           console.log('Guest user creation failed (may already exist):', guestErr);
         }
