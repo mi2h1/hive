@@ -23,17 +23,20 @@ interface Gem3DProps {
 const Gem3D = ({ color, initialPosition, initialRotation }: Gem3DProps) => {
   const rigidBodyRef = useRef<RigidBodyType>(null);
   const [isSleeping, setIsSleeping] = useState(false);
+  const [frameCount, setFrameCount] = useState(0);
   const colorConfig = gemColors[color];
 
-  // 宝石が静止したかチェック
+  // 宝石が静止したかチェック（少し待ってから判定開始）
   useFrame(() => {
-    if (rigidBodyRef.current && !isSleeping) {
+    setFrameCount(prev => prev + 1);
+
+    if (rigidBodyRef.current && !isSleeping && frameCount > 60) {
       const vel = rigidBodyRef.current.linvel();
       const angVel = rigidBodyRef.current.angvel();
       const speed = Math.sqrt(vel.x ** 2 + vel.y ** 2 + vel.z ** 2);
       const angSpeed = Math.sqrt(angVel.x ** 2 + angVel.y ** 2 + angVel.z ** 2);
 
-      if (speed < 0.01 && angSpeed < 0.01) {
+      if (speed < 0.05 && angSpeed < 0.05) {
         setIsSleeping(true);
         rigidBodyRef.current.setEnabled(false);
       }
@@ -48,8 +51,9 @@ const Gem3D = ({ color, initialPosition, initialRotation }: Gem3DProps) => {
       colliders="hull"
       restitution={0.3}
       friction={0.8}
-      linearDamping={0.5}
-      angularDamping={0.5}
+      linearDamping={0.3}
+      angularDamping={0.3}
+      linearVelocity={[0, -2, 0]}
     >
       <mesh castShadow receiveShadow>
         <octahedronGeometry args={[0.35, 0]} />
@@ -167,11 +171,13 @@ export const GemPlatform3D = ({ gems, className = '' }: GemPlatform3DProps) => {
     setKey(prev => prev + 1);
   }, [gems.map(g => g.id).join(',')]);
 
+  const platformSize = 180;
+
   if (gems.length === 0) {
     return (
       <div
-        className={`flex items-center justify-center bg-slate-700/30 rounded-lg ${className}`}
-        style={{ width: 140, height: 140 }}
+        className={`flex items-center justify-center bg-slate-700/50 rounded-lg ${className}`}
+        style={{ width: platformSize, height: platformSize }}
       >
         <span className="text-slate-500 text-sm">空</span>
       </div>
@@ -181,15 +187,16 @@ export const GemPlatform3D = ({ gems, className = '' }: GemPlatform3DProps) => {
   return (
     <div
       className={`rounded-lg overflow-hidden ${className}`}
-      style={{ width: 140, height: 140 }}
+      style={{ width: platformSize, height: platformSize }}
     >
       <Canvas
         key={key}
         shadows
         camera={{ position: [0, 4, 5], fov: 40 }}
         gl={{ antialias: true, alpha: true }}
+        style={{ background: 'transparent' }}
       >
-        <color attach="background" args={['#1e293b']} />
+        <color attach="background" args={['#334155']} />
         <PlatformScene gems={gems} />
       </Canvas>
     </div>

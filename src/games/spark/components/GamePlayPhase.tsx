@@ -272,7 +272,7 @@ export const GamePlayPhase = ({
           {/* 宝石台 */}
           <div className="bg-slate-800/90 rounded-xl p-3 mb-3">
             <div className="flex flex-wrap justify-center gap-2">
-              {gameState.platforms.map((platform, index) => {
+              {gameState.platforms.map((platform) => {
                 const isSelected = selectedType === 'platform' && selectedTargetId === platform.id;
                 const isEmpty = platform.gems.length === 0;
 
@@ -289,13 +289,12 @@ export const GamePlayPhase = ({
                         : 'border-slate-600 bg-slate-700/50 hover:border-cyan-400/50'
                     } ${(hasSubmitted || isResting) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    <div className="text-slate-400 text-xs mb-1 text-center">台{index + 1}</div>
                     {!isEmpty ? (
-                      <GemPlatform3D gems={platform.gems} className="mx-auto" />
+                      <GemPlatform3D gems={platform.gems} />
                     ) : (
                       <div
-                        className="text-slate-500 text-xs flex items-center justify-center bg-slate-700/30 rounded-lg"
-                        style={{ width: 140, height: 140 }}
+                        className="text-slate-500 text-xs flex items-center justify-center bg-slate-700/50 rounded-lg"
+                        style={{ width: 180, height: 180 }}
                       >
                         空
                       </div>
