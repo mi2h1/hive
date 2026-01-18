@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ref, set, onValue, off, update, remove, get, onDisconnect } from 'firebase/database';
 import { db } from '../../../lib/firebase';
-import type { GameState, Player, GameSettings, RoomData, Gem, Platform, PlayerAction } from '../types/game';
+import type { GameState, Player, GameSettings, RoomData, Gem, Platform, PlayerAction, RoundResult } from '../types/game';
 import { DEFAULT_SETTINGS } from '../types/game';
 
 // 古いルームを削除（24時間以上前のルーム）
@@ -200,6 +200,23 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
           gems: normalizeArray<Gem>(p.gems),
         }));
 
+        // lastRoundResultsの正規化
+        let normalizedLastRoundResults: RoundResult | undefined;
+        if (gs?.lastRoundResults) {
+          const lrr = gs.lastRoundResults;
+          normalizedLastRoundResults = {
+            actions: normalizeArray<RoundResult['actions'][number]>(lrr.actions),
+            transfers: normalizeArray<RoundResult['transfers'][number]>(lrr.transfers).map(t => ({
+              ...t,
+              gems: normalizeArray<Gem>(t.gems),
+            })),
+            barriers: normalizeArray<RoundResult['barriers'][number]>(lrr.barriers).map(b => ({
+              ...b,
+              gems: normalizeArray<Gem>(b.gems),
+            })),
+          };
+        }
+
         const normalizedData: RoomData = {
           ...data,
           gameState: {
@@ -208,6 +225,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
             platforms: normalizedPlatforms,
             bag: normalizeArray<Gem>(gs?.bag),
             settings: gs?.settings ?? DEFAULT_SETTINGS,
+            lastRoundResults: normalizedLastRoundResults,
           },
         };
         setRoomData(normalizedData);
