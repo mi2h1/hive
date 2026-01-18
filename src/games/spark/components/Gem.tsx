@@ -125,6 +125,7 @@ export const GemPlatform = ({ gems, className = '' }: GemPlatformProps) => {
               top: y,
               transform: `rotate(${rotate}deg)`,
               zIndex: index,
+              opacity: 0.9,
             }}
           />
         );
