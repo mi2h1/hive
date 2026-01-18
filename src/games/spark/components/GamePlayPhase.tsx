@@ -134,6 +134,20 @@ export const GamePlayPhase = ({
             : 'border-slate-600 bg-slate-800/50 hover:border-slate-500'
         } ${(hasSubmitted || isResting || isPlayerResting) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
+        {/* 名前（左上固定） */}
+        <div className="absolute top-1 left-2">
+          <span className={`text-xs font-bold ${isMe ? 'text-cyan-300' : 'text-white'}`}>
+            {player.name}{isMe && ' (自分)'}
+          </span>
+        </div>
+
+        {/* 確定ポイント（右上） */}
+        {score.total > 0 && (
+          <div className="absolute top-1 right-6">
+            <span className="text-xs text-green-400 font-bold">{score.total}pt</span>
+          </div>
+        )}
+
         {/* 休み中のプレイヤーはバツ表示 */}
         {isPlayerResting && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60 rounded-lg z-10">
@@ -141,18 +155,8 @@ export const GamePlayPhase = ({
           </div>
         )}
 
-        {/* ヘッダー: 名前と確定ポイント */}
-        <div className="flex items-center justify-between mb-1">
-          <span className={`text-xs font-bold truncate ${isMe ? 'text-cyan-300' : 'text-white'}`}>
-            {player.name}{isMe && ' (自分)'}
-          </span>
-          {score.total > 0 && (
-            <span className="text-xs text-green-400 font-bold">{score.total}pt</span>
-          )}
-        </div>
-
         {/* 金庫の宝石 */}
-        <div className="flex flex-wrap gap-0.5">
+        <div className="flex flex-wrap gap-0.5 mt-5">
           {sortedVault.length > 0 ? (
             sortedVault.slice(0, 12).map(gem => (
               <Gem key={gem.id} color={gem.color} size="sm" />
@@ -285,8 +289,8 @@ export const GamePlayPhase = ({
                       isSelected
                         ? 'border-cyan-400 bg-cyan-500/20'
                         : isEmpty
-                        ? 'border-transparent opacity-50'
-                        : 'border-transparent hover:border-cyan-400/50'
+                        ? 'border-white/10 opacity-50'
+                        : 'border-white/20 hover:border-cyan-400/50'
                     } ${(hasSubmitted || isResting) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     {!isEmpty ? (
