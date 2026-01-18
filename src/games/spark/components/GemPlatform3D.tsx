@@ -234,7 +234,7 @@ const PlatformScene = ({ gems }: { gems: { id: string; color: GemColor }[] }) =>
       {/* 物理シミュレーション */}
       <Physics gravity={[0, -15, 0]}>
         {/* 台（床）- 宝石の先端が埋まらないよう下げる */}
-        <RigidBody type="fixed" position={[0, -0.5, 0]}>
+        <RigidBody type="fixed" position={[0, -0.8, 0]}>
           <CuboidCollider args={[1.5, 0.1, 1.5]} />
           <mesh receiveShadow>
             <boxGeometry args={[3, 0.2, 3]} />
