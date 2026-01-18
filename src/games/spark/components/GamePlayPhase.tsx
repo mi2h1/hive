@@ -162,19 +162,19 @@ export const GamePlayPhase = ({
             : 'border-slate-600 bg-slate-800/50 hover:border-slate-500'
         } ${(hasSubmitted || isResting || isPlayerResting) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
-        {/* 名前（左上固定）+ 確定チェック */}
-        <div className="absolute top-1 left-2 flex items-center gap-1">
-          <span className={`text-xs font-bold ${isMe ? 'text-cyan-300' : 'text-white'}`}>
-            {player.name}{isMe && ' (自分)'}
+        {/* ヘッダー: 名前+チェック（左） / 確定ポイント（右） */}
+        <div className="absolute top-1 left-2 right-2 flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <span className={`text-xs font-bold ${isMe ? 'text-cyan-300' : 'text-white'}`}>
+              {player.name}{isMe && ' (自分)'}
+            </span>
+            {player.isReady && !isPlayerResting && (
+              <Check className="w-3 h-3 text-green-400" />
+            )}
+          </div>
+          <span className={`text-xs font-bold ${score.total > 0 ? 'text-green-400' : 'text-slate-500'}`}>
+            {score.total}pt
           </span>
-          {player.isReady && !isPlayerResting && (
-            <Check className="w-3 h-3 text-green-400" />
-          )}
-        </div>
-
-        {/* 確定ポイント（右上） */}
-        <div className="absolute top-1 right-6">
-          <span className={`text-xs font-bold ${score.total > 0 ? 'text-green-400' : 'text-slate-500'}`}>{score.total}pt</span>
         </div>
 
         {/* 休み中のプレイヤーはバツ表示 */}
