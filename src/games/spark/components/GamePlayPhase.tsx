@@ -128,7 +128,7 @@ export const GamePlayPhase = ({
         disabled={hasSubmitted || isResting || isPlayerResting}
         className={`flex-1 min-w-[100px] h-28 rounded-lg border-2 p-2 transition-all relative ${
           isSelected
-            ? 'border-cyan-400 bg-cyan-600/30'
+            ? 'border-amber-400 bg-amber-600/30'
             : isMe
             ? 'border-cyan-500 bg-cyan-900/30'
             : 'border-slate-600 bg-slate-800/50 hover:border-slate-500'
@@ -287,10 +287,10 @@ export const GamePlayPhase = ({
                     disabled={hasSubmitted || isResting || isEmpty}
                     className={`p-1 rounded-lg border-2 transition-all ${
                       isSelected
-                        ? 'border-cyan-400 bg-cyan-500/20'
+                        ? 'border-amber-400 bg-amber-500/20'
                         : isEmpty
                         ? 'border-white/10 opacity-50'
-                        : 'border-white/20 hover:border-cyan-400/50'
+                        : 'border-white/20 hover:border-amber-400/50'
                     } ${(hasSubmitted || isResting) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     {!isEmpty ? (
