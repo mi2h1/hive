@@ -3,7 +3,6 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier';
 import { Environment } from '@react-three/drei';
 import type { RigidBody as RigidBodyType } from '@dimforge/rapier3d-compat';
-import * as THREE from 'three';
 import type { GemColor } from '../types/game';
 
 // 宝石の色定義（MeshPhysicalMaterial用）
@@ -13,108 +12,6 @@ const gemColors: Record<GemColor, { color: string; emissive: string }> = {
   red: { color: '#f87171', emissive: '#b91c1c' },
   white: { color: '#f8fafc', emissive: '#cbd5e1' },
 };
-
-// ブリリアントカットのジオメトリを作成
-const createBrilliantCutGeometry = (): THREE.BufferGeometry => {
-  const geometry = new THREE.BufferGeometry();
-
-  // パラメータ
-  const tableRadius = 0.22;    // テーブル面の半径
-  const crownRadius = 0.35;    // クラウン（最大幅）の半径
-  const girdleHeight = 0.05;   // ガードルの高さ
-  const crownHeight = 0.15;    // クラウンの高さ
-  const pavilionDepth = 0.35;  // パビリオンの深さ
-  const segments = 8;          // 面の数
-
-  const vertices: number[] = [];
-  const indices: number[] = [];
-
-  // 頂点を追加するヘルパー
-  const addVertex = (x: number, y: number, z: number) => {
-    vertices.push(x, y, z);
-    return vertices.length / 3 - 1;
-  };
-
-  // 中心点
-  const topCenter = addVertex(0, crownHeight + girdleHeight / 2, 0);
-  const bottomPoint = addVertex(0, -(pavilionDepth + girdleHeight / 2), 0);
-
-  // テーブル面の頂点（上部の平らな面）
-  const tableVertices: number[] = [];
-  for (let i = 0; i < segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    tableVertices.push(
-      addVertex(
-        Math.cos(angle) * tableRadius,
-        crownHeight + girdleHeight / 2,
-        Math.sin(angle) * tableRadius
-      )
-    );
-  }
-
-  // クラウン（ガードル位置）の頂点
-  const crownVertices: number[] = [];
-  for (let i = 0; i < segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    crownVertices.push(
-      addVertex(
-        Math.cos(angle) * crownRadius,
-        girdleHeight / 2,
-        Math.sin(angle) * crownRadius
-      )
-    );
-  }
-
-  // ガードル下の頂点
-  const girdleBottomVertices: number[] = [];
-  for (let i = 0; i < segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    girdleBottomVertices.push(
-      addVertex(
-        Math.cos(angle) * crownRadius,
-        -girdleHeight / 2,
-        Math.sin(angle) * crownRadius
-      )
-    );
-  }
-
-  // テーブル面（上部の八角形）
-  for (let i = 0; i < segments; i++) {
-    const next = (i + 1) % segments;
-    indices.push(topCenter, tableVertices[i], tableVertices[next]);
-  }
-
-  // クラウンファセット（テーブルからガードルへ）
-  for (let i = 0; i < segments; i++) {
-    const next = (i + 1) % segments;
-    // 三角形1
-    indices.push(tableVertices[i], crownVertices[i], tableVertices[next]);
-    // 三角形2
-    indices.push(tableVertices[next], crownVertices[i], crownVertices[next]);
-  }
-
-  // ガードル（側面の帯）
-  for (let i = 0; i < segments; i++) {
-    const next = (i + 1) % segments;
-    indices.push(crownVertices[i], girdleBottomVertices[i], crownVertices[next]);
-    indices.push(crownVertices[next], girdleBottomVertices[i], girdleBottomVertices[next]);
-  }
-
-  // パビリオンファセット（ガードルから先端へ）
-  for (let i = 0; i < segments; i++) {
-    const next = (i + 1) % segments;
-    indices.push(girdleBottomVertices[i], bottomPoint, girdleBottomVertices[next]);
-  }
-
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-
-  return geometry;
-};
-
-// ブリリアントカットジオメトリをキャッシュ
-const brilliantGeometry = createBrilliantCutGeometry();
 
 interface Gem3DProps {
   id: string;
@@ -159,7 +56,8 @@ const Gem3D = ({ color, initialPosition, initialRotation }: Gem3DProps) => {
       angularDamping={0.3}
       linearVelocity={[0, -2, 0]}
     >
-      <mesh castShadow receiveShadow geometry={brilliantGeometry}>
+      <mesh castShadow receiveShadow>
+        <octahedronGeometry args={[0.35, 0]} />
         <meshStandardMaterial
           color={colorConfig.color}
           emissive={colorConfig.emissive}
