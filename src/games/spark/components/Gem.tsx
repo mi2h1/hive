@@ -93,24 +93,39 @@ interface GemPlatformProps {
 export const GemPlatform = ({ gems, className = '' }: GemPlatformProps) => {
   const gemSize = 22; // 宝石のサイズ（px）
   const platformSize = 80; // 台のサイズ（px）
-  const padding = 6; // 端からの余白
+
+  // 3x3のグリッドで配置（最大9個）
+  const cols = 3;
+  const rows = 3;
+  const cellWidth = platformSize / cols;
+  const cellHeight = platformSize / rows;
+
+  // グリッド位置をシャッフル（gem.idベースで決定的に）
+  const positions = Array.from({ length: cols * rows }, (_, i) => i);
+  const firstGemId = gems[0]?.id || 'default';
+  for (let i = positions.length - 1; i > 0; i--) {
+    const j = Math.floor(seededRandom(firstGemId, i) * (i + 1));
+    [positions[i], positions[j]] = [positions[j], positions[i]];
+  }
 
   return (
     <div
       className={`relative ${className}`}
       style={{ width: platformSize, height: platformSize }}
     >
-      {gems.map((gem, index) => {
-        // gem.idから決定的なランダム値を生成
-        const randX = seededRandom(gem.id, 0);
-        const randY = seededRandom(gem.id, 1);
-        const randRotate = seededRandom(gem.id, 2);
+      {gems.slice(0, 9).map((gem, index) => {
+        const pos = positions[index];
+        const col = pos % cols;
+        const row = Math.floor(pos / cols);
 
-        // 位置を計算（台の範囲内に収める）
-        const maxOffset = platformSize - gemSize - padding * 2;
-        const x = padding + randX * maxOffset;
-        const y = padding + randY * maxOffset;
-        const rotate = (randRotate - 0.5) * 40; // -20deg ~ +20deg
+        // セル内でのランダムオフセット（小さめ）
+        const offsetX = (seededRandom(gem.id, 0) - 0.5) * 6;
+        const offsetY = (seededRandom(gem.id, 1) - 0.5) * 6;
+        const rotate = (seededRandom(gem.id, 2) - 0.5) * 30; // -15deg ~ +15deg
+
+        // セルの中央に配置
+        const x = col * cellWidth + (cellWidth - gemSize) / 2 + offsetX;
+        const y = row * cellHeight + (cellHeight - gemSize) / 2 + offsetY;
 
         return (
           <img
