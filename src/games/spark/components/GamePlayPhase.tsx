@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { X, Check } from 'lucide-react';
 import type { GameState, PlayerAction } from '../types/game';
-import { Gem, GemPlatform } from './Gem';
+import { Gem } from './Gem';
+import { GemPlatform3D } from './GemPlatform3D';
 import { calculateScore } from '../lib/gems';
 
 interface GamePlayPhaseProps {
@@ -290,11 +291,11 @@ export const GamePlayPhase = ({
                   >
                     <div className="text-slate-400 text-xs mb-1 text-center">台{index + 1}</div>
                     {!isEmpty ? (
-                      <GemPlatform gems={platform.gems} className="mx-auto" />
+                      <GemPlatform3D gems={platform.gems} className="mx-auto" />
                     ) : (
                       <div
-                        className="text-slate-500 text-xs flex items-center justify-center"
-                        style={{ width: 80, height: 80 }}
+                        className="text-slate-500 text-xs flex items-center justify-center bg-slate-700/30 rounded-lg"
+                        style={{ width: 140, height: 140 }}
                       >
                         空
                       </div>
