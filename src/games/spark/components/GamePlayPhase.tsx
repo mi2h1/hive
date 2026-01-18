@@ -32,6 +32,7 @@ export const GamePlayPhase = ({
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [showAllReadyAnnounce, setShowAllReadyAnnounce] = useState(false);
   const transitionTriggeredRef = useRef(false);
+  const lastRoundRef = useRef(gameState.round);
 
   const currentPlayer = gameState.players.find(p => p.id === playerId);
   const isResting = currentPlayer?.isResting ?? false;
@@ -40,9 +41,20 @@ export const GamePlayPhase = ({
     .filter(p => !p.isResting)
     .every(p => p.isReady);
 
+  // ラウンドが変わったら状態をリセット
+  useEffect(() => {
+    if (gameState.round !== lastRoundRef.current) {
+      lastRoundRef.current = gameState.round;
+      setSelectedType(null);
+      setSelectedTargetId(null);
+      setShowAllReadyAnnounce(false);
+      transitionTriggeredRef.current = false;
+    }
+  }, [gameState.round]);
+
   // 全員確定時に1秒後に自動遷移（ホストのみ）
   useEffect(() => {
-    if (allPlayersReady && isHost && !transitionTriggeredRef.current) {
+    if (allPlayersReady && isHost && !transitionTriggeredRef.current && gameState.players.length > 0) {
       transitionTriggeredRef.current = true;
       setShowAllReadyAnnounce(true);
 
@@ -52,7 +64,7 @@ export const GamePlayPhase = ({
 
       return () => clearTimeout(timer);
     }
-  }, [allPlayersReady, isHost, onRevealActions]);
+  }, [allPlayersReady, isHost, onRevealActions, gameState.players.length]);
 
   // 6人分のスロットを作成
   const playerSlots = Array(6).fill(null).map((_, i) => gameState.players[i] || null);
