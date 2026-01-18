@@ -186,15 +186,14 @@ export const GemPlatform3D = ({ gems, className = '' }: GemPlatform3DProps) => {
 
   return (
     <div
-      className={`rounded-lg overflow-hidden ${className}`}
+      className={`rounded-lg overflow-hidden bg-slate-700/50 ${className}`}
       style={{ width: platformSize, height: platformSize }}
     >
       <Canvas
         key={key}
         shadows
-        camera={{ position: [0, 4, 5], fov: 40 }}
+        camera={{ position: [0, 6, 3], fov: 35 }}
         gl={{ antialias: true, alpha: true }}
-        style={{ background: 'transparent' }}
       >
         <color attach="background" args={['#334155']} />
         <PlatformScene gems={gems} />

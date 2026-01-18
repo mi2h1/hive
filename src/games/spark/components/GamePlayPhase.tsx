@@ -270,8 +270,8 @@ export const GamePlayPhase = ({
           </div>
 
           {/* 宝石台 */}
-          <div className="bg-slate-800/90 rounded-xl p-3 mb-3">
-            <div className="flex flex-wrap justify-center gap-2">
+          <div className="bg-slate-700/50 rounded-xl p-3 mb-3">
+            <div className="flex flex-wrap justify-center gap-3">
               {gameState.platforms.map((platform) => {
                 const isSelected = selectedType === 'platform' && selectedTargetId === platform.id;
                 const isEmpty = platform.gems.length === 0;
@@ -281,12 +281,12 @@ export const GamePlayPhase = ({
                     key={platform.id}
                     onClick={() => handlePlatformClick(platform.id)}
                     disabled={hasSubmitted || isResting || isEmpty}
-                    className={`p-2 rounded-lg border-2 transition-all ${
+                    className={`p-1 rounded-lg border-2 transition-all ${
                       isSelected
-                        ? 'border-cyan-400 bg-cyan-600/30'
+                        ? 'border-cyan-400 bg-cyan-500/20'
                         : isEmpty
-                        ? 'border-slate-600 bg-slate-700/30 opacity-50'
-                        : 'border-slate-600 bg-slate-700/50 hover:border-cyan-400/50'
+                        ? 'border-transparent opacity-50'
+                        : 'border-transparent hover:border-cyan-400/50'
                     } ${(hasSubmitted || isResting) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     {!isEmpty ? (
