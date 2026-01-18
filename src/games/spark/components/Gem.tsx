@@ -71,3 +71,64 @@ export const GemCount = ({ color, count, size = 'md' }: GemCountProps) => {
     </div>
   );
 };
+
+// IDから決定的な乱数を生成（0-1の範囲）
+const seededRandom = (seed: string, index: number = 0): number => {
+  const str = seed + index.toString();
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs((hash % 1000) / 1000);
+};
+
+// 宝石台の表示（宝石がランダムに散らばる）
+interface GemPlatformProps {
+  gems: { id: string; color: GemColor }[];
+  className?: string;
+}
+
+export const GemPlatform = ({ gems, className = '' }: GemPlatformProps) => {
+  const gemSize = 28; // 宝石のサイズ（px）
+  const platformSize = 80; // 台のサイズ（px）
+  const padding = 8; // 端からの余白
+
+  return (
+    <div
+      className={`relative ${className}`}
+      style={{ width: platformSize, height: platformSize }}
+    >
+      {gems.map((gem, index) => {
+        // gem.idから決定的なランダム値を生成
+        const randX = seededRandom(gem.id, 0);
+        const randY = seededRandom(gem.id, 1);
+        const randRotate = seededRandom(gem.id, 2);
+
+        // 位置を計算（台の範囲内に収める）
+        const maxOffset = platformSize - gemSize - padding * 2;
+        const x = padding + randX * maxOffset;
+        const y = padding + randY * maxOffset;
+        const rotate = (randRotate - 0.5) * 40; // -20deg ~ +20deg
+
+        return (
+          <img
+            key={gem.id}
+            src={colorImages[gem.color]}
+            alt={gem.color}
+            className="absolute"
+            style={{
+              width: gemSize,
+              height: gemSize,
+              left: x,
+              top: y,
+              transform: `rotate(${rotate}deg)`,
+              zIndex: index,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+};

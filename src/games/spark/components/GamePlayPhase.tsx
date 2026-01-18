@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Shield, Target, Lock, Check, Clock } from 'lucide-react';
 import type { GameState, PlayerAction, ActionType } from '../types/game';
-import { Gem, GemStack } from './Gem';
+import { GemStack, GemPlatform } from './Gem';
 
 interface GamePlayPhaseProps {
   gameState: GameState;
@@ -125,15 +125,14 @@ export const GamePlayPhase = ({
                         : 'border-slate-600 bg-slate-700/50 hover:border-cyan-400/50'
                     } ${hasSubmitted || isResting ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    <div className="text-slate-400 text-xs mb-2">台 {index + 1}</div>
+                    <div className="text-slate-400 text-xs mb-1">台 {index + 1}</div>
                     {platform.gems.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 justify-center min-h-[40px]">
-                        {platform.gems.map(gem => (
-                          <Gem key={gem.id} color={gem.color} size="md" />
-                        ))}
-                      </div>
+                      <GemPlatform gems={platform.gems} className="mx-auto" />
                     ) : (
-                      <div className="text-slate-500 text-sm min-h-[40px] flex items-center justify-center">
+                      <div
+                        className="text-slate-500 text-sm flex items-center justify-center mx-auto"
+                        style={{ width: 80, height: 80 }}
+                      >
                         空
                       </div>
                     )}
