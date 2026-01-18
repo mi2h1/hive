@@ -72,7 +72,7 @@ export const Lobby = ({
               <img
                 src="/boards/images/vec_logo_spark.svg"
                 alt="SPARK"
-                className="h-10 mx-auto"
+                className="h-8 mx-auto"
                 style={{ filter: 'brightness(0) invert(1)' }}
               />
               <p className="text-white/60 text-sm mt-2">宝石争奪・読み合いゲーム</p>
@@ -202,7 +202,7 @@ export const Lobby = ({
               <img
                 src="/boards/images/vec_logo_spark.svg"
                 alt="SPARK"
-                className="h-16 mx-auto"
+                className="h-12 mx-auto"
                 style={{ filter: 'brightness(0) invert(1)' }}
               />
               <p className="text-white/60 text-sm mt-1">宝石争奪・読み合いゲーム</p>
