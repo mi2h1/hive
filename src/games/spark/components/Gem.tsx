@@ -117,10 +117,10 @@ export const GemPlatform = ({ gems, className = '' }: GemPlatformProps) => {
             key={gem.id}
             src={colorImages[gem.color]}
             alt={gem.color}
-            className="absolute"
+            className="absolute object-contain"
             style={{
               width: gemSize,
-              height: gemSize,
+              height: 'auto',
               left: x,
               top: y,
               transform: `rotate(${rotate}deg)`,
