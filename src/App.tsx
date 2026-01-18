@@ -309,7 +309,8 @@ function App() {
             <div className="p-4">
               <h2 className="text-lg font-bold text-white mb-2">アトランティスの深淵</h2>
               <p className="text-slate-400 text-sm mb-4">
-                深海の遺跡を探索するチキンレースゲーム。宝石を集めて帰還するか、さらに奥へ進むか？
+                深海の遺跡を探索するチキンレースゲーム。<br />
+                宝石を集めて帰還するか、さらに奥へ進むか？
               </p>
               <div className="flex gap-2">
                 <button
@@ -336,7 +337,8 @@ function App() {
             <div className="p-4">
               <h2 className="text-lg font-bold text-white mb-2">もじはんと</h2>
               <p className="text-slate-400 text-sm mb-4">
-                ひらがなで秘密の言葉を当て合うパーティーゲーム。最後まで残った人の勝ち！
+                ひらがなで言葉を当て合う推理パーティーゲーム。<br />
+                相手の言葉を暴き、最後まで生き残れ！
               </p>
               <div className="flex gap-2">
                 <button
@@ -363,7 +365,8 @@ function App() {
             <div className="p-4">
               <h2 className="text-lg font-bold text-white mb-2">ジャッカル</h2>
               <p className="text-slate-400 text-sm mb-4">
-                自分のカードだけ見えない！ブラフと推理で相手を出し抜け。
+                自分のカードだけ見えないブラフカードゲーム。<br />
+                推理と駆け引きで相手を出し抜け！
               </p>
               <div className="flex gap-2">
                 <button
@@ -390,7 +393,8 @@ function App() {
             <div className="p-4">
               <h2 className="text-lg font-bold text-white mb-2">POLYFORM</h2>
               <p className="text-slate-400 text-sm mb-4">
-                パズルとピースの拡大再生産ゲーム。パズルを完成させて報酬を獲得！
+                ピースを集めてパズルを完成させる拡大再生産ゲーム。<br />
+                効率よくピースを集め、高得点を狙え！
               </p>
               <div className="flex gap-2">
                 <button
@@ -417,7 +421,8 @@ function App() {
             <div className="p-4">
               <h2 className="text-lg font-bold text-white mb-2">デスペラード</h2>
               <p className="text-slate-400 text-sm mb-4">
-                ダイス2個で勝負！最強の「デスペラード」を出せるか？最後まで生き残れ！
+                ダイス2個で勝負するサバイバルダイスゲーム。<br />
+                最強の「デスペラード」を出して生き残れ！
               </p>
               <div className="flex gap-2">
                 <button
