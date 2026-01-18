@@ -91,9 +91,9 @@ interface GemPlatformProps {
 }
 
 export const GemPlatform = ({ gems, className = '' }: GemPlatformProps) => {
-  const gemSize = 28; // 宝石のサイズ（px）
+  const gemSize = 22; // 宝石のサイズ（px）
   const platformSize = 80; // 台のサイズ（px）
-  const padding = 8; // 端からの余白
+  const padding = 6; // 端からの余白
 
   return (
     <div
