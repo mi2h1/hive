@@ -37,7 +37,12 @@ export const ResultPhase = ({
         <div className="max-w-2xl mx-auto">
           {/* ヘッダー */}
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-white tracking-wider mb-2">SPARK</h1>
+            <img
+              src="/boards/images/vec_logo_spark.svg"
+              alt="SPARK"
+              className="h-10 mx-auto mb-2"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
             <p className="text-cyan-400 font-bold">ゲーム終了</p>
           </div>
 

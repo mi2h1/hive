@@ -28,7 +28,7 @@ export const RulesModal = ({ onClose }: RulesModalProps) => {
           <section>
             <h3 className="text-lg font-bold text-cyan-400 mb-2">ゲーム概要</h3>
             <p className="text-sm leading-relaxed">
-              宝石を奪い合う「バッティング」系ゲーム。全員が同時に「どの宝石を狙うか」を選択し、
+              宝石を奪い合う同時選択ゲーム。全員が同時に「どの宝石を狙うか」を選択し、
               <span className="text-yellow-400">誰とも被らなければ</span>宝石を獲得できます。
               被ったら誰も取れません。
             </p>

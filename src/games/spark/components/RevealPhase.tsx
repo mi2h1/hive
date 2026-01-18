@@ -43,7 +43,12 @@ export const RevealPhase = ({
           {/* ヘッダー */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-white tracking-wider">SPARK</h1>
+              <img
+                src="/boards/images/vec_logo_spark.svg"
+                alt="SPARK"
+                className="h-6"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
               <span className="text-cyan-400 font-bold">ラウンド {gameState.round} 結果</span>
             </div>
             <button
@@ -85,7 +90,7 @@ export const RevealPhase = ({
                           {actions.map(a => a.playerName).join(', ')}
                         </span>
                         {isBatting && (
-                          <span className="text-red-400 text-sm">バッティング！</span>
+                          <span className="text-red-400 text-sm">かぶり！</span>
                         )}
                       </div>
                       {transfer && (
@@ -138,7 +143,7 @@ export const RevealPhase = ({
                         <span className={`font-bold ${isBatting || isBlocked ? 'text-red-400' : 'text-yellow-400'}`}>
                           {actions.map(a => a.playerName).join(', ')}
                         </span>
-                        {isBatting && <span className="text-red-400 text-sm">バッティング！</span>}
+                        {isBatting && <span className="text-red-400 text-sm">かぶり！</span>}
                         {isBlocked && <span className="text-purple-400 text-sm">バリアで防御！</span>}
                       </div>
                       {transfer && (

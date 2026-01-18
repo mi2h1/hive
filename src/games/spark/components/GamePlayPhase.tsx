@@ -71,7 +71,12 @@ export const GamePlayPhase = ({
           {/* ヘッダー */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-white tracking-wider">SPARK</h1>
+              <img
+                src="/boards/images/vec_logo_spark.svg"
+                alt="SPARK"
+                className="h-6"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
               <span className="text-cyan-400 font-bold">ラウンド {gameState.round}</span>
             </div>
             <div className="flex items-center gap-2">

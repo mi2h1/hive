@@ -69,8 +69,13 @@ export const Lobby = ({
               >
                 <HelpCircle className="w-5 h-5" />
               </button>
-              <h1 className="text-4xl font-bold text-white tracking-wider">SPARK</h1>
-              <p className="text-white/60 text-sm mt-2">宝石争奪バッティングゲーム</p>
+              <img
+                src="/boards/images/vec_logo_spark.svg"
+                alt="SPARK"
+                className="h-10 mx-auto"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+              <p className="text-white/60 text-sm mt-2">宝石争奪・読み合いゲーム</p>
               {showRulesModal && <RulesModal onClose={() => setShowRulesModal(false)} />}
               {debugMode && (
                 <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded inline-flex items-center gap-1 mt-2">
@@ -193,8 +198,13 @@ export const Lobby = ({
               <HelpCircle className="w-5 h-5" />
             </button>
             <div className="text-center">
-              <h1 className="text-5xl font-bold text-white tracking-wider">SPARK</h1>
-              <p className="text-white/60 text-sm mt-1">宝石争奪バッティングゲーム</p>
+              <img
+                src="/boards/images/vec_logo_spark.svg"
+                alt="SPARK"
+                className="h-16 mx-auto"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+              <p className="text-white/60 text-sm mt-1">宝石争奪・読み合いゲーム</p>
             </div>
             {showRulesModal && <RulesModal onClose={() => setShowRulesModal(false)} />}
             {debugMode && (

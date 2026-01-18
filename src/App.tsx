@@ -418,12 +418,17 @@ function App() {
           {/* SPARK */}
           <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-cyan-500 transition-all">
             <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center">
-              <span className="text-4xl font-bold text-white tracking-wider">SPARK</span>
+              <img
+                src="/boards/images/vec_logo_spark.svg"
+                alt="SPARK"
+                className="h-12"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
             </div>
             <div className="p-4">
               <h2 className="text-lg font-bold text-white mb-2">SPARK</h2>
               <p className="text-slate-400 text-sm mb-4">
-                宝石を奪い合うバッティングゲーム。被らなければ獲得、被ったら誰も取れない！
+                宝石を奪い合う読み合いゲーム。被らなければ獲得、被ったら誰も取れない！
               </p>
               <div className="flex gap-2">
                 <button
