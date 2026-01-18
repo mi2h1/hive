@@ -245,6 +245,22 @@ function App() {
                 </button>
               </div>
             </div>
+
+            {/* SPARK（開発中） */}
+            <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
+              <div className="h-32 bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center">
+                <span className="text-3xl font-bold text-white">SPARK DEV</span>
+              </div>
+              <div className="p-4">
+                <button
+                  onClick={() => selectGame('spark')}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500
+                    hover:from-orange-600 hover:to-amber-600 rounded-lg text-white font-bold transition-all"
+                >
+                  開く
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="mt-8 text-center">
@@ -408,33 +424,6 @@ function App() {
                   onClick={() => selectGame('desperado')}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-500 to-red-500
                     hover:from-amber-600 hover:to-red-600 rounded-lg text-white font-bold transition-all"
-                >
-                  遊ぶ
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* SPARK */}
-          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-cyan-500 transition-all">
-            <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center">
-              <img
-                src="/boards/images/vec_logo_spark.svg"
-                alt="SPARK"
-                className="h-12"
-                style={{ filter: 'brightness(0) invert(1)' }}
-              />
-            </div>
-            <div className="p-4">
-              <h2 className="text-lg font-bold text-white mb-2">SPARK</h2>
-              <p className="text-slate-400 text-sm mb-4">
-                宝石を奪い合う読み合いゲーム。被らなければ獲得、被ったら誰も取れない！
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => selectGame('spark')}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500
-                    hover:from-cyan-600 hover:to-blue-600 rounded-lg text-white font-bold transition-all"
                 >
                   遊ぶ
                 </button>
