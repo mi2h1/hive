@@ -82,7 +82,6 @@ export const SparkGame = ({ onBack }: SparkGameProps) => {
       platforms,
       players: resetPlayers,
       winnerId: null,
-      lastRoundResults: undefined,
     });
   };
 
@@ -284,7 +283,6 @@ export const SparkGame = ({ onBack }: SparkGameProps) => {
       bag: replenished.bag,
       platforms: replenished.platforms,
       players: finalPlayers,
-      lastRoundResults: undefined,
     });
   };
 
@@ -308,7 +306,6 @@ export const SparkGame = ({ onBack }: SparkGameProps) => {
       platforms: [],
       players: resetPlayers,
       winnerId: null,
-      lastRoundResults: undefined,
     });
   };
 
