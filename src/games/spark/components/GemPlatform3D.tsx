@@ -160,17 +160,13 @@ const Gem3D = ({ color, initialPosition, initialRotation }: Gem3DProps) => {
       linearVelocity={[0, -2, 0]}
     >
       <mesh castShadow receiveShadow geometry={brilliantGeometry}>
-        <meshPhysicalMaterial
+        <meshStandardMaterial
           color={colorConfig.color}
           emissive={colorConfig.emissive}
-          emissiveIntensity={0.1}
-          metalness={0.0}
-          roughness={0.05}
-          transmission={0.6}
-          thickness={0.5}
-          ior={2.4}
-          transparent={true}
-          envMapIntensity={1}
+          emissiveIntensity={0.3}
+          metalness={0.4}
+          roughness={0.1}
+          envMapIntensity={1.5}
         />
       </mesh>
     </RigidBody>
