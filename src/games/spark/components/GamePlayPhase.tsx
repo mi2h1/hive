@@ -201,7 +201,7 @@ export const GamePlayPhase = ({
           </div>
 
           {/* インフォパネル（固定2行分の高さ） */}
-          <div className="bg-slate-800/90 rounded-xl p-3 mb-3 h-20 flex flex-col justify-center">
+          <div className="bg-slate-800 rounded-xl p-3 mb-3 h-20 flex flex-col justify-center">
             {isResting ? (
               <>
                 <div className="text-amber-300 font-bold text-center">
@@ -270,7 +270,7 @@ export const GamePlayPhase = ({
           </div>
 
           {/* 宝石台 */}
-          <div className="bg-slate-800/90 rounded-xl p-3 mb-3">
+          <div className="bg-slate-800 rounded-xl p-3 mb-3">
             <div className="flex flex-wrap justify-center gap-3">
               {gameState.platforms.map((platform) => {
                 const isSelected = selectedType === 'platform' && selectedTargetId === platform.id;
