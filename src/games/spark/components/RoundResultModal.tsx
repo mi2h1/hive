@@ -45,7 +45,7 @@ export const RoundResultModal = ({
         {/* ヘッダー */}
         <div className="sticky top-0 bg-slate-800 p-4 border-b border-slate-700 flex items-center justify-between">
           <span className="text-cyan-400 font-bold text-lg">
-            ラウンド {gameState.round} 結果
+            ラウンド{gameState.round} 結果
           </span>
         </div>
 

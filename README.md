@@ -34,11 +34,17 @@
 - **本番版**: `/boards/desperado`
 - **特徴**: dddice連携による3Dダイスアニメーション同期
 
+### SPARK
+宝石を奪い合う心理戦ゲーム（2〜6人）。場の宝石台から宝石を取るか、他人の金庫を狙うか、バリアで守るか。同じ選択をすると「かぶり」で何も得られない。
+
+- **本番版**: `/boards/spark`
+- **特徴**: React Three Fiber + Rapier による3D宝石物理シミュレーション
+
 ## 管理画面
 
 `/boards/admin` で全ゲームの部屋をリアルタイム監視できる。
 
-- 部屋一覧（AOA / もじはんと / ジャッカル / POLYFORM / デスペラード + 各DEV版）
+- 部屋一覧（AOA / もじはんと / ジャッカル / POLYFORM / デスペラード / SPARK + 各DEV版）
 - プレイヤー情報、ゲームフェーズ、お題表示
 - もじはんとの文字パネル状況（50音グリッド）
 - 古い部屋の一括削除
@@ -75,6 +81,7 @@ npm run build
 - `docs/jackal-spec.md` - ジャッカル仕様書
 - `docs/polyform-spec.md` - POLYFORM仕様書
 - `docs/desperado-spec.md` - デスペラード仕様書
+- `docs/spark-spec.md` - SPARK仕様書
 - `src/games/aoa/README.md` - AOA詳細
 
 ## ライセンス

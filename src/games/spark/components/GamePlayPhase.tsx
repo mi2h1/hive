@@ -215,7 +215,7 @@ export const GamePlayPhase = ({
                 className="h-5"
                 style={{ filter: 'brightness(0) invert(1)' }}
               />
-              <span className="text-cyan-400 font-bold text-sm">R{gameState.round}</span>
+              <span className="text-cyan-400 font-bold text-sm">ラウンド{gameState.round}</span>
               <span className="text-slate-400 text-xs">袋: {gameState.bag.length}</span>
             </div>
             <button

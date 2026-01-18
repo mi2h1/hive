@@ -436,6 +436,34 @@ function App() {
             </div>
           </div>
 
+          {/* SPARK */}
+          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-cyan-500 transition-all">
+            <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center">
+              <img
+                src="/boards/images/vec_logo_spark.svg"
+                alt="SPARK"
+                className="h-12"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+            </div>
+            <div className="p-4">
+              <h2 className="text-lg font-bold text-white mb-2">SPARK</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                宝石を奪い合う心理戦カードゲーム。<br />
+                場の宝石を取るか、他人の金庫を狙うか？
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => selectGame('spark')}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500
+                    hover:from-cyan-600 hover:to-blue-600 rounded-lg text-white font-bold transition-all"
+                >
+                  遊ぶ
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
