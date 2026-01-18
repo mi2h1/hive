@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 
 const GEM_ICON_PATH = '/boards/images/i_gem.png';
+// モノクロ画像を青色に着色するフィルター
+const GEM_BLUE_FILTER = 'sepia(1) saturate(5) hue-rotate(180deg) brightness(0.9)';
 
 interface GemDistributionAnimationProps {
   gemValue: number;
@@ -111,6 +113,7 @@ export const GemDistributionAnimation = ({ gemValue, triggerKey, exploringPlayer
             src={GEM_ICON_PATH}
             alt=""
             className="w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+            style={{ filter: GEM_BLUE_FILTER }}
           />
         </div>
       ))}

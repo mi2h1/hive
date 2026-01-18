@@ -7,12 +7,12 @@ interface GemProps {
 }
 
 // 宝石の色に対応するCSSフィルター
-// 元画像は青色なので、他の色はhue-rotateで調整
+// 元画像はモノクロなので、sepia + hue-rotate で着色
 const colorFilters: Record<GemColor, string> = {
-  blue: '', // そのまま
-  yellow: 'hue-rotate(45deg) saturate(1.2) brightness(1.1)', // 青→黄
-  red: 'hue-rotate(-40deg) saturate(1.3)', // 青→赤
-  white: 'grayscale(100%) brightness(1.5)', // 白
+  blue: 'sepia(1) saturate(5) hue-rotate(180deg) brightness(0.9)', // 青
+  yellow: 'sepia(1) saturate(5) hue-rotate(10deg) brightness(1.1)', // 黄
+  red: 'sepia(1) saturate(5) hue-rotate(-10deg) brightness(0.9)', // 赤
+  white: 'brightness(1.2)', // 白（そのまま明るく）
 };
 
 const sizeClasses: Record<'sm' | 'md' | 'lg', string> = {

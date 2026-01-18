@@ -133,6 +133,7 @@ export const Lobby = ({
                       src="/boards/images/i_gem.png"
                       alt=""
                       className="w-5 h-5"
+                      style={{ filter: 'sepia(1) saturate(5) hue-rotate(180deg) brightness(0.9)' }}
                     />
                   </div>
                 ))}
