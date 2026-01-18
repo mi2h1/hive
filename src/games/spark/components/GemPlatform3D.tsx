@@ -1,16 +1,120 @@
 import { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier';
+import { Environment } from '@react-three/drei';
 import type { RigidBody as RigidBodyType } from '@dimforge/rapier3d-compat';
+import * as THREE from 'three';
 import type { GemColor } from '../types/game';
 
-// 宝石の色定義（MeshStandardMaterial用）
+// 宝石の色定義（MeshPhysicalMaterial用）
 const gemColors: Record<GemColor, { color: string; emissive: string }> = {
-  blue: { color: '#3b82f6', emissive: '#1e40af' },
-  yellow: { color: '#fbbf24', emissive: '#b45309' },
-  red: { color: '#ef4444', emissive: '#b91c1c' },
-  white: { color: '#f1f5f9', emissive: '#94a3b8' },
+  blue: { color: '#60a5fa', emissive: '#1e40af' },
+  yellow: { color: '#fcd34d', emissive: '#b45309' },
+  red: { color: '#f87171', emissive: '#b91c1c' },
+  white: { color: '#f8fafc', emissive: '#cbd5e1' },
 };
+
+// ブリリアントカットのジオメトリを作成
+const createBrilliantCutGeometry = (): THREE.BufferGeometry => {
+  const geometry = new THREE.BufferGeometry();
+
+  // パラメータ
+  const tableRadius = 0.22;    // テーブル面の半径
+  const crownRadius = 0.35;    // クラウン（最大幅）の半径
+  const girdleHeight = 0.05;   // ガードルの高さ
+  const crownHeight = 0.15;    // クラウンの高さ
+  const pavilionDepth = 0.35;  // パビリオンの深さ
+  const segments = 8;          // 面の数
+
+  const vertices: number[] = [];
+  const indices: number[] = [];
+
+  // 頂点を追加するヘルパー
+  const addVertex = (x: number, y: number, z: number) => {
+    vertices.push(x, y, z);
+    return vertices.length / 3 - 1;
+  };
+
+  // 中心点
+  const topCenter = addVertex(0, crownHeight + girdleHeight / 2, 0);
+  const bottomPoint = addVertex(0, -(pavilionDepth + girdleHeight / 2), 0);
+
+  // テーブル面の頂点（上部の平らな面）
+  const tableVertices: number[] = [];
+  for (let i = 0; i < segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    tableVertices.push(
+      addVertex(
+        Math.cos(angle) * tableRadius,
+        crownHeight + girdleHeight / 2,
+        Math.sin(angle) * tableRadius
+      )
+    );
+  }
+
+  // クラウン（ガードル位置）の頂点
+  const crownVertices: number[] = [];
+  for (let i = 0; i < segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    crownVertices.push(
+      addVertex(
+        Math.cos(angle) * crownRadius,
+        girdleHeight / 2,
+        Math.sin(angle) * crownRadius
+      )
+    );
+  }
+
+  // ガードル下の頂点
+  const girdleBottomVertices: number[] = [];
+  for (let i = 0; i < segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    girdleBottomVertices.push(
+      addVertex(
+        Math.cos(angle) * crownRadius,
+        -girdleHeight / 2,
+        Math.sin(angle) * crownRadius
+      )
+    );
+  }
+
+  // テーブル面（上部の八角形）
+  for (let i = 0; i < segments; i++) {
+    const next = (i + 1) % segments;
+    indices.push(topCenter, tableVertices[i], tableVertices[next]);
+  }
+
+  // クラウンファセット（テーブルからガードルへ）
+  for (let i = 0; i < segments; i++) {
+    const next = (i + 1) % segments;
+    // 三角形1
+    indices.push(tableVertices[i], crownVertices[i], tableVertices[next]);
+    // 三角形2
+    indices.push(tableVertices[next], crownVertices[i], crownVertices[next]);
+  }
+
+  // ガードル（側面の帯）
+  for (let i = 0; i < segments; i++) {
+    const next = (i + 1) % segments;
+    indices.push(crownVertices[i], girdleBottomVertices[i], crownVertices[next]);
+    indices.push(crownVertices[next], girdleBottomVertices[i], girdleBottomVertices[next]);
+  }
+
+  // パビリオンファセット（ガードルから先端へ）
+  for (let i = 0; i < segments; i++) {
+    const next = (i + 1) % segments;
+    indices.push(girdleBottomVertices[i], bottomPoint, girdleBottomVertices[next]);
+  }
+
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+
+  return geometry;
+};
+
+// ブリリアントカットジオメトリをキャッシュ
+const brilliantGeometry = createBrilliantCutGeometry();
 
 interface Gem3DProps {
   id: string;
@@ -55,14 +159,18 @@ const Gem3D = ({ color, initialPosition, initialRotation }: Gem3DProps) => {
       angularDamping={0.3}
       linearVelocity={[0, -2, 0]}
     >
-      <mesh castShadow receiveShadow>
-        <octahedronGeometry args={[0.35, 0]} />
-        <meshStandardMaterial
+      <mesh castShadow receiveShadow geometry={brilliantGeometry}>
+        <meshPhysicalMaterial
           color={colorConfig.color}
           emissive={colorConfig.emissive}
-          emissiveIntensity={0.2}
-          metalness={0.3}
-          roughness={0.2}
+          emissiveIntensity={0.1}
+          metalness={0.0}
+          roughness={0.05}
+          transmission={0.6}
+          thickness={0.5}
+          ior={2.4}
+          transparent={true}
+          envMapIntensity={1}
         />
       </mesh>
     </RigidBody>
@@ -109,15 +217,19 @@ const PlatformScene = ({ gems }: { gems: { id: string; color: GemColor }[] }) =>
 
   return (
     <>
+      {/* 環境マップ（反射・屈折用） */}
+      <Environment preset="city" />
+
       {/* ライティング */}
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={0.4} />
       <directionalLight
         position={[5, 10, 5]}
-        intensity={1}
+        intensity={1.5}
         castShadow
         shadow-mapSize={[512, 512]}
       />
-      <pointLight position={[-3, 5, -3]} intensity={0.5} color="#fef3c7" />
+      <pointLight position={[-3, 5, -3]} intensity={0.8} color="#fef3c7" />
+      <pointLight position={[3, 3, 3]} intensity={0.5} color="#ffffff" />
 
       {/* 物理シミュレーション */}
       <Physics gravity={[0, -15, 0]}>
@@ -127,7 +239,7 @@ const PlatformScene = ({ gems }: { gems: { id: string; color: GemColor }[] }) =>
           <mesh receiveShadow>
             <boxGeometry args={[3, 0.2, 3]} />
             <meshStandardMaterial
-              color="#334155"
+              color="#1e293b"
               metalness={0.1}
               roughness={0.8}
             />
@@ -173,8 +285,8 @@ export const GemPlatform3D = ({ gems, className = '' }: GemPlatform3DProps) => {
 
   const platformSize = 180;
 
-  // 外側と同じ背景色（slate-700）
-  const bgColor = '#334155';
+  // インフォパネルと同じ背景色（slate-800）
+  const bgColor = '#1e293b';
 
   if (gems.length === 0) {
     return (

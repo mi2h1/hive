@@ -270,7 +270,7 @@ export const GamePlayPhase = ({
           </div>
 
           {/* 宝石台 */}
-          <div className="rounded-xl p-3 mb-3" style={{ backgroundColor: '#334155' }}>
+          <div className="bg-slate-800/90 rounded-xl p-3 mb-3">
             <div className="flex flex-wrap justify-center gap-3">
               {gameState.platforms.map((platform) => {
                 const isSelected = selectedType === 'platform' && selectedTargetId === platform.id;
