@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Check } from 'lucide-react';
 import type { GameState, PlayerAction } from '../types/game';
 import { Gem } from './Gem';
@@ -30,6 +30,8 @@ export const GamePlayPhase = ({
 }: GamePlayPhaseProps) => {
   const [selectedType, setSelectedType] = useState<'platform' | 'vault' | 'barrier' | null>(null);
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
+  const [showAllReadyAnnounce, setShowAllReadyAnnounce] = useState(false);
+  const transitionTriggeredRef = useRef(false);
 
   const currentPlayer = gameState.players.find(p => p.id === playerId);
   const isResting = currentPlayer?.isResting ?? false;
@@ -37,6 +39,20 @@ export const GamePlayPhase = ({
   const allPlayersReady = gameState.players
     .filter(p => !p.isResting)
     .every(p => p.isReady);
+
+  // 全員確定時に1秒後に自動遷移（ホストのみ）
+  useEffect(() => {
+    if (allPlayersReady && isHost && !transitionTriggeredRef.current) {
+      transitionTriggeredRef.current = true;
+      setShowAllReadyAnnounce(true);
+
+      const timer = setTimeout(() => {
+        onRevealActions();
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [allPlayersReady, isHost, onRevealActions]);
 
   // 6人分のスロットを作成
   const playerSlots = Array(6).fill(null).map((_, i) => gameState.players[i] || null);
@@ -214,28 +230,34 @@ export const GamePlayPhase = ({
                 </div>
               </>
             ) : hasSubmitted ? (
-              <>
-                <div className="text-green-300 font-bold text-center">
-                  アクション確定済み
+              showAllReadyAnnounce ? (
+                <div className="text-amber-300 font-bold text-center text-lg animate-pulse">
+                  全員の行動が確定しました！
                 </div>
-                <div className="flex items-center justify-center gap-2 mt-1">
-                  {gameState.players.map(p => (
-                    <div
-                      key={p.id}
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                        p.isResting
-                          ? 'bg-amber-600/50 text-amber-300'
-                          : p.isReady
-                          ? 'bg-green-600 text-white'
-                          : 'bg-slate-600 text-slate-400'
-                      }`}
-                      title={p.name}
-                    >
-                      {p.isResting ? '休' : p.isReady ? '✓' : '...'}
-                    </div>
-                  ))}
-                </div>
-              </>
+              ) : (
+                <>
+                  <div className="text-green-300 font-bold text-center">
+                    アクション確定済み
+                  </div>
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                    {gameState.players.map(p => (
+                      <div
+                        key={p.id}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                          p.isResting
+                            ? 'bg-amber-600/50 text-amber-300'
+                            : p.isReady
+                            ? 'bg-green-600 text-white'
+                            : 'bg-slate-600 text-slate-400'
+                        }`}
+                        title={p.name}
+                      >
+                        {p.isResting ? '休' : p.isReady ? '✓' : '...'}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )
             ) : actionDescription ? (
               <>
                 <div className="flex items-center justify-center gap-3">
@@ -314,15 +336,6 @@ export const GamePlayPhase = ({
             ))}
           </div>
 
-          {/* 全員準備完了時の進行ボタン（ホストのみ） */}
-          {isHost && allPlayersReady && (
-            <button
-              onClick={onRevealActions}
-              className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 rounded-lg text-white font-bold transition-all"
-            >
-              アクションを公開する
-            </button>
-          )}
         </div>
       </div>
     </div>

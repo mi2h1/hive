@@ -3,7 +3,7 @@ import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
 import { Lobby } from './components/Lobby';
 import { GamePlayPhase } from './components/GamePlayPhase';
-import { RevealPhase } from './components/RevealPhase';
+import { RoundResultModal } from './components/RoundResultModal';
 import { ResultPhase } from './components/ResultPhase';
 import {
   createBag,
@@ -374,27 +374,26 @@ export const SparkGame = ({ onBack }: SparkGameProps) => {
     );
   }
 
-  // アクション公開画面
-  if (gameState.phase === 'revealing' || gameState.phase === 'resolving' || gameState.phase === 'replenishing') {
-    return (
-      <RevealPhase
+  // ゲーム画面（アクション選択）+ 結果モーダル
+  const showResultModal = gameState.phase === 'revealing' || gameState.phase === 'resolving' || gameState.phase === 'replenishing';
+
+  return (
+    <>
+      <GamePlayPhase
         gameState={gameState}
+        playerId={playerId ?? ''}
         isHost={isHost}
-        onNextRound={handleNextRound}
+        onSetAction={setPlayerAction}
+        onRevealActions={handleRevealActions}
         onLeaveRoom={leaveRoom}
       />
-    );
-  }
-
-  // ゲーム画面（アクション選択）
-  return (
-    <GamePlayPhase
-      gameState={gameState}
-      playerId={playerId ?? ''}
-      isHost={isHost}
-      onSetAction={setPlayerAction}
-      onRevealActions={handleRevealActions}
-      onLeaveRoom={leaveRoom}
-    />
+      {showResultModal && (
+        <RoundResultModal
+          gameState={gameState}
+          isHost={isHost}
+          onNextRound={handleNextRound}
+        />
+      )}
+    </>
   );
 };
