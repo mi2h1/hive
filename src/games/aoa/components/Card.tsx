@@ -8,7 +8,7 @@ const CARD_BACK_AOA = '/boards/images/cards/card_back_aoa.png';
 const CARD_BACK_INCAN = '/boards/images/cards/card_back_incan.png';
 const GEM_ICON_PATH = '/boards/images/i_gem.png';
 // モノクロ画像を青色に着色するフィルター
-const GEM_BLUE_FILTER = 'sepia(1) saturate(5) hue-rotate(180deg) brightness(0.9)';
+const GEM_BLUE_FILTER = 'invert(40%) sepia(90%) saturate(1500%) hue-rotate(190deg) brightness(90%)';
 
 // カード裏面のパスを取得
 const getCardBackPath = (isIncan: boolean): string => {

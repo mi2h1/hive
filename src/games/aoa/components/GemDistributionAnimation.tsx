@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 
 const GEM_ICON_PATH = '/boards/images/i_gem.png';
 // モノクロ画像を青色に着色するフィルター
-const GEM_BLUE_FILTER = 'sepia(1) saturate(5) hue-rotate(180deg) brightness(0.9)';
+const GEM_BLUE_FILTER = 'invert(40%) sepia(90%) saturate(1500%) hue-rotate(190deg) brightness(90%)';
 
 interface GemDistributionAnimationProps {
   gemValue: number;
