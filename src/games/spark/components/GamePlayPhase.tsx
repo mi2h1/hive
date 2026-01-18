@@ -142,11 +142,9 @@ export const GamePlayPhase = ({
         </div>
 
         {/* 確定ポイント（右上） */}
-        {score.total > 0 && (
-          <div className="absolute top-1 right-6">
-            <span className="text-xs text-green-400 font-bold">{score.total}pt</span>
-          </div>
-        )}
+        <div className="absolute top-1 right-6">
+          <span className={`text-xs font-bold ${score.total > 0 ? 'text-green-400' : 'text-slate-500'}`}>{score.total}pt</span>
+        </div>
 
         {/* 休み中のプレイヤーはバツ表示 */}
         {isPlayerResting && (
@@ -156,7 +154,7 @@ export const GamePlayPhase = ({
         )}
 
         {/* 金庫の宝石 */}
-        <div className="flex flex-wrap gap-0.5 mt-5">
+        <div className="flex flex-wrap gap-1 mt-5">
           {sortedVault.length > 0 ? (
             sortedVault.slice(0, 12).map(gem => (
               <Gem key={gem.id} color={gem.color} size="sm" />
