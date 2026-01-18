@@ -119,7 +119,7 @@ export const GamePlayPhase = ({
     const isPlayerResting = player.isResting;
     const isSelected = (selectedType === 'vault' && selectedTargetId === player.id) ||
                        (selectedType === 'barrier' && isMe);
-    const score = calculateScore(player);
+    const score = calculateScore(player, true); // 確定分のみ表示
     const sortedVault = sortGemsByValue(player.vault);
 
     return (

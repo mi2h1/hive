@@ -104,7 +104,8 @@ export const replenishPlatforms = (
 };
 
 // 得点計算
-export const calculateScore = (player: Player): {
+// securedOnly: trueの場合は確定分のみ、falseの場合は金庫と確定分を合算
+export const calculateScore = (player: Player, securedOnly = false): {
   total: number;
   colorPoints: number;
   setBonus: number;
@@ -118,8 +119,8 @@ export const calculateScore = (player: Player): {
     sets: number;
   };
 } => {
-  // 金庫と確定分を合算
-  const allGems = [...player.vault, ...player.secured];
+  // securedOnlyがtrueなら確定分のみ、falseなら金庫と確定分を合算
+  const allGems = securedOnly ? [...player.secured] : [...player.vault, ...player.secured];
 
   // 色ごとにカウント
   const counts = {
