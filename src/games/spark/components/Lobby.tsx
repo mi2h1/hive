@@ -130,10 +130,9 @@ export const Lobby = ({
                     <span className="text-white flex-1">{player.name}</span>
                     {/* 宝石アイコンで表示 */}
                     <img
-                      src="/boards/images/i_gem.png"
+                      src="/boards/images/i_gem_b.png"
                       alt=""
                       className="w-5 h-5"
-                      style={{ filter: 'invert(40%) sepia(90%) saturate(1500%) hue-rotate(190deg) brightness(90%)' }}
                     />
                   </div>
                 ))}

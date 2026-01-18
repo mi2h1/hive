@@ -6,13 +6,12 @@ interface GemProps {
   className?: string;
 }
 
-// 宝石の色に対応するCSSフィルター
-// 元画像は白黒なので、invert + sepia + hue-rotate で着色
-const colorFilters: Record<GemColor, string> = {
-  blue: 'invert(40%) sepia(90%) saturate(1500%) hue-rotate(190deg) brightness(90%)', // 青
-  yellow: 'invert(85%) sepia(60%) saturate(500%) hue-rotate(10deg) brightness(105%)', // 黄
-  red: 'invert(25%) sepia(90%) saturate(2000%) hue-rotate(350deg) brightness(95%)', // 赤
-  white: 'brightness(1.1)', // 白（そのまま）
+// 宝石の色に対応する画像パス
+const colorImages: Record<GemColor, string> = {
+  blue: '/boards/images/i_gem_b.png',
+  yellow: '/boards/images/i_gem_y.png',
+  red: '/boards/images/i_gem_r.png',
+  white: '/boards/images/i_gem_w.png',
 };
 
 const sizeClasses: Record<'sm' | 'md' | 'lg', string> = {
@@ -24,10 +23,9 @@ const sizeClasses: Record<'sm' | 'md' | 'lg', string> = {
 export const Gem = ({ color, size = 'md', className = '' }: GemProps) => {
   return (
     <img
-      src="/boards/images/i_gem.png"
+      src={colorImages[color]}
       alt={color}
       className={`${sizeClasses[size]} ${className}`}
-      style={{ filter: colorFilters[color] }}
     />
   );
 };

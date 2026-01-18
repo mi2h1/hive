@@ -7,8 +7,6 @@ import { GemDistributionAnimation } from './GemDistributionAnimation';
 const CARD_BACK_AOA = '/boards/images/cards/card_back_aoa.png';
 const CARD_BACK_INCAN = '/boards/images/cards/card_back_incan.png';
 const GEM_ICON_PATH = '/boards/images/i_gem.png';
-// モノクロ画像を青色に着色するフィルター
-const GEM_BLUE_FILTER = 'invert(40%) sepia(90%) saturate(1500%) hue-rotate(190deg) brightness(90%)';
 
 // カード裏面のパスを取得
 const getCardBackPath = (isIncan: boolean): string => {
@@ -30,7 +28,7 @@ const RemainderGems = ({ count }: { count: number }) => {
           src={GEM_ICON_PATH}
           alt="宝石"
           className="object-contain drop-shadow-[0_0_3px_rgba(255,255,255,0.9)] drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]"
-          style={{ width: '22px', height: '16px', filter: GEM_BLUE_FILTER }}
+          style={{ width: '22px', height: '16px' }}
         />
       ))}
     </div>
