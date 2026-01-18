@@ -5,11 +5,11 @@ import { Environment } from '@react-three/drei';
 import type { RigidBody as RigidBodyType } from '@dimforge/rapier3d-compat';
 import type { GemColor } from '../types/game';
 
-// 宝石の色定義（MeshPhysicalMaterial用）
+// 宝石の色定義（より鮮やかに）
 const gemColors: Record<GemColor, { color: string; emissive: string }> = {
-  blue: { color: '#60a5fa', emissive: '#1e40af' },
-  yellow: { color: '#fcd34d', emissive: '#b45309' },
-  red: { color: '#f87171', emissive: '#b91c1c' },
+  blue: { color: '#2563eb', emissive: '#1e3a8a' },
+  yellow: { color: '#eab308', emissive: '#a16207' },
+  red: { color: '#dc2626', emissive: '#991b1b' },
   white: { color: '#f8fafc', emissive: '#cbd5e1' },
 };
 
