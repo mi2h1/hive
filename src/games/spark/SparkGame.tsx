@@ -161,6 +161,8 @@ export const SparkGame = ({ onBack }: SparkGameProps) => {
       }
     }
 
+    // まず成功する奪取をすべて特定（元の状態を基準に判定）
+    const vaultSteals: { attackerId: string; targetId: string; gems: typeof updatedPlayers[0]['vault'] }[] = [];
     for (const [targetPlayerId, attackerIds] of Object.entries(vaultTargets)) {
       const targetPlayer = updatedPlayers.find(p => p.id === targetPlayerId);
       if (!targetPlayer) continue;
@@ -169,30 +171,49 @@ export const SparkGame = ({ onBack }: SparkGameProps) => {
       const isBarriered = targetPlayer.action?.type === 'barrier';
 
       if (attackerIds.length === 1 && !isBarriered) {
-        // 被りなし & バリアなし - 宝石を奪取
+        // 被りなし & バリアなし - 奪取成功
         const attackerId = attackerIds[0];
         const gems = targetPlayer.vault;
         if (gems.length > 0) {
+          vaultSteals.push({
+            attackerId,
+            targetId: targetPlayerId,
+            gems: [...gems], // 元の金庫の内容をコピー
+          });
+
           results.transfers.push({
             fromType: 'vault',
             fromId: targetPlayerId,
             toPlayerId: attackerId,
             gems: [...gems],
           });
-
-          // 奪取処理
-          updatedPlayers = updatedPlayers.map(p => {
-            if (p.id === attackerId) {
-              return { ...p, vault: [...p.vault, ...gems] };
-            }
-            if (p.id === targetPlayerId) {
-              return { ...p, vault: [] };
-            }
-            return p;
-          });
         }
       }
       // 被りあり or バリア - 何も起きない
+    }
+
+    // 奪取を一括で適用
+    if (vaultSteals.length > 0) {
+      updatedPlayers = updatedPlayers.map(p => {
+        // この人が奪われる宝石
+        const stolenFrom = vaultSteals.find(s => s.targetId === p.id);
+        // この人が奪う宝石
+        const stolenTo = vaultSteals.filter(s => s.attackerId === p.id);
+
+        let newVault = [...p.vault];
+
+        // 奪われた分を削除
+        if (stolenFrom) {
+          newVault = [];
+        }
+
+        // 奪った分を追加
+        for (const steal of stolenTo) {
+          newVault = [...newVault, ...steal.gems];
+        }
+
+        return { ...p, vault: newVault };
+      });
     }
 
     // バリアを解決
