@@ -173,11 +173,14 @@ export const GemPlatform3D = ({ gems, className = '' }: GemPlatform3DProps) => {
 
   const platformSize = 180;
 
+  // 外側と同じ背景色（slate-700）
+  const bgColor = '#334155';
+
   if (gems.length === 0) {
     return (
       <div
-        className={`flex items-center justify-center bg-slate-700/50 rounded-lg ${className}`}
-        style={{ width: platformSize, height: platformSize }}
+        className={`flex items-center justify-center rounded-lg ${className}`}
+        style={{ width: platformSize, height: platformSize, backgroundColor: bgColor }}
       >
         <span className="text-slate-500 text-sm">空</span>
       </div>
@@ -186,8 +189,8 @@ export const GemPlatform3D = ({ gems, className = '' }: GemPlatform3DProps) => {
 
   return (
     <div
-      className={`rounded-lg overflow-hidden bg-slate-700/50 ${className}`}
-      style={{ width: platformSize, height: platformSize }}
+      className={`rounded-lg overflow-hidden ${className}`}
+      style={{ width: platformSize, height: platformSize, backgroundColor: bgColor }}
     >
       <Canvas
         key={key}
@@ -195,7 +198,7 @@ export const GemPlatform3D = ({ gems, className = '' }: GemPlatform3DProps) => {
         camera={{ position: [0, 6, 3], fov: 35 }}
         gl={{ antialias: true, alpha: true }}
       >
-        <color attach="background" args={['#334155']} />
+        <color attach="background" args={[bgColor]} />
         <PlatformScene gems={gems} />
       </Canvas>
     </div>
