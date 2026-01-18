@@ -9,9 +9,10 @@ import { JackalDevGame } from './games/jackal-dev/JackalDevGame';
 import { PolyformGame } from './games/polyform/PolyformGame';
 import { PolyformDevGame } from './games/polyform-dev/PolyformDevGame';
 import { DesperadoGame } from './games/desperado/DesperadoGame';
+import { SparkGame } from './games/spark/SparkGame';
 import { AdminPage } from './admin/AdminPage';
 
-type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform' | 'polyform-dev' | 'desperado' | 'boards-dev' | 'admin';
+type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform' | 'polyform-dev' | 'desperado' | 'spark' | 'boards-dev' | 'admin';
 
 // クエリパラメータを保持（?v=xxx などのキャッシュバスター用）
 const getQueryString = (excludeKeys: string[] = []) => {
@@ -39,6 +40,7 @@ const getGameFromPath = (): GameType => {
     if (redirectPath === 'polyform') return 'polyform';
     if (redirectPath === 'polyform-dev') return 'polyform-dev';
     if (redirectPath === 'desperado') return 'desperado';
+    if (redirectPath === 'spark') return 'spark';
     if (redirectPath === 'boards-dev') return 'boards-dev';
     if (redirectPath === 'admin') return 'admin';
   }
@@ -53,6 +55,7 @@ const getGameFromPath = (): GameType => {
   if (path === 'polyform') return 'polyform';
   if (path === 'polyform-dev') return 'polyform-dev';
   if (path === 'desperado') return 'desperado';
+  if (path === 'spark') return 'spark';
   if (path === 'boards-dev') return 'boards-dev';
   if (path === 'admin') return 'admin';
   return 'none';
@@ -177,6 +180,9 @@ function App() {
   }
   if (selectedGame === 'desperado') {
     return <DesperadoGame onBack={() => selectGame('none')} />;
+  }
+  if (selectedGame === 'spark') {
+    return <SparkGame onBack={() => selectGame('none')} />;
   }
   if (selectedGame === 'boards-dev') {
     // 開発版ゲーム一覧
@@ -402,6 +408,28 @@ function App() {
                   onClick={() => selectGame('desperado')}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-500 to-red-500
                     hover:from-amber-600 hover:to-red-600 rounded-lg text-white font-bold transition-all"
+                >
+                  遊ぶ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* SPARK */}
+          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-cyan-500 transition-all">
+            <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center">
+              <span className="text-4xl font-bold text-white tracking-wider">SPARK</span>
+            </div>
+            <div className="p-4">
+              <h2 className="text-lg font-bold text-white mb-2">SPARK</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                宝石を奪い合うバッティングゲーム。被らなければ獲得、被ったら誰も取れない！
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => selectGame('spark')}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500
+                    hover:from-cyan-600 hover:to-blue-600 rounded-lg text-white font-bold transition-all"
                 >
                   遊ぶ
                 </button>
