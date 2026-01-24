@@ -44,6 +44,7 @@ export interface Player {
   hasRolled: boolean;
   isEliminated: boolean;
   rerollsRemaining: number; // 残り振り直し回数（初期値2）
+  isDddiceReady?: boolean; // dddice SDK接続完了フラグ
 }
 
 // ゲーム状態（Firebase同期）

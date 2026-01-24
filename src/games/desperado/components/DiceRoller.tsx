@@ -14,6 +14,7 @@ interface DiceRollerProps {
   onStartRoll: () => void;
   showButton: boolean;
   rollingPlayerId: string | null;
+  onConnected?: () => void; // dddice接続完了時のコールバック
 }
 
 // 外部からロールをトリガーするためのハンドル
@@ -30,13 +31,14 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   onStartRoll,
   showButton,
   rollingPlayerId,
+  onConnected,
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dddiceRef = useRef<ThreeDDice | null>(null);
   const [isSdkReady, setIsSdkReady] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('初期化中...');
+  const [connectionStatus, setConnectionStatus] = useState('ダイスを準備中...');
   const lastRollUuid = useRef<string | null>(null);
   const isInitialized = useRef(false);
   const isSettingUpRoom = useRef(false);
@@ -65,13 +67,14 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
 
     const initDddice = async () => {
       try {
-        setConnectionStatus('SDK初期化中...');
+        setConnectionStatus('ダイスを準備中...');
 
-        // ダイスサイズを大きく設定
+        // ダイスサイズを大きく設定、サウンドを無効化
         const dddice = new ThreeDDice(canvasRef.current!, DDDICE_API_KEY, {
           dice: {
             size: 2.5, // さらに大きく
           },
+          sounds: false, // 効果音を無効化
         });
         dddiceRef.current = dddice;
 
@@ -115,11 +118,11 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
           // テーマ取得失敗は無視
         }
 
-        setConnectionStatus('SDK起動完了');
+        setConnectionStatus('準備完了');
         setIsSdkReady(true);
       } catch (err) {
         console.error('dddice initialization error:', err);
-        setConnectionStatus('SDK初期化エラー');
+        setConnectionStatus('準備に失敗しました');
       }
     };
 
@@ -149,7 +152,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     const shouldJoinRoom = !!dddiceRoomSlug;
 
     if (!shouldCreateRoom && !shouldJoinRoom) {
-      setConnectionStatus('ホストがルームを作成するのを待っています...');
+      setConnectionStatus('他のプレイヤーを待っています...');
       return;
     }
 
@@ -161,7 +164,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
       try {
         if (shouldCreateRoom) {
           // ホスト: 新しいルームを作成
-          setConnectionStatus('ルーム作成中...');
+          setConnectionStatus('ダイスフィールドを準備中...');
 
           const response = await dddice.api?.room?.create();
           if (response?.data?.slug) {
@@ -171,17 +174,18 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
             onDddiceRoomCreated(newSlug);
 
             // ルームに接続
-            setConnectionStatus('ルームに接続中...');
+            setConnectionStatus('接続中...');
             dddice.connect(newSlug);
             setIsConnected(true);
             setConnectionStatus('接続完了');
+            onConnected?.();
           } else {
-            setConnectionStatus('ルーム作成失敗');
+            setConnectionStatus('準備に失敗しました');
             isSettingUpRoom.current = false;
           }
         } else if (shouldJoinRoom && dddiceRoomSlug) {
           // 参加者: 既存のルームに参加
-          setConnectionStatus('ルームに参加中...');
+          setConnectionStatus('参加中...');
 
           try {
             await dddice.api?.room?.join(dddiceRoomSlug);
@@ -193,16 +197,17 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
           dddice.connect(dddiceRoomSlug);
           setIsConnected(true);
           setConnectionStatus('接続完了');
+          onConnected?.();
         }
       } catch (err) {
         console.error('Room setup error:', err);
-        setConnectionStatus('接続エラー');
+        setConnectionStatus('接続に失敗しました');
         isSettingUpRoom.current = false;
       }
     };
 
     setupRoom();
-  }, [isSdkReady, isHost, dddiceRoomSlug, isConnected, onDddiceRoomCreated]);
+  }, [isSdkReady, isHost, dddiceRoomSlug, isConnected, onDddiceRoomCreated, onConnected]);
 
   // ダイスを振る
   const handleRoll = useCallback(async () => {

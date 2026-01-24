@@ -38,6 +38,21 @@ export const GamePlayPhase = ({
   const isMyTurn = gameState.currentTurnPlayerId === playerId;
   const diceRollerRef = useRef<DiceRollerHandle>(null);
 
+  // 全員がdddice接続完了しているかチェック
+  const allPlayersReady = activePlayers.every(p => p.isDddiceReady);
+
+  // dddice接続完了時のハンドラ
+  const handleDddiceConnected = useCallback(() => {
+    // 自分のisDddiceReadyをtrueに更新
+    const updatedPlayers = gameState.players.map(p => {
+      if (p.id === playerId) {
+        return { ...p, isDddiceReady: true };
+      }
+      return p;
+    });
+    onUpdateGameState({ players: updatedPlayers });
+  }, [gameState.players, playerId, onUpdateGameState]);
+
   // ダイスを振り始める（dddiceに通知）
   const handleStartRoll = useCallback(() => {
     if (!currentPlayer || currentPlayer.hasRolled || !isMyTurn) return;
@@ -308,7 +323,9 @@ export const GamePlayPhase = ({
                 {/* ステータス表示 */}
                 {gameState.phase === 'rolling' && (
                   <div className="text-center">
-                    {isMyTurn && currentPlayer && !currentPlayer.hasRolled && currentPlayer.currentRoll ? (
+                    {!allPlayersReady ? (
+                      <p className="text-slate-400 animate-pulse">全員の準備完了を待っています...</p>
+                    ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled && currentPlayer.currentRoll ? (
                       <p className="text-amber-400 font-bold">キープするか振り直すか選んでください</p>
                     ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
                       <p className="text-amber-400 font-bold">あなたの番です</p>
@@ -335,12 +352,14 @@ export const GamePlayPhase = ({
                   onStartRoll={handleStartRoll}
                   showButton={!!(
                     gameState.phase === 'rolling' &&
+                    allPlayersReady && // 全員が準備完了している場合のみ
                     isMyTurn &&
                     currentPlayer &&
                     !currentPlayer.hasRolled &&
                     !currentPlayer.currentRoll // まだ振っていない場合のみ「ダイスを振る」表示
                   )}
                   rollingPlayerId={gameState.rollingPlayerId}
+                  onConnected={handleDddiceConnected}
                 />
 
                 {/* 振り直し/キープ選択（自分のターンで、振った後、まだ確定していない場合） */}
