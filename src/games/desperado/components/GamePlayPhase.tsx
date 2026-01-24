@@ -3,6 +3,7 @@ import { Skull, Heart, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-r
 import type { GameState, DiceResult } from '../types/game';
 import { getRollRank, getRollDisplayName, findWeakestPlayers } from '../lib/dice';
 import { DiceRoller, type DiceRollerHandle } from './DiceRoller';
+import { RoundResultModal } from './RoundResultModal';
 
 interface GamePlayPhaseProps {
   gameState: GameState;
@@ -46,26 +47,22 @@ export const GamePlayPhase = ({
 
   // dddice接続完了時のハンドラ
   const handleDddiceConnected = useCallback(() => {
-    // 自分のdddiceReady状態をtrueに更新（他のプレイヤーの状態を上書きしない）
     onSetDddiceReady(playerId);
   }, [playerId, onSetDddiceReady]);
 
   // ダイスを振り始める（dddiceに通知）
   const handleStartRoll = useCallback(() => {
     if (!currentPlayer || currentPlayer.hasRolled || !isMyTurn) return;
-    // 他のプレイヤーに「振り始めた」ことを通知
     onUpdateGameState({ rollingPlayerId: playerId });
   }, [currentPlayer, isMyTurn, playerId, onUpdateGameState]);
 
-  // dddiceからの結果を受け取る（振り直し可能な状態に）
+  // dddiceからの結果を受け取る
   const handleRollComplete = useCallback((die1: number, die2: number) => {
     const result: DiceResult = { die1, die2 };
 
-    // プレイヤーの出目を更新
-    // 振り直しの場合のみrerollsRemainingを減らす（最初のロールでは減らさない）
     const updatedPlayers = gameState.players.map(p => {
       if (p.id === playerId) {
-        const isReroll = p.currentRoll != null; // 既に出目があれば振り直し（null/undefined両方チェック）
+        const isReroll = p.currentRoll != null;
         return {
           ...p,
           currentRoll: result,
@@ -88,7 +85,6 @@ export const GamePlayPhase = ({
     const rank = getRollRank(currentPlayer.currentRoll);
     const isDesperado = rank.type === 'desperado';
 
-    // hasRolledをtrueに
     const updatedPlayers = gameState.players.map(p => {
       if (p.id === playerId) {
         return { ...p, hasRolled: true };
@@ -110,7 +106,6 @@ export const GamePlayPhase = ({
       }
     }
 
-    // 全員振ったかチェック
     const allHaveRolled = updatedPlayers
       .filter(p => !p.isEliminated)
       .every(p => p.hasRolled);
@@ -128,14 +123,13 @@ export const GamePlayPhase = ({
     onUpdateGameState({ dddiceRoomSlug: slug });
   }, [onUpdateGameState]);
 
-  // 振り直し（DiceRollerのtriggerRollを呼ぶ）
+  // 振り直し
   const handleReroll = useCallback(() => {
     diceRollerRef.current?.triggerRoll();
   }, []);
 
   // 次のラウンドへ
   const handleNextRound = () => {
-    // 負けたプレイヤーを特定
     const rolledPlayers = activePlayers
       .filter(p => p.currentRoll)
       .map(p => ({ playerId: p.id, roll: p.currentRoll as DiceResult }));
@@ -143,7 +137,6 @@ export const GamePlayPhase = ({
     const loserIds = findWeakestPlayers(rolledPlayers);
     const penalty = gameState.desperadoRolledThisRound ? 2 : 1;
 
-    // ライフを減らす & 振り直し回数をリセット
     const updatedPlayers = gameState.players.map(p => {
       if (loserIds.includes(p.id)) {
         const newLives = Math.max(0, p.lives - penalty);
@@ -164,11 +157,9 @@ export const GamePlayPhase = ({
       };
     });
 
-    // 残りプレイヤーをチェック
     const remainingPlayers = updatedPlayers.filter(p => !p.isEliminated);
 
     if (remainingPlayers.length <= 1) {
-      // ゲーム終了
       onUpdateGameState({
         players: updatedPlayers,
         phase: 'game_end',
@@ -176,8 +167,6 @@ export const GamePlayPhase = ({
         rollingPlayerId: null,
       });
     } else {
-      // 次のラウンド開始
-      // 新しいターン順（前回の負けた人から開始、または既存順）
       const newTurnOrder = [...gameState.turnOrder].filter(id =>
         updatedPlayers.find(p => p.id === id && !p.isEliminated)
       );
@@ -197,10 +186,15 @@ export const GamePlayPhase = ({
     }
   };
 
+  // 現在のターンプレイヤー
+  const currentTurnPlayer = gameState.players.find(p => p.id === gameState.currentTurnPlayerId);
+  const someoneIsRolling = !!gameState.rollingPlayerId;
+  const rollingPlayer = gameState.players.find(p => p.id === gameState.rollingPlayerId);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-900 to-red-900">
       <div className="min-h-screen bg-black/20 p-4">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {/* ヘッダー */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -220,222 +214,178 @@ export const GamePlayPhase = ({
               退出
             </button>
           </div>
+
           {gameState.desperadoRolledThisRound && (
             <p className="text-red-400 font-bold text-center mb-4 animate-pulse">
               デスペラード発動中！ペナルティ2倍！
             </p>
           )}
 
-          {/* プレイヤー一覧 */}
-          <div className="bg-slate-800/90 rounded-xl p-4 mb-4">
-            <h2 className="text-slate-400 text-sm mb-3">プレイヤー</h2>
-            <div className="space-y-2">
-              {gameState.players.map((player) => {
-                const isCurrentTurn = gameState.currentTurnPlayerId === player.id;
-                const isMe = player.id === playerId;
-                const isLoser = gameState.phase === 'result' &&
-                  findWeakestPlayers(
-                    activePlayers
-                      .filter(p => p.currentRoll)
-                      .map(p => ({ playerId: p.id, roll: p.currentRoll as DiceResult }))
-                  ).includes(player.id);
-
-                return (
-                  <div
-                    key={player.id}
-                    className={`flex items-center justify-between p-3 rounded-lg transition-all ${
-                      player.isEliminated
-                        ? 'bg-slate-700/50 opacity-50'
-                        : isCurrentTurn
-                        ? 'bg-amber-600/30 ring-2 ring-amber-500'
-                        : isLoser
-                        ? 'bg-red-600/30 ring-2 ring-red-500'
-                        : 'bg-slate-700/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* 名前 */}
-                      <div className="flex items-center gap-2">
-                        {player.isEliminated && <Skull className="w-4 h-4 text-slate-500" />}
-                        <span className={`font-bold ${player.isEliminated ? 'text-slate-500 line-through' : 'text-white'}`}>
-                          {player.name}
-                        </span>
-                        {isMe && <span className="text-slate-400 text-xs">(自分)</span>}
-                      </div>
-
-                      {/* ライフ */}
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Heart
-                            key={i}
-                            className={`w-4 h-4 ${i < player.lives ? 'text-red-500 fill-red-500' : 'text-slate-600'}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 出目 */}
-                    <div className="flex items-center gap-2">
-                      {player.currentRoll ? (
-                        <>
-                          <div className="flex items-center gap-1">
-                            <DiceIcon value={player.currentRoll.die1} className="w-8 h-8 text-white" />
-                            <DiceIcon value={player.currentRoll.die2} className="w-8 h-8 text-white" />
-                          </div>
-                          <span className={`text-sm font-bold ${
-                            getRollRank(player.currentRoll).type === 'desperado'
-                              ? 'text-amber-400'
-                              : getRollRank(player.currentRoll).type === 'doubles'
-                              ? 'text-purple-400'
-                              : 'text-slate-300'
-                          }`}>
-                            {getRollDisplayName(player.currentRoll)}
-                          </span>
-                        </>
-                      ) : player.hasRolled ? (
-                        <span className="text-slate-500">振り済み</span>
-                      ) : isCurrentTurn && !player.isEliminated ? (
-                        <span className="text-amber-400 animate-pulse">振る番</span>
-                      ) : !player.isEliminated ? (
-                        <span className="text-slate-500">待機中</span>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ダイスエリア（常に表示） */}
-          {(gameState.phase === 'rolling' || gameState.phase === 'result') && (() => {
-            // 現在のターンプレイヤー
-            const currentTurnPlayer = gameState.players.find(p => p.id === gameState.currentTurnPlayerId);
-            // 誰かがダイスを振っているか
-            const someoneIsRolling = !!gameState.rollingPlayerId;
-            // 振っている人
-            const rollingPlayer = gameState.players.find(p => p.id === gameState.rollingPlayerId);
-
-            return (
-              <div className="bg-slate-800/90 rounded-xl p-4 space-y-4">
-                {/* ステータス表示 */}
-                {gameState.phase === 'rolling' && (
-                  <div className="text-center">
-                    {!allPlayersReady ? (
-                      <p className="text-slate-400 animate-pulse">全員の準備完了を待っています...</p>
-                    ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled && currentPlayer.currentRoll ? (
-                      <p className="text-amber-400 font-bold">キープするか振り直すか選んでください</p>
-                    ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
-                      <p className="text-amber-400 font-bold">あなたの番です</p>
-                    ) : someoneIsRolling ? (
-                      <p className="text-amber-400">
-                        {`${rollingPlayer?.name}がダイスを振っています`}
-                      </p>
-                    ) : currentPlayer?.hasRolled ? (
-                      <p className="text-slate-400">{currentTurnPlayer?.name}の番を待っています...</p>
-                    ) : (
-                      <p className="text-amber-400">{currentTurnPlayer?.name}の番です</p>
-                    )}
-                  </div>
-                )}
-
-                {/* DiceRoller - dddiceで全員に同期表示 */}
-                <DiceRoller
-                  ref={diceRollerRef}
-                  isHost={isHost}
-                  dddiceRoomSlug={gameState.dddiceRoomSlug}
-                  onDddiceRoomCreated={handleDddiceRoomCreated}
-                  onRollComplete={handleRollComplete}
-                  isMyTurn={isMyTurn && !currentPlayer?.hasRolled && gameState.phase === 'rolling'}
-                  onStartRoll={handleStartRoll}
-                  showButton={!!(
-                    gameState.phase === 'rolling' &&
-                    allPlayersReady && // 全員が準備完了している場合のみ
-                    isMyTurn &&
-                    currentPlayer &&
-                    !currentPlayer.hasRolled &&
-                    !currentPlayer.currentRoll // まだ振っていない場合のみ「ダイスを振る」表示
+          {/* 2カラムレイアウト */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 左カラム: ダイスフィールド */}
+            <div className="bg-slate-800/90 rounded-xl p-4 space-y-4">
+              {/* ステータス表示 */}
+              {gameState.phase === 'rolling' && (
+                <div className="text-center">
+                  {!allPlayersReady ? (
+                    <p className="text-slate-400 animate-pulse">全員の準備完了を待っています...</p>
+                  ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled && currentPlayer.currentRoll ? (
+                    <p className="text-amber-400 font-bold">キープするか振り直すか選んでください</p>
+                  ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
+                    <p className="text-amber-400 font-bold">あなたの番です</p>
+                  ) : someoneIsRolling ? (
+                    <p className="text-amber-400">
+                      {`${rollingPlayer?.name}がダイスを振っています`}
+                    </p>
+                  ) : currentPlayer?.hasRolled ? (
+                    <p className="text-slate-400">{currentTurnPlayer?.name}の番を待っています...</p>
+                  ) : (
+                    <p className="text-amber-400">{currentTurnPlayer?.name}の番です</p>
                   )}
-                  rollingPlayerId={gameState.rollingPlayerId}
-                  onConnected={handleDddiceConnected}
-                />
+                </div>
+              )}
 
-                {/* 振り直し/キープ選択（自分のターンで、振った後、まだ確定していない場合） */}
-                {gameState.phase === 'rolling' &&
+              {/* DiceRoller */}
+              <DiceRoller
+                ref={diceRollerRef}
+                isHost={isHost}
+                dddiceRoomSlug={gameState.dddiceRoomSlug}
+                onDddiceRoomCreated={handleDddiceRoomCreated}
+                onRollComplete={handleRollComplete}
+                isMyTurn={isMyTurn && !currentPlayer?.hasRolled && gameState.phase === 'rolling'}
+                onStartRoll={handleStartRoll}
+                showButton={!!(
+                  gameState.phase === 'rolling' &&
+                  allPlayersReady &&
                   isMyTurn &&
                   currentPlayer &&
                   !currentPlayer.hasRolled &&
-                  currentPlayer.currentRoll && (
-                    <div className="space-y-3">
-                      <div className="text-center">
-                        <p className="text-white font-bold">
-                          {getRollDisplayName(currentPlayer.currentRoll)}
-                        </p>
-                        <p className="text-slate-400 text-sm">
-                          残り振り直し: {currentPlayer.rerollsRemaining ?? 0}回
-                        </p>
-                      </div>
-                      <div className="flex gap-3">
-                        {(currentPlayer.rerollsRemaining ?? 0) > 0 && (
-                          <button
-                            onClick={handleReroll}
-                            className="flex-1 px-6 py-3 bg-slate-600 hover:bg-slate-500
-                              rounded-lg text-white font-bold transition-all"
-                          >
-                            振り直す
-                          </button>
-                        )}
-                        <button
-                          onClick={handleKeepRoll}
-                          className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
-                            hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
-                        >
-                          キープ
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  !currentPlayer.currentRoll
+                )}
+                rollingPlayerId={gameState.rollingPlayerId}
+                onConnected={handleDddiceConnected}
+              />
 
-                {/* 結果表示 */}
-                {gameState.phase === 'result' && (
-                  <div className="space-y-4">
+              {/* 振り直し/キープ選択 */}
+              {gameState.phase === 'rolling' &&
+                isMyTurn &&
+                currentPlayer &&
+                !currentPlayer.hasRolled &&
+                currentPlayer.currentRoll && (
+                  <div className="space-y-3">
                     <div className="text-center">
-                      <p className="text-white text-lg mb-2">ラウンド結果</p>
-                      {(() => {
-                        const loserIds = findWeakestPlayers(
-                          activePlayers
-                            .filter(p => p.currentRoll)
-                            .map(p => ({ playerId: p.id, roll: p.currentRoll as DiceResult }))
-                        );
-                        const losers = loserIds.map(id => gameState.players.find(p => p.id === id)?.name).join(', ');
-                        const penalty = gameState.desperadoRolledThisRound ? 2 : 1;
-                        return (
-                          <p className="text-red-400 font-bold">
-                            {losers} が ライフ-{penalty}
-                          </p>
-                        );
-                      })()}
+                      <p className="text-white font-bold">
+                        {getRollDisplayName(currentPlayer.currentRoll)}
+                      </p>
+                      <p className="text-slate-400 text-sm">
+                        残り振り直し: {currentPlayer.rerollsRemaining ?? 0}回
+                      </p>
                     </div>
-                    {isHost ? (
+                    <div className="flex gap-3">
+                      {(currentPlayer.rerollsRemaining ?? 0) > 0 && (
+                        <button
+                          onClick={handleReroll}
+                          className="flex-1 px-6 py-3 bg-slate-600 hover:bg-slate-500
+                            rounded-lg text-white font-bold transition-all"
+                        >
+                          振り直す
+                        </button>
+                      )}
                       <button
-                        onClick={handleNextRound}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
+                        onClick={handleKeepRoll}
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
                           hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
                       >
-                        次のラウンドへ
+                        キープ
                       </button>
-                    ) : (
-                      <div className="text-center text-slate-400 py-3">
-                        ホストの操作を待っています...
-                      </div>
-                    )}
+                    </div>
                   </div>
                 )}
-              </div>
-            );
-          })()}
+            </div>
 
+            {/* 右カラム: プレイヤー一覧 */}
+            <div className="bg-slate-800/90 rounded-xl p-4">
+              <h2 className="text-slate-400 text-sm mb-3">プレイヤー</h2>
+              <div className="space-y-2">
+                {gameState.players.map((player) => {
+                  const isCurrentTurn = gameState.currentTurnPlayerId === player.id;
+                  const isMe = player.id === playerId;
+
+                  return (
+                    <div
+                      key={player.id}
+                      className={`p-3 rounded-lg transition-all ${
+                        player.isEliminated
+                          ? 'bg-slate-700/50 opacity-50'
+                          : isCurrentTurn
+                          ? 'bg-amber-600/30 ring-2 ring-amber-500'
+                          : 'bg-slate-700/50'
+                      }`}
+                    >
+                      {/* 上段: 名前 + ライフ */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {player.isEliminated && <Skull className="w-4 h-4 text-slate-500" />}
+                          <span className={`font-bold ${player.isEliminated ? 'text-slate-500 line-through' : 'text-white'}`}>
+                            {player.name}
+                          </span>
+                          {isMe && <span className="text-slate-400 text-xs">(自分)</span>}
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Heart
+                              key={i}
+                              className={`w-4 h-4 ${i < player.lives ? 'text-red-500 fill-red-500' : 'text-slate-600'}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 下段: ダイス状況 */}
+                      <div className="flex items-center justify-end gap-2">
+                        {player.currentRoll ? (
+                          <>
+                            <div className="flex items-center gap-0.5">
+                              <DiceIcon value={player.currentRoll.die1} className="w-6 h-6 text-white" />
+                              <DiceIcon value={player.currentRoll.die2} className="w-6 h-6 text-white" />
+                            </div>
+                            <span className={`text-sm font-bold ${
+                              getRollRank(player.currentRoll).type === 'desperado'
+                                ? 'text-amber-400'
+                                : getRollRank(player.currentRoll).type === 'doubles'
+                                ? 'text-purple-400'
+                                : 'text-slate-300'
+                            }`}>
+                              {getRollDisplayName(player.currentRoll)}
+                            </span>
+                          </>
+                        ) : player.hasRolled ? (
+                          <span className="text-slate-500 text-sm">振り済み</span>
+                        ) : isCurrentTurn && !player.isEliminated ? (
+                          <span className="text-amber-400 text-sm animate-pulse">振る番</span>
+                        ) : !player.isEliminated ? (
+                          <span className="text-slate-500 text-sm">待機中</span>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* ラウンド結果モーダル */}
+      {gameState.phase === 'result' && (
+        <RoundResultModal
+          gameState={gameState}
+          playerId={playerId}
+          isHost={isHost}
+          onNextRound={handleNextRound}
+        />
+      )}
     </div>
   );
 };
