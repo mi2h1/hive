@@ -69,12 +69,11 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
       try {
         setConnectionStatus('ダイスを準備中...');
 
-        // ダイスサイズを大きく設定、サウンドを無効化
+        // ダイスサイズを大きく設定
         const dddice = new ThreeDDice(canvasRef.current!, DDDICE_API_KEY, {
           dice: {
             size: 2.5, // さらに大きく
           },
-          sounds: false, // 効果音を無効化
         });
         dddiceRef.current = dddice;
 
