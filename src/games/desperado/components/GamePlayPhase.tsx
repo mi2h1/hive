@@ -39,19 +39,16 @@ export const GamePlayPhase = ({
   const diceRollerRef = useRef<DiceRollerHandle>(null);
 
   // 全員がdddice接続完了しているかチェック
-  const allPlayersReady = activePlayers.every(p => p.isDddiceReady);
+  const dddiceReady = gameState.dddiceReady || {};
+  const allPlayersReady = activePlayers.every(p => dddiceReady[p.id]);
 
   // dddice接続完了時のハンドラ
   const handleDddiceConnected = useCallback(() => {
-    // 自分のisDddiceReadyをtrueに更新
-    const updatedPlayers = gameState.players.map(p => {
-      if (p.id === playerId) {
-        return { ...p, isDddiceReady: true };
-      }
-      return p;
+    // 自分のdddiceReady状態をtrueに更新（他のプレイヤーの状態を上書きしない）
+    onUpdateGameState({
+      dddiceReady: { ...gameState.dddiceReady, [playerId]: true }
     });
-    onUpdateGameState({ players: updatedPlayers });
-  }, [gameState.players, playerId, onUpdateGameState]);
+  }, [gameState.dddiceReady, playerId, onUpdateGameState]);
 
   // ダイスを振り始める（dddiceに通知）
   const handleStartRoll = useCallback(() => {

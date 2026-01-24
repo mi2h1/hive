@@ -44,7 +44,6 @@ export interface Player {
   hasRolled: boolean;
   isEliminated: boolean;
   rerollsRemaining: number; // 残り振り直し回数（初期値2）
-  isDddiceReady?: boolean; // dddice SDK接続完了フラグ
 }
 
 // ゲーム状態（Firebase同期）
@@ -60,6 +59,7 @@ export interface GameState {
   // ダイスアニメーション同期用
   rollingPlayerId: string | null; // 現在ダイスを振っているプレイヤーID
   dddiceRoomSlug: string | null; // dddice のルームスラッグ
+  dddiceReady?: Record<string, boolean>; // プレイヤーIDごとのdddice接続状態
 }
 
 // 部屋データ

@@ -52,6 +52,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
       turnOrder: shuffledOrder,
       currentTurnPlayerId: shuffledOrder[0],
       rollingPlayerId: null,
+      dddiceReady: {}, // dddice接続状態をリセット
       players: players.map(p => ({
         ...p,
         currentRoll: null,
@@ -77,6 +78,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
       winnerId: null,
       lastLoser: null,
       rollingPlayerId: null,
+      dddiceReady: {}, // dddice接続状態をリセット
       players: players.map(p => ({
         ...p,
         lives: INITIAL_LIVES,
