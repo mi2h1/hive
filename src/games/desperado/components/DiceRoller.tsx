@@ -43,6 +43,8 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   const onRollCompleteRef = useRef(onRollComplete);
   // 自分がロール中かどうかを追跡（イベントハンドラ内で参照）
   const iAmRollingRef = useRef(false);
+  // このロールセッションで既に結果を報告したかどうか
+  const hasReportedResultRef = useRef(false);
 
   // コールバックを常に最新に保つ
   useEffect(() => {
@@ -81,11 +83,13 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
 
           // 自分がロールした場合のみゲーム状態を更新
           // 他のプレイヤーのロールはアニメーションだけ見る
-          if (iAmRollingRef.current) {
+          // 既に結果を報告済みなら二重処理しない
+          if (iAmRollingRef.current && !hasReportedResultRef.current) {
             const dice = roll.values || [];
             if (dice.length >= 2) {
               const die1 = dice[0]?.value ?? 1;
               const die2 = dice[1]?.value ?? 1;
+              hasReportedResultRef.current = true; // 結果報告済みフラグを立てる
               onRollCompleteRef.current(die1, die2);
             }
             iAmRollingRef.current = false;
@@ -207,6 +211,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     onStartRoll();
     setIsRolling(true);
     iAmRollingRef.current = true; // 自分がロール中フラグを立てる
+    hasReportedResultRef.current = false; // 結果報告済みフラグをリセット
 
     try {
       // 2つのd6を振る（クリアは RollStarted イベントで全員同期される）
@@ -218,6 +223,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
       console.error('Roll error:', err);
       setIsRolling(false);
       iAmRollingRef.current = false;
+      hasReportedResultRef.current = false;
     }
   }, [isConnected, isRolling, onStartRoll, dddiceRoomSlug]);
 
