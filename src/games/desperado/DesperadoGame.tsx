@@ -23,6 +23,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
     joinRoom,
     leaveRoom,
     updateGameState,
+    setDddiceReady,
     addTestPlayer,
   } = useRoom(playerId, playerName);
 
@@ -125,6 +126,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
         playerId={playerId}
         isHost={isHost}
         onUpdateGameState={updateGameState}
+        onSetDddiceReady={setDddiceReady}
         onLeaveRoom={handleLeaveToGameTop}
       />
     );

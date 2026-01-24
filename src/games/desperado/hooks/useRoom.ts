@@ -419,6 +419,17 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     }
   }, [roomCode]);
 
+  // dddice接続状態を更新（個別のプレイヤーパスを直接更新）
+  const setDddiceReady = useCallback(async (id: string) => {
+    if (!roomCode) return;
+
+    try {
+      await update(ref(db, `${ROOM_PATH}/${roomCode}/gameState/dddiceReady`), { [id]: true });
+    } catch (err) {
+      console.error('Set dddice ready error:', err);
+    }
+  }, [roomCode]);
+
   // デバッグ用: テストプレイヤーを追加
   const addTestPlayer = useCallback(async () => {
     if (!roomCode || !roomData) return;
@@ -457,6 +468,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     joinRoom,
     leaveRoom,
     updateGameState,
+    setDddiceReady,
     addTestPlayer,
   };
 };

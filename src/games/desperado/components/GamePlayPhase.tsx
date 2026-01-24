@@ -9,6 +9,7 @@ interface GamePlayPhaseProps {
   playerId: string;
   isHost: boolean;
   onUpdateGameState: (state: Partial<GameState>) => void;
+  onSetDddiceReady: (playerId: string) => void;
   onLeaveRoom: () => void;
 }
 
@@ -31,6 +32,7 @@ export const GamePlayPhase = ({
   playerId,
   isHost,
   onUpdateGameState,
+  onSetDddiceReady,
   onLeaveRoom,
 }: GamePlayPhaseProps) => {
   const currentPlayer = gameState.players.find(p => p.id === playerId);
@@ -45,10 +47,8 @@ export const GamePlayPhase = ({
   // dddice接続完了時のハンドラ
   const handleDddiceConnected = useCallback(() => {
     // 自分のdddiceReady状態をtrueに更新（他のプレイヤーの状態を上書きしない）
-    onUpdateGameState({
-      dddiceReady: { ...gameState.dddiceReady, [playerId]: true }
-    });
-  }, [gameState.dddiceReady, playerId, onUpdateGameState]);
+    onSetDddiceReady(playerId);
+  }, [playerId, onSetDddiceReady]);
 
   // ダイスを振り始める（dddiceに通知）
   const handleStartRoll = useCallback(() => {
