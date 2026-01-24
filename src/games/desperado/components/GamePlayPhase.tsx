@@ -53,7 +53,7 @@ export const GamePlayPhase = ({
     // 振り直しの場合のみrerollsRemainingを減らす（最初のロールでは減らさない）
     const updatedPlayers = gameState.players.map(p => {
       if (p.id === playerId) {
-        const isReroll = p.currentRoll !== null; // 既に出目があれば振り直し
+        const isReroll = p.currentRoll != null; // 既に出目があれば振り直し（null/undefined両方チェック）
         return {
           ...p,
           currentRoll: result,
