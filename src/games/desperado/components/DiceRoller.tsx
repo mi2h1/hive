@@ -168,6 +168,19 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
           const response = await dddice.api?.room?.create();
           if (response?.data?.slug) {
             const newSlug = response.data.slug;
+            const room = response.data;
+
+            // ダイス音を無効化（自分のparticipant設定を更新）
+            const myParticipant = room.participants?.[0];
+            if (myParticipant?.id) {
+              try {
+                await dddice.api?.room?.updateParticipant(newSlug, myParticipant.id, {
+                  settings: { roll: { disableShakingSound: true } }
+                } as Partial<typeof myParticipant>);
+              } catch {
+                // 設定更新失敗は無視
+              }
+            }
 
             // Firebaseにスラッグを保存
             onDddiceRoomCreated(newSlug);
@@ -187,7 +200,20 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
           setConnectionStatus('参加中...');
 
           try {
-            await dddice.api?.room?.join(dddiceRoomSlug);
+            const joinResponse = await dddice.api?.room?.join(dddiceRoomSlug);
+
+            // ダイス音を無効化（自分のparticipant設定を更新）
+            const participants = joinResponse?.data?.participants || [];
+            const myParticipant = participants[participants.length - 1]; // 最後に参加した人が自分
+            if (myParticipant?.id) {
+              try {
+                await dddice.api?.room?.updateParticipant(dddiceRoomSlug, myParticipant.id, {
+                  settings: { roll: { disableShakingSound: true } }
+                } as Partial<typeof myParticipant>);
+              } catch {
+                // 設定更新失敗は無視
+              }
+            }
           } catch {
             // 既に参加している場合はエラーを無視
           }
