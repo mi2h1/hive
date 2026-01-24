@@ -102,6 +102,14 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         // SDK開始
         await dddice.start();
 
+        // dddice内部のaudioをミュート（privateプロパティに直接アクセス）
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dddiceAny = dddice as any;
+        if (dddiceAny.audioListener) {
+          // Three.jsのAudioListenerでマスターボリュームを0に
+          dddiceAny.audioListener.setMasterVolume(0);
+        }
+
         // カメラコントロールを無効化（ドラッグ/タッチで視点変更させない）
         dddice.controlsEnabled = false;
 
