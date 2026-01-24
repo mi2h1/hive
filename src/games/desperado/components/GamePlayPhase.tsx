@@ -221,8 +221,8 @@ export const GamePlayPhase = ({
             </p>
           )}
 
-          {/* 2カラムレイアウト */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* 2カラムレイアウト（左:ダイス 広め、右:プレイヤー 狭め） */}
+          <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4">
             {/* 左カラム: ダイスフィールド */}
             <div className="bg-slate-800/90 rounded-xl p-4 space-y-4">
               {/* ステータス表示 */}
