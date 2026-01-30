@@ -66,12 +66,42 @@ src/
 │   │       └── game.ts
 │   ├── jackal-dev/            # ジャッカル（開発版）
 │   │   └── ...                # 本番と同構造 + デバッグ機能
-│   └── polyform-dev/          # POLYFORM（開発版）
-│       ├── PolyformDevGame.tsx
+│   ├── polyform-dev/          # POLYFORM（開発版）
+│   │   ├── PolyformDevGame.tsx
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── data/
+│   │   └── types/
+│   ├── spark/                 # SPARK（本番）
+│   │   ├── SparkGame.tsx
+│   │   ├── components/
+│   │   │   ├── Lobby.tsx
+│   │   │   ├── GamePlayPhase.tsx
+│   │   │   ├── RoundResultModal.tsx
+│   │   │   ├── ResultPhase.tsx
+│   │   │   ├── Gem.tsx
+│   │   │   └── GemPlatform3D.tsx
+│   │   ├── hooks/
+│   │   │   └── useRoom.ts
+│   │   ├── lib/
+│   │   │   └── gems.ts
+│   │   └── types/
+│   │       └── game.ts
+│   └── desperado/             # デスペラード（本番）
+│       ├── DesperadoGame.tsx
 │       ├── components/
+│       │   ├── Lobby.tsx
+│       │   ├── GamePlayPhase.tsx
+│       │   ├── RoundResultModal.tsx
+│       │   ├── ResultScreen.tsx
+│       │   ├── DiceRoller.tsx
+│       │   └── RulesModal.tsx
 │       ├── hooks/
-│       ├── data/
+│       │   └── useRoom.ts
+│       ├── lib/
+│       │   └── dice.ts
 │       └── types/
+│           └── game.ts
 └── shared/
     └── hooks/
         └── usePlayer.ts       # プレイヤー名管理（共用）
@@ -105,11 +135,25 @@ src/
 - 仕様: `docs/polyform-spec.md` 参照
 - 特徴: ピースを集めてパズルカードを完成させる
 
+### SPARK (spark)
+- パス: `/boards/spark`（本番）
+- 状態: 完成・稼働中
+- 概要: 宝石を奪い合う心理戦ゲーム（2〜6人）
+- 仕様: `docs/spark-spec.md` 参照
+- 特徴: React Three Fiber + Rapierによる3D宝石物理シミュレーション
+
+### デスペラード (desperado)
+- パス: `/boards/desperado`（本番）
+- 状態: 完成・稼働中
+- 概要: サイコロ2個で出目の強さを競うダイスバトル（2〜8人）
+- 仕様: `docs/desperado-spec.md` 参照
+- 特徴: dddice連携による3Dダイスアニメーション同期
+
 ### 管理画面 (admin)
 - パス: `/boards/admin`
 - 概要: 全ゲームの部屋をリアルタイム監視
 - 機能:
-  - 部屋一覧表示（AOA / もじはんと / ジャッカル / POLYFORM + 各DEV版）
+  - 部屋一覧表示（AOA / もじはんと / ジャッカル / POLYFORM / SPARK / デスペラード + 各DEV版）
   - 部屋の詳細情報（プレイヤー、フェーズ、お題等）
   - もじはんとの文字パネル状況表示（50音グリッド）
   - 古い部屋の一括削除
@@ -124,6 +168,8 @@ src/
 - `/boards/jackal` → ジャッカル（本番）
 - `/boards/jackal-dev` → ジャッカル（開発版・デバッグ機能付き）
 - `/boards/polyform-dev` → POLYFORM（開発版・デバッグ機能付き）
+- `/boards/spark` → SPARK
+- `/boards/desperado` → デスペラード
 - `/boards/admin` → 管理画面
 
 GitHub Pagesでは404.htmlによるSPAリダイレクトを使用。
@@ -142,6 +188,8 @@ GitHub Pagesでは404.htmlによるSPAリダイレクトを使用。
 | ジャッカル | ジャッカル |
 | ジャッカルDEV | ジャッカルDEV |
 | PolyformDEV | PolyformDEV |
+| SPARK | SPARK |
+| デスペラード | デスペラード |
 | 管理画面 | Game Board - Admin Dashboard |
 
 ## 部屋の自動削除

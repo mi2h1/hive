@@ -151,14 +151,8 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     const setupPresence = async () => {
       await set(myPresenceRef, true);
       await onDisconnect(myPresenceRef).remove();
-
-      const roomSnapshot = await get(roomRef);
-      if (roomSnapshot.exists()) {
-        const room = roomSnapshot.val();
-        if (room.hostId === playerId) {
-          await onDisconnect(roomRef).remove();
-        }
-      }
+      // ホスト切断時の部屋自動削除は無効化（ネットワーク一時切断で消えてしまう問題対策）
+      // 部屋の削除は24時間クリーンアップまたは明示的な退出時のみ
     };
 
     setupPresence();
@@ -166,7 +160,6 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     return () => {
       remove(myPresenceRef);
       onDisconnect(myPresenceRef).cancel();
-      onDisconnect(roomRef).cancel();
     };
   }, [roomCode, playerId]);
 
@@ -197,14 +190,9 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
       if (offlinePlayers.length > 0) {
         const remainingPlayers = players.filter(p => effectiveOnlineIds.includes(p.id));
 
-        if (remainingPlayers.length === 0) {
-          // 全員オフラインになった場合、dddice ルームも削除
-          const dddiceSlug = room.gameState?.dddiceRoomSlug;
-          await Promise.all([
-            remove(roomRef),
-            deleteDddiceRoom(dddiceSlug),
-          ]);
-        } else {
+        // 全員オフラインになっても即削除しない（ネットワーク一時切断対策）
+        // 24時間クリーンアップに任せる
+        if (remainingPlayers.length > 0) {
           const updates: Record<string, unknown> = {
             'gameState/players': remainingPlayers,
           };
@@ -212,10 +200,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
           if (!effectiveOnlineIds.includes(currentHostId)) {
             const newHostId = remainingPlayers[0].id;
             updates['hostId'] = newHostId;
-
-            if (newHostId === playerId) {
-              await onDisconnect(roomRef).remove();
-            }
+            // ホスト切断時の部屋自動削除は無効化済み
           }
 
           await update(roomRef, updates);
