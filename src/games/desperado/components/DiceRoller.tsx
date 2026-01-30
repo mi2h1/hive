@@ -15,11 +15,6 @@ const DDDICE_API_KEY = 'lu5TTPrLRZ4JcL2t7PwE9xBnkdltDqhlwyk33XnUdb7bd065';
 const DICE_THEME = 'untitled-dice-mkhmye02';
 
 
-// フォールバックモードかどうかを判定
-const isFallbackSlug = (slug: string | null): boolean => {
-  return slug?.startsWith('fallback-') ?? false;
-};
-
 interface DiceRollerProps {
   isHost: boolean;
   dddiceRoomSlug: string | null;
@@ -175,19 +170,13 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         const errorMessage = err instanceof Error ? err.message : String(err);
         console.error('[DiceRoller] Error details:', errorMessage);
 
-        // 初期化に失敗したら常に2Dモードにフォールバック
-        console.log('[DiceRoller] Falling back to 2D mode');
+        // 初期化に失敗したら2Dモードにフォールバック
+        // ルーム設定はuseEffectに任せる（fallbackスラッグは作らない）
+        console.log('[DiceRoller] WebGL failed, will use 2D mode');
         setWebglError(true);
         setConnectionStatus('2Dモードで動作中');
         setIsSdkReady(true);
-        setIsConnected(true);
-        // ホストの場合はダミーのルームスラッグを生成（refから最新値を取得）
-        if (isHostRef.current && !dddiceRoomSlugRef.current) {
-          const fallbackSlug = `fallback-${Date.now()}`;
-          console.log('[DiceRoller] Creating fallback room:', fallbackSlug);
-          onDddiceRoomCreatedRef.current(fallbackSlug);
-        }
-        onConnectedRef.current?.();
+        // isConnectedは設定しない → ルーム設定effectが実行される
       }
     };
 
@@ -207,9 +196,22 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     // SDK未初期化 or 接続済みならスキップ
     if (!isSdkReady || isConnected) return;
 
-    // フォールバックモードの場合はdddice操作をスキップ
-    if (isFallbackSlug(dddiceRoomSlug)) {
-      console.log('[DiceRoller] Detected fallback room slug:', dddiceRoomSlug);
+    // 自分が2Dモード（WebGL失敗）の場合
+    if (webglError) {
+      console.log('[DiceRoller] Already in 2D mode, skipping room setup');
+      // ホストで、まだスラッグがなければ空文字を設定（他のプレイヤーにルーム無しを通知）
+      if (isHost && !dddiceRoomSlug) {
+        console.log('[DiceRoller] Host in 2D mode, setting empty slug');
+        onDddiceRoomCreated('');
+      }
+      setIsConnected(true);
+      onConnected?.();
+      return;
+    }
+
+    // ルームスラッグが空文字の場合（ホストがWebGL失敗）、自分も2Dモードに
+    if (dddiceRoomSlug === '') {
+      console.log('[DiceRoller] Host has no WebGL, falling back to 2D');
       setWebglError(true);
       setIsConnected(true);
       setConnectionStatus('2Dモードで動作中');
