@@ -145,7 +145,6 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     // テストプレイヤーはプレゼンス対象外
     if (playerId.startsWith('test-')) return;
 
-    const roomRef = ref(db, `${ROOM_PATH}/${roomCode}`);
     const myPresenceRef = ref(db, `${ROOM_PATH}/${roomCode}/presence/${playerId}`);
 
     const setupPresence = async () => {
