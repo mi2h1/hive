@@ -421,6 +421,11 @@ export const useGame = ({
         };
       });
 
+      // ラストサバイバーボーナスを獲得したらイベントをクリア（同ラウンド内での重複獲得を防ぐ）
+      if (isLastSurvivor) {
+        newState = { ...newState, currentEvent: null };
+      }
+
       // 帰還演出フェーズに移行
       await updateGameState(sanitizeForFirebase({
         ...newState,
