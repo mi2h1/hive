@@ -22,6 +22,11 @@ const testWebGLAvailable = (): boolean => {
   }
 };
 
+// フォールバックモードかどうかを判定
+const isFallbackSlug = (slug: string | null): boolean => {
+  return slug?.startsWith('fallback-') ?? false;
+};
+
 interface DiceRollerProps {
   isHost: boolean;
   dddiceRoomSlug: string | null;
@@ -223,6 +228,16 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   useEffect(() => {
     // SDK未初期化 or 接続済みならスキップ
     if (!isSdkReady || isConnected) return;
+
+    // フォールバックモードの場合はdddice操作をスキップ
+    if (isFallbackSlug(dddiceRoomSlug)) {
+      console.log('[Fallback] Detected fallback room, skipping dddice operations');
+      setWebglError(true);
+      setIsConnected(true);
+      setConnectionStatus('2Dモードで動作中');
+      onConnected?.();
+      return;
+    }
 
     const dddice = dddiceRef.current;
     if (!dddice) return;
