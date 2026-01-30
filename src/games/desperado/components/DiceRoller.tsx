@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
-import { ThreeDDice, ThreeDDiceRollEvent, type IRoll } from 'dddice-js';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-react';
+// dddice-jsは動的インポート（Three.js競合を避けるため）
+import type { ThreeDDice as ThreeDDiceType, IRoll } from 'dddice-js';
 
 // ダイスアイコンコンポーネント
 const DiceIcon = ({ value, className }: { value: number; className?: string }) => {
@@ -50,7 +51,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   displayedDice,
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const dddiceRef = useRef<ThreeDDice | null>(null);
+  const dddiceRef = useRef<ThreeDDiceType | null>(null);
   const [isSdkReady, setIsSdkReady] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
@@ -102,8 +103,11 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         setConnectionStatus('ダイスを準備中...');
         console.log('[DiceRoller] Starting initialization...');
 
-        // 事前WebGLチェックをスキップして直接インスタンス作成を試みる
-        // （事前チェックがWebGLコンテキストを消費してしまうため）
+        // dddice-jsを動的インポート（Three.js競合を避けるため）
+        console.log('[DiceRoller] Loading dddice-js dynamically...');
+        const dddiceModule = await import('dddice-js');
+        const { ThreeDDice, ThreeDDiceRollEvent } = dddiceModule;
+
         console.log('[DiceRoller] Creating dddice instance...');
 
         // ダイスサイズを大きく設定
