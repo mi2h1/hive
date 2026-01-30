@@ -162,9 +162,11 @@ export const SparkGame = ({ onBack }: SparkGameProps) => {
     }
 
     // まず成功する奪取をすべて特定（元の状態を基準に判定）
+    // 重要: players（アクション解決前の状態）を使用する
+    // updatedPlayersを使うと、同ターンで場から取った宝石まで奪われてしまう
     const vaultSteals: { attackerId: string; targetId: string; gems: typeof updatedPlayers[0]['vault'] }[] = [];
     for (const [targetPlayerId, attackerIds] of Object.entries(vaultTargets)) {
-      const targetPlayer = updatedPlayers.find(p => p.id === targetPlayerId);
+      const targetPlayer = players.find(p => p.id === targetPlayerId); // 元の状態を参照
       if (!targetPlayer) continue;
 
       // バリアされているかチェック
@@ -173,7 +175,7 @@ export const SparkGame = ({ onBack }: SparkGameProps) => {
       if (attackerIds.length === 1 && !isBarriered) {
         // 被りなし & バリアなし - 奪取成功
         const attackerId = attackerIds[0];
-        const gems = targetPlayer.vault;
+        const gems = targetPlayer.vault; // 元の金庫（場から取る前の状態）
         if (gems.length > 0) {
           vaultSteals.push({
             attackerId,
