@@ -60,8 +60,15 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
 
   // フェーズ変更を監視（他プレイヤー用）
   useEffect(() => {
+    const prevPhase = prevPhaseRef.current;
+
     // 他プレイヤーが waiting → word_input の遷移を検知した時
-    if (prevPhaseRef.current === 'waiting' && phase === 'word_input' && !showTransition) {
+    // または game_end → word_input の遷移を検知した時（もう一度遊ぶ）
+    if (
+      (prevPhase === 'waiting' || prevPhase === 'game_end') &&
+      phase === 'word_input' &&
+      !showTransition
+    ) {
       // ローカル状態をリセット（前回のゲームの状態をクリア）
       setLocalState(null);
       setTransitionTopic(currentTopic || null);
