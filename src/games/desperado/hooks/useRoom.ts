@@ -177,8 +177,12 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
       if (!roomSnapshot.exists()) return;
 
       const room = roomSnapshot.val();
+      const gamePhase = room.gameState?.phase;
       const players = normalizeArray<Player>(room.gameState?.players);
       const currentHostId = room.hostId;
+
+      // ゲーム中はプレゼンスによるプレイヤー削除を行わない（一時的な切断で落とされるのを防ぐ）
+      if (gamePhase !== 'waiting') return;
 
       // テストプレイヤーは常にオンライン扱い
       const testPlayerIds = players.filter(p => p.id.startsWith('test-')).map(p => p.id);
