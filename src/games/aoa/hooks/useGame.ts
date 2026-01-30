@@ -371,9 +371,9 @@ export const useGame = ({
 
     // 帰還処理（帰還者がいる場合は演出フェーズへ）
     if (returningPlayers.length > 0) {
-      // ラストサバイバーボーナス判定（1人だけ帰還し、他に進む人がいる場合）
+      // ラストサバイバーボーナス判定（最後の1人が帰還した場合＝進む人がもういない）
       const isLastSurvivor = gameState.currentEvent === 'last_survivor' &&
-        returningPlayers.length === 1 && proceedingPlayers.length > 0;
+        returningPlayers.length === 1 && proceedingPlayers.length === 0;
 
       // 帰還情報を計算（遺物の価値もこの時点でロール）
       const returningPlayersInfo: ReturnInfo[] = returningPlayers.map((p) => {
