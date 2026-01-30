@@ -39,6 +39,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   const [isConnected, setIsConnected] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('ダイスを準備中...');
+  const [webglError, setWebglError] = useState(false);
   const lastRollUuid = useRef<string | null>(null);
   const isInitialized = useRef(false);
   const isSettingUpRoom = useRef(false);
@@ -68,6 +69,17 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     const initDddice = async () => {
       try {
         setConnectionStatus('ダイスを準備中...');
+
+        // WebGL利用可能チェック
+        if (!ThreeDDice.isWebGLAvailable()) {
+          console.error('WebGL is not available');
+          setWebglError(true);
+          setConnectionStatus('WebGLが利用できません');
+          // WebGLなしでもゲームを続行できるようにする
+          setIsSdkReady(true);
+          onConnected?.();
+          return;
+        }
 
         // ダイスサイズを大きく設定
         const dddice = new ThreeDDice(canvasRef.current!, DDDICE_API_KEY, {
@@ -129,10 +141,19 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         setIsSdkReady(true);
       } catch (err) {
         console.error('dddice initialization error:', err);
-        // エラー詳細を表示（デバッグ用）
         const errorMessage = err instanceof Error ? err.message : String(err);
         console.error('Error details:', errorMessage);
-        setConnectionStatus(`準備に失敗しました: ${errorMessage.slice(0, 50)}`);
+
+        // WebGLエラーの場合はフォールバックモードで続行
+        if (errorMessage.includes('WebGL')) {
+          setWebglError(true);
+          setConnectionStatus('3Dダイスが利用できません');
+          // WebGLなしでもゲームを続行できるようにする
+          setIsSdkReady(true);
+          onConnected?.();
+        } else {
+          setConnectionStatus(`準備に失敗しました: ${errorMessage.slice(0, 50)}`);
+        }
       }
     };
 
@@ -250,6 +271,21 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
 
   // ダイスを振る
   const handleRoll = useCallback(async () => {
+    // WebGLフォールバックモード: 3Dなしでランダムダイスを生成
+    if (webglError) {
+      onStartRoll();
+      setIsRolling(true);
+
+      // アニメーション風に少し待つ
+      setTimeout(() => {
+        const die1 = Math.floor(Math.random() * 6) + 1;
+        const die2 = Math.floor(Math.random() * 6) + 1;
+        onRollComplete(die1, die2);
+        setIsRolling(false);
+      }, 1000);
+      return;
+    }
+
     if (!dddiceRef.current || !isConnected || isRolling || !dddiceRoomSlug) return;
 
     onStartRoll();
@@ -269,7 +305,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
       iAmRollingRef.current = false;
       hasReportedResultRef.current = false;
     }
-  }, [isConnected, isRolling, onStartRoll, dddiceRoomSlug]);
+  }, [webglError, isConnected, isRolling, onStartRoll, dddiceRoomSlug, onRollComplete]);
 
   // 外部からロールをトリガーするためのハンドルを公開
   useImperativeHandle(ref, () => ({
@@ -294,15 +330,25 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         />
       </div>
 
+      {/* WebGLフォールバック表示 */}
+      {webglError && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/30">
+          <div className="text-center">
+            <p className="text-amber-400 text-sm mb-2">3Dダイスが利用できません</p>
+            <p className="text-slate-400 text-xs">（他のタブを閉じると改善する場合があります）</p>
+          </div>
+        </div>
+      )}
+
       {/* 接続中表示 */}
-      {!isConnected && (
+      {!isConnected && !webglError && (
         <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50">
           <p className="text-amber-400 animate-pulse">{connectionStatus}</p>
         </div>
       )}
 
       {/* ボタン表示 */}
-      {showButton && isConnected && isMyTurn && !isRolling && (
+      {showButton && (isConnected || webglError) && isMyTurn && !isRolling && (
         <button
           onClick={handleRoll}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-3
