@@ -98,14 +98,18 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         // シンプルなWebGL利用可能チェック（Three.jsより先に）
         if (!testWebGLAvailable()) {
           console.error('WebGL is not available (simple test)');
+          console.log('[Fallback] isHost:', isHostRef.current, 'dddiceRoomSlug:', dddiceRoomSlugRef.current);
           setWebglError(true);
           setConnectionStatus('2Dモードで動作中');
           setIsSdkReady(true);
           setIsConnected(true);
           // ホストの場合はダミーのルームスラッグを生成（refから最新値を取得）
           if (isHostRef.current && !dddiceRoomSlugRef.current) {
-            onDddiceRoomCreatedRef.current(`fallback-${Date.now()}`);
+            const fallbackSlug = `fallback-${Date.now()}`;
+            console.log('[Fallback] Creating fallback room:', fallbackSlug);
+            onDddiceRoomCreatedRef.current(fallbackSlug);
           }
+          console.log('[Fallback] Calling onConnected');
           onConnectedRef.current?.();
           return;
         }
