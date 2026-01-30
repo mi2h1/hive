@@ -102,23 +102,9 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         setConnectionStatus('ダイスを準備中...');
         console.log('[DiceRoller] Starting initialization...');
 
-        // dddice SDKのWebGLチェック
-        if (!ThreeDDice.isWebGLAvailable()) {
-          console.error('[DiceRoller] WebGL is not available (dddice check)');
-          setWebglError(true);
-          setConnectionStatus('2Dモードで動作中');
-          setIsSdkReady(true);
-          setIsConnected(true);
-          if (isHostRef.current && !dddiceRoomSlugRef.current) {
-            const fallbackSlug = `fallback-${Date.now()}`;
-            console.log('[DiceRoller] Creating fallback room:', fallbackSlug);
-            onDddiceRoomCreatedRef.current(fallbackSlug);
-          }
-          onConnectedRef.current?.();
-          return;
-        }
-
-        console.log('[DiceRoller] WebGL available, creating dddice instance...');
+        // 事前WebGLチェックをスキップして直接インスタンス作成を試みる
+        // （事前チェックがWebGLコンテキストを消費してしまうため）
+        console.log('[DiceRoller] Creating dddice instance...');
 
         // ダイスサイズを大きく設定
         const dddice = new ThreeDDice(canvasRef.current!, DDDICE_API_KEY, {
@@ -185,28 +171,19 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         const errorMessage = err instanceof Error ? err.message : String(err);
         console.error('[DiceRoller] Error details:', errorMessage);
 
-        // WebGLエラーまたはGPU関連エラーの場合のみフォールバックモードで続行
-        const isWebGLError = errorMessage.toLowerCase().includes('webgl') ||
-                            errorMessage.toLowerCase().includes('gpu') ||
-                            errorMessage.toLowerCase().includes('context');
-
-        if (isWebGLError) {
-          console.log('[DiceRoller] Falling back to 2D mode due to WebGL/GPU error');
-          setWebglError(true);
-          setConnectionStatus('2Dモードで動作中');
-          setIsSdkReady(true);
-          setIsConnected(true);
-          // ホストの場合はダミーのルームスラッグを生成（refから最新値を取得）
-          if (isHostRef.current && !dddiceRoomSlugRef.current) {
-            const fallbackSlug = `fallback-${Date.now()}`;
-            console.log('[DiceRoller] Creating fallback room:', fallbackSlug);
-            onDddiceRoomCreatedRef.current(fallbackSlug);
-          }
-          onConnectedRef.current?.();
-        } else {
-          console.error('[DiceRoller] Non-WebGL error, not falling back');
-          setConnectionStatus(`準備に失敗しました: ${errorMessage.slice(0, 50)}`);
+        // 初期化に失敗したら常に2Dモードにフォールバック
+        console.log('[DiceRoller] Falling back to 2D mode');
+        setWebglError(true);
+        setConnectionStatus('2Dモードで動作中');
+        setIsSdkReady(true);
+        setIsConnected(true);
+        // ホストの場合はダミーのルームスラッグを生成（refから最新値を取得）
+        if (isHostRef.current && !dddiceRoomSlugRef.current) {
+          const fallbackSlug = `fallback-${Date.now()}`;
+          console.log('[DiceRoller] Creating fallback room:', fallbackSlug);
+          onDddiceRoomCreatedRef.current(fallbackSlug);
         }
+        onConnectedRef.current?.();
       }
     };
 
