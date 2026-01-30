@@ -129,7 +129,10 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         setIsSdkReady(true);
       } catch (err) {
         console.error('dddice initialization error:', err);
-        setConnectionStatus('準備に失敗しました');
+        // エラー詳細を表示（デバッグ用）
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error('Error details:', errorMessage);
+        setConnectionStatus(`準備に失敗しました: ${errorMessage.slice(0, 50)}`);
       }
     };
 
@@ -222,8 +225,9 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
                 // 設定更新失敗は無視
               }
             }
-          } catch {
-            // 既に参加している場合はエラーを無視
+          } catch (joinErr) {
+            // 既に参加している場合はエラーを無視するが、ログは出す
+            console.warn('Room join warning:', joinErr);
           }
 
           // WebSocket接続
@@ -234,7 +238,9 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         }
       } catch (err) {
         console.error('Room setup error:', err);
-        setConnectionStatus('接続に失敗しました');
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error('Room setup error details:', errorMessage);
+        setConnectionStatus(`接続に失敗しました: ${errorMessage.slice(0, 50)}`);
         isSettingUpRoom.current = false;
       }
     };
