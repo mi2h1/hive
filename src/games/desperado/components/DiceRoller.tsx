@@ -1,5 +1,13 @@
 import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import { ThreeDDice, ThreeDDiceRollEvent, type IRoll } from 'dddice-js';
+import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-react';
+
+// ダイスアイコンコンポーネント
+const DiceIcon = ({ value, className }: { value: number; className?: string }) => {
+  const icons = { 1: Dice1, 2: Dice2, 3: Dice3, 4: Dice4, 5: Dice5, 6: Dice6 };
+  const Icon = icons[value as keyof typeof icons] || Dice1;
+  return <Icon className={className} />;
+};
 
 // dddice APIキー
 const DDDICE_API_KEY = 'lu5TTPrLRZ4JcL2t7PwE9xBnkdltDqhlwyk33XnUdb7bd065';
@@ -62,6 +70,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   const [isRolling, setIsRolling] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('ダイスを準備中...');
   const [webglError, setWebglError] = useState(false);
+  const [fallbackDice, setFallbackDice] = useState<{ die1: number; die2: number } | null>(null);
   const lastRollUuid = useRef<string | null>(null);
   const isInitialized = useRef(false);
   const isSettingUpRoom = useRef(false);
@@ -86,10 +95,16 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
 
   // 誰かがロールを開始したらダイスをクリア
   useEffect(() => {
-    if (rollingPlayerId && dddiceRef.current) {
-      dddiceRef.current.clear();
+    if (rollingPlayerId) {
+      if (dddiceRef.current) {
+        dddiceRef.current.clear();
+      }
+      // 2Dモードの場合もクリア
+      if (webglError) {
+        setFallbackDice(null);
+      }
     }
-  }, [rollingPlayerId]);
+  }, [rollingPlayerId, webglError]);
 
   // dddice 初期化
   useEffect(() => {
@@ -341,11 +356,13 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     if (webglError) {
       onStartRoll();
       setIsRolling(true);
+      setFallbackDice(null); // ロール開始時にクリア
 
       // アニメーション風に少し待つ
       setTimeout(() => {
         const die1 = Math.floor(Math.random() * 6) + 1;
         const die2 = Math.floor(Math.random() * 6) + 1;
+        setFallbackDice({ die1, die2 }); // 結果を保存して表示
         onRollComplete(die1, die2);
         setIsRolling(false);
       }, 1000);
@@ -399,8 +416,26 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
       {/* WebGLフォールバック表示 */}
       {webglError && !isRolling && (
         <div className="absolute inset-0 flex items-center justify-center rounded-xl">
-          <div className="text-center">
-            <p className="text-slate-400 text-sm">2Dモード（3Dダイスなし）</p>
+          {fallbackDice ? (
+            // ダイスの結果を表示
+            <div className="flex items-center gap-4">
+              <DiceIcon value={fallbackDice.die1} className="w-20 h-20 text-white drop-shadow-lg" />
+              <DiceIcon value={fallbackDice.die2} className="w-20 h-20 text-white drop-shadow-lg" />
+            </div>
+          ) : (
+            <div className="text-center">
+              <p className="text-slate-400 text-sm">2Dモード（3Dダイスなし）</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 2Dモードでロール中のアニメーション */}
+      {webglError && isRolling && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl">
+          <div className="flex items-center gap-4 animate-bounce">
+            <Dice1 className="w-16 h-16 text-white/60 animate-spin" />
+            <Dice6 className="w-16 h-16 text-white/60 animate-spin" style={{ animationDirection: 'reverse' }} />
           </div>
         </div>
       )}
