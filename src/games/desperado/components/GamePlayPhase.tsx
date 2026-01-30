@@ -265,6 +265,7 @@ export const GamePlayPhase = ({
                 )}
                 rollingPlayerId={gameState.rollingPlayerId}
                 onConnected={handleDddiceConnected}
+                displayedDice={currentTurnPlayer?.currentRoll ?? null}
               />
 
               {/* 振り直し/キープ選択 */}

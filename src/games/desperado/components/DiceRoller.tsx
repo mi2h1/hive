@@ -45,6 +45,7 @@ interface DiceRollerProps {
   showButton: boolean;
   rollingPlayerId: string | null;
   onConnected?: () => void; // dddice接続完了時のコールバック
+  displayedDice?: { die1: number; die2: number } | null; // 2Dモード: ゲーム状態から取得したダイス結果
 }
 
 // 外部からロールをトリガーするためのハンドル
@@ -62,6 +63,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   showButton,
   rollingPlayerId,
   onConnected,
+  displayedDice,
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dddiceRef = useRef<ThreeDDice | null>(null);
@@ -414,21 +416,25 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
       </div>
 
       {/* WebGLフォールバック表示 */}
-      {webglError && !isRolling && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-xl">
-          {fallbackDice ? (
-            // ダイスの結果を表示
-            <div className="flex items-center gap-4">
-              <DiceIcon value={fallbackDice.die1} className="w-20 h-20 text-white drop-shadow-lg" />
-              <DiceIcon value={fallbackDice.die2} className="w-20 h-20 text-white drop-shadow-lg" />
-            </div>
-          ) : (
-            <div className="text-center">
-              <p className="text-slate-400 text-sm">2Dモード（3Dダイスなし）</p>
-            </div>
-          )}
-        </div>
-      )}
+      {webglError && !isRolling && (() => {
+        // ローカルで振ったダイスを優先、なければゲーム状態から取得
+        const diceToShow = fallbackDice || displayedDice;
+        return (
+          <div className="absolute inset-0 flex items-center justify-center rounded-xl">
+            {diceToShow ? (
+              // ダイスの結果を表示
+              <div className="flex items-center gap-4">
+                <DiceIcon value={diceToShow.die1} className="w-20 h-20 text-white drop-shadow-lg" />
+                <DiceIcon value={diceToShow.die2} className="w-20 h-20 text-white drop-shadow-lg" />
+              </div>
+            ) : (
+              <div className="text-center">
+                <p className="text-slate-400 text-sm">2Dモード（3Dダイスなし）</p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* 2Dモードでロール中のアニメーション */}
       {webglError && isRolling && (
