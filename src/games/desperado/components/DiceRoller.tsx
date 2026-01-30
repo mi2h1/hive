@@ -61,15 +61,23 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   const isInitialized = useRef(false);
   const isSettingUpRoom = useRef(false);
   const onRollCompleteRef = useRef(onRollComplete);
+  const onDddiceRoomCreatedRef = useRef(onDddiceRoomCreated);
+  const onConnectedRef = useRef(onConnected);
+  const isHostRef = useRef(isHost);
+  const dddiceRoomSlugRef = useRef(dddiceRoomSlug);
   // 自分がロール中かどうかを追跡（イベントハンドラ内で参照）
   const iAmRollingRef = useRef(false);
   // このロールセッションで既に結果を報告したかどうか
   const hasReportedResultRef = useRef(false);
 
-  // コールバックを常に最新に保つ
+  // コールバックとpropsを常に最新に保つ
   useEffect(() => {
     onRollCompleteRef.current = onRollComplete;
-  }, [onRollComplete]);
+    onDddiceRoomCreatedRef.current = onDddiceRoomCreated;
+    onConnectedRef.current = onConnected;
+    isHostRef.current = isHost;
+    dddiceRoomSlugRef.current = dddiceRoomSlug;
+  }, [onRollComplete, onDddiceRoomCreated, onConnected, isHost, dddiceRoomSlug]);
 
   // 誰かがロールを開始したらダイスをクリア
   useEffect(() => {
@@ -91,9 +99,14 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         if (!testWebGLAvailable()) {
           console.error('WebGL is not available (simple test)');
           setWebglError(true);
-          setConnectionStatus('WebGLが利用できません');
+          setConnectionStatus('2Dモードで動作中');
           setIsSdkReady(true);
-          onConnected?.();
+          setIsConnected(true);
+          // ホストの場合はダミーのルームスラッグを生成（refから最新値を取得）
+          if (isHostRef.current && !dddiceRoomSlugRef.current) {
+            onDddiceRoomCreatedRef.current(`fallback-${Date.now()}`);
+          }
+          onConnectedRef.current?.();
           return;
         }
 
@@ -101,9 +114,13 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         if (!ThreeDDice.isWebGLAvailable()) {
           console.error('WebGL is not available (dddice check)');
           setWebglError(true);
-          setConnectionStatus('WebGLが利用できません');
+          setConnectionStatus('2Dモードで動作中');
           setIsSdkReady(true);
-          onConnected?.();
+          setIsConnected(true);
+          if (isHostRef.current && !dddiceRoomSlugRef.current) {
+            onDddiceRoomCreatedRef.current(`fallback-${Date.now()}`);
+          }
+          onConnectedRef.current?.();
           return;
         }
 
@@ -173,10 +190,14 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         // WebGLエラーの場合はフォールバックモードで続行
         if (errorMessage.includes('WebGL')) {
           setWebglError(true);
-          setConnectionStatus('3Dダイスが利用できません');
-          // WebGLなしでもゲームを続行できるようにする
+          setConnectionStatus('2Dモードで動作中');
           setIsSdkReady(true);
-          onConnected?.();
+          setIsConnected(true);
+          // ホストの場合はダミーのルームスラッグを生成（refから最新値を取得）
+          if (isHostRef.current && !dddiceRoomSlugRef.current) {
+            onDddiceRoomCreatedRef.current(`fallback-${Date.now()}`);
+          }
+          onConnectedRef.current?.();
         } else {
           setConnectionStatus(`準備に失敗しました: ${errorMessage.slice(0, 50)}`);
         }
@@ -357,11 +378,10 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
       </div>
 
       {/* WebGLフォールバック表示 */}
-      {webglError && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/30">
+      {webglError && !isRolling && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl">
           <div className="text-center">
-            <p className="text-amber-400 text-sm mb-2">3Dダイスが利用できません</p>
-            <p className="text-slate-400 text-xs">（他のタブを閉じると改善する場合があります）</p>
+            <p className="text-slate-400 text-sm">2Dモード（3Dダイスなし）</p>
           </div>
         </div>
       )}
