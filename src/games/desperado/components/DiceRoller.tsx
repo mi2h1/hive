@@ -5,6 +5,23 @@ import { ThreeDDice, ThreeDDiceRollEvent, type IRoll } from 'dddice-js';
 const DDDICE_API_KEY = 'lu5TTPrLRZ4JcL2t7PwE9xBnkdltDqhlwyk33XnUdb7bd065';
 const DICE_THEME = 'untitled-dice-mkhmye02';
 
+// シンプルなWebGLテスト（Three.jsに依存しない）
+const testWebGLAvailable = (): boolean => {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (gl) {
+      // コンテキストを明示的に解放
+      const ext = (gl as WebGLRenderingContext).getExtension('WEBGL_lose_context');
+      if (ext) ext.loseContext();
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+
 interface DiceRollerProps {
   isHost: boolean;
   dddiceRoomSlug: string | null;
@@ -70,12 +87,21 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
       try {
         setConnectionStatus('ダイスを準備中...');
 
-        // WebGL利用可能チェック
-        if (!ThreeDDice.isWebGLAvailable()) {
-          console.error('WebGL is not available');
+        // シンプルなWebGL利用可能チェック（Three.jsより先に）
+        if (!testWebGLAvailable()) {
+          console.error('WebGL is not available (simple test)');
           setWebglError(true);
           setConnectionStatus('WebGLが利用できません');
-          // WebGLなしでもゲームを続行できるようにする
+          setIsSdkReady(true);
+          onConnected?.();
+          return;
+        }
+
+        // dddice SDKのWebGLチェック
+        if (!ThreeDDice.isWebGLAvailable()) {
+          console.error('WebGL is not available (dddice check)');
+          setWebglError(true);
+          setConnectionStatus('WebGLが利用できません');
           setIsSdkReady(true);
           onConnected?.();
           return;
