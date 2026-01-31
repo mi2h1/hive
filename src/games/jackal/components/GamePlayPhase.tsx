@@ -83,6 +83,9 @@ export const GamePlayPhase = ({
   const inputValueNum = parseInt(inputValue, 10);
   const isValidInput = !isNaN(inputValueNum) && inputValueNum >= minDeclareValue;
 
+  // ジャッカルは2手目以降（誰かが既に宣言した後）のみ可能
+  const canCallJackal = lastDeclarerId !== null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 p-4 pb-44 md:pb-4">
       <div className="max-w-7xl mx-auto">
@@ -173,6 +176,7 @@ export const GamePlayPhase = ({
                 setInputValue={setInputValue}
                 minDeclareValue={minDeclareValue}
                 currentDeclaredValue={currentDeclaredValue}
+                canCallJackal={canCallJackal}
                 isMyTurn={isMyTurn}
                 isValidInput={isValidInput}
                 currentPlayerName={currentPlayer?.name}
@@ -193,6 +197,7 @@ export const GamePlayPhase = ({
                 setInputValue={setInputValue}
                 minDeclareValue={minDeclareValue}
                 currentDeclaredValue={currentDeclaredValue}
+                canCallJackal={canCallJackal}
                 isMyTurn={isMyTurn}
                 isValidInput={isValidInput}
                 currentPlayerName={currentPlayer?.name}
@@ -275,7 +280,7 @@ export const GamePlayPhase = ({
               >
                 宣言
               </button>
-              {currentDeclaredValue !== null && (
+              {canCallJackal && (
                 <button
                   onClick={handleCallJackal}
                   className="flex-1 py-3 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"

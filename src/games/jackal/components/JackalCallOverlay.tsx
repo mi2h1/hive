@@ -129,11 +129,11 @@ export const JackalCallOverlay = ({ onAnimationEnd }: JackalCallOverlayProps) =>
         </svg>
 
         {/* ジャッカルロゴ */}
-        <div className="relative z-10 w-72 h-48 flex items-center justify-center">
+        <div className="relative z-10 w-80 h-56 flex items-center justify-center">
           <img
             src="/hive/images/vec_logo_jackal.svg"
             alt="JACKAL"
-            className="w-48 h-48 filter brightness-0 invert drop-shadow-lg"
+            className="w-64 h-64 filter brightness-0 invert drop-shadow-lg"
           />
         </div>
       </div>

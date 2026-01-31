@@ -5,6 +5,7 @@ interface DeclarationPanelProps {
   setInputValue: (value: string) => void;
   minDeclareValue: number;
   currentDeclaredValue: number | null;
+  canCallJackal: boolean;
   isMyTurn: boolean;
   isValidInput: boolean;
   currentPlayerName?: string;
@@ -19,6 +20,7 @@ export const DeclarationPanel = ({
   setInputValue,
   minDeclareValue,
   currentDeclaredValue,
+  canCallJackal,
   isMyTurn,
   isValidInput,
   currentPlayerName,
@@ -84,7 +86,7 @@ export const DeclarationPanel = ({
           >
             宣言
           </button>
-          {currentDeclaredValue !== null && (
+          {canCallJackal && (
             <button
               onClick={onCallJackal}
               className="flex-1 py-2 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all text-sm"
