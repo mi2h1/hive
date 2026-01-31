@@ -97,7 +97,7 @@ export const GamePlayPhase = ({
               alt="ジャッカル"
               className="h-7 filter brightness-0 invert"
             />
-            <h1 className="text-xl font-bold text-white">ラウンド {round}</h1>
+            <span className="text-white font-bold">ラウンド {round}</span>
           </div>
           <div className="flex items-center gap-2">
             {debugMode && (
