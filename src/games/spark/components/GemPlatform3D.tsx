@@ -129,9 +129,9 @@ const PlatformScene = ({ gems }: { gems: { id: string; color: GemColor }[] }) =>
       <Physics gravity={[0, -15, 0]}>
         {/* 台（床）- 宝石の先端が埋まらないよう下げる */}
         <RigidBody type="fixed" position={[0, -0.8, 0]}>
-          <CuboidCollider args={[1.5, 0.1, 1.5]} />
+          <CuboidCollider args={[2.25, 0.1, 2.25]} />
           <mesh receiveShadow>
-            <boxGeometry args={[3, 0.2, 3]} />
+            <boxGeometry args={[4.5, 0.2, 4.5]} />
             <meshStandardMaterial
               color="#1e293b"
               metalness={0.1}
@@ -141,17 +141,17 @@ const PlatformScene = ({ gems }: { gems: { id: string; color: GemColor }[] }) =>
         </RigidBody>
 
         {/* 見えない壁（宝石が落ちないように） */}
-        <RigidBody type="fixed" position={[0, 0, -1.6]}>
-          <CuboidCollider args={[1.6, 1.5, 0.1]} />
+        <RigidBody type="fixed" position={[0, 0, -2.4]}>
+          <CuboidCollider args={[2.4, 1.5, 0.1]} />
         </RigidBody>
-        <RigidBody type="fixed" position={[0, 0, 1.6]}>
-          <CuboidCollider args={[1.6, 1.5, 0.1]} />
+        <RigidBody type="fixed" position={[0, 0, 2.4]}>
+          <CuboidCollider args={[2.4, 1.5, 0.1]} />
         </RigidBody>
-        <RigidBody type="fixed" position={[-1.6, 0, 0]}>
-          <CuboidCollider args={[0.1, 1.5, 1.6]} />
+        <RigidBody type="fixed" position={[-2.4, 0, 0]}>
+          <CuboidCollider args={[0.1, 1.5, 2.4]} />
         </RigidBody>
-        <RigidBody type="fixed" position={[1.6, 0, 0]}>
-          <CuboidCollider args={[0.1, 1.5, 1.6]} />
+        <RigidBody type="fixed" position={[2.4, 0, 0]}>
+          <CuboidCollider args={[0.1, 1.5, 2.4]} />
         </RigidBody>
 
         {/* 宝石 */}
