@@ -47,7 +47,7 @@ export const PolyformGame = ({ onBack }: PolyformGameProps) => {
   useEffect(() => {
     document.title = 'POLYFORM';
     return () => {
-      document.title = 'Game Board';
+      document.title = 'HIVE';
     };
   }, []);
 

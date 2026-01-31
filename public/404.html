@@ -5,21 +5,21 @@
     <title>Redirecting...</title>
     <script>
       // GitHub Pages SPA redirect
-      // /boards/aoa -> /boards/?path=aoa
+      // /hive/aoa -> /hive/?path=aoa
       const path = window.location.pathname;
       const search = window.location.search;
       const hash = window.location.hash;
 
-      // /boards 以下のパスを取得（先頭・末尾のスラッシュを除去）
-      const gamePath = path.replace('/boards', '').replace(/^\/|\/$/g, '');
+      // /hive 以下のパスを取得（先頭・末尾のスラッシュを除去）
+      const gamePath = path.replace('/hive', '').replace(/^\/|\/$/g, '');
 
       if (gamePath) {
         // パスをクエリパラメータとして渡してリダイレクト
         // search が ?foo=bar の場合、&foo=bar に変換して連結
         const extraParams = search ? '&' + search.slice(1) : '';
-        window.location.replace('/boards/?p=' + gamePath + extraParams + hash);
+        window.location.replace('/hive/?p=' + gamePath + extraParams + hash);
       } else {
-        window.location.replace('/boards/' + search + hash);
+        window.location.replace('/hive/' + search + hash);
       }
     </script>
   </head>

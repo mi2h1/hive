@@ -168,8 +168,8 @@ export const DroppablePuzzleCard = ({
 
   // カード画像パス
   const cardImage = card.type === 'white'
-    ? '/boards/images/cards/card_pf_front_w.png'
-    : '/boards/images/cards/card_pf_front_b.png';
+    ? '/hive/images/cards/card_pf_front_w.png'
+    : '/hive/images/cards/card_pf_front_b.png';
 
   return (
     <div

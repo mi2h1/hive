@@ -1926,7 +1926,7 @@ export const GamePlayPhase = ({
         <div className="min-h-screen bg-black/20 p-4 flex flex-col items-center">
           {/* タイトル */}
           <div className="text-center my-6 mb-4">
-            <img src="/boards/images/vec_logo_polyform.svg" alt="POLYFORM" className="h-8 mx-auto mb-2" style={{ filter: 'brightness(0) invert(1)' }} />
+            <img src="/hive/images/vec_logo_polyform.svg" alt="POLYFORM" className="h-8 mx-auto mb-2" style={{ filter: 'brightness(0) invert(1)' }} />
             <h1 className="text-2xl font-bold text-white">結果発表</h1>
           </div>
 
@@ -2165,7 +2165,7 @@ export const GamePlayPhase = ({
         {/* ヘッダー（全幅） */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
-            <img src="/boards/images/vec_logo_polyform.svg" alt="POLYFORM" className="h-6" style={{ filter: 'brightness(0) invert(1)' }} />
+            <img src="/hive/images/vec_logo_polyform.svg" alt="POLYFORM" className="h-6" style={{ filter: 'brightness(0) invert(1)' }} />
             <div className="text-white">
               <span className="font-bold">{currentPlayer.name}</span>
             </div>
@@ -2659,16 +2659,16 @@ export const GamePlayPhase = ({
                     {/* 背面カード（3枚重ね） */}
                     <div
                       className="absolute top-1.5 left-1.5 rounded-lg bg-cover bg-center"
-                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
+                      style={{ ...deckSize, backgroundImage: 'url(/hive/images/cards/card_pf_back_w.png)' }}
                     />
                     <div
                       className="absolute top-1 left-1 rounded-lg bg-cover bg-center"
-                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
+                      style={{ ...deckSize, backgroundImage: 'url(/hive/images/cards/card_pf_back_w.png)' }}
                     />
                     {/* 表面カード */}
                     <div
                       className={`absolute top-0 left-0 rounded-lg bg-cover bg-center flex flex-col items-center justify-center transition-all ${canDraw ? 'hover:shadow-lg hover:shadow-teal-400/30' : ''}`}
-                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_w.png)' }}
+                      style={{ ...deckSize, backgroundImage: 'url(/hive/images/cards/card_pf_back_w.png)' }}
                     >
                       <div className="text-slate-600 text-xs mb-1 font-medium">山札</div>
                       <div className={`text-slate-800 font-bold ${CARD_SIZES[cardSize].width < 130 ? 'text-xl' : 'text-3xl'}`}>{gameState.whitePuzzleDeck.length}</div>
@@ -2728,16 +2728,16 @@ export const GamePlayPhase = ({
                     {/* 背面カード（3枚重ね） */}
                     <div
                       className="absolute top-1.5 left-1.5 rounded-lg bg-cover bg-center"
-                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
+                      style={{ ...deckSize, backgroundImage: 'url(/hive/images/cards/card_pf_back_b.png)' }}
                     />
                     <div
                       className="absolute top-1 left-1 rounded-lg bg-cover bg-center"
-                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
+                      style={{ ...deckSize, backgroundImage: 'url(/hive/images/cards/card_pf_back_b.png)' }}
                     />
                     {/* 表面カード */}
                     <div
                       className={`absolute top-0 left-0 rounded-lg bg-cover bg-center flex flex-col items-center justify-center transition-all ${canDraw ? 'hover:shadow-lg hover:shadow-teal-400/30' : ''}`}
-                      style={{ ...deckSize, backgroundImage: 'url(/boards/images/cards/card_pf_back_b.png)' }}
+                      style={{ ...deckSize, backgroundImage: 'url(/hive/images/cards/card_pf_back_b.png)' }}
                     >
                       <div className="text-slate-300 text-xs mb-1 font-medium">山札</div>
                       <div className={`text-white font-bold ${CARD_SIZES[cardSize].width < 130 ? 'text-xl' : 'text-3xl'}`}>{gameState.blackPuzzleDeck.length}</div>

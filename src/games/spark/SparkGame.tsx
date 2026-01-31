@@ -59,7 +59,7 @@ export const SparkGame = ({ onBack }: SparkGameProps) => {
   // ブラウザタブのタイトルを設定
   useEffect(() => {
     document.title = 'SPARK';
-    return () => { document.title = 'Game Board'; };
+    return () => { document.title = 'HIVE'; };
   }, []);
 
   // URLパラメータからルームに自動参加

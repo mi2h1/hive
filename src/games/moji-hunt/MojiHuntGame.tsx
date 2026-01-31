@@ -34,7 +34,7 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
   // ブラウザタブのタイトルを設定
   useEffect(() => {
     document.title = 'もじはんと';
-    return () => { document.title = 'Game Board'; };
+    return () => { document.title = 'HIVE'; };
   }, []);
 
   // 本番はデバッグモードOFF
@@ -321,7 +321,7 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
           </button>
           <div className="flex items-center gap-3 flex-1">
             <img
-              src="/boards/images/vec_logo_moji-hant.svg"
+              src="/hive/images/vec_logo_moji-hant.svg"
               alt="もじはんと"
               className="h-8"
               style={{ filter: 'brightness(0) invert(1)' }}

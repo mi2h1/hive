@@ -52,7 +52,7 @@ export const JackalGame = ({ onBack }: JackalGameProps) => {
   // ブラウザタブのタイトルを設定
   useEffect(() => {
     document.title = 'ジャッカル';
-    return () => { document.title = 'Game Board'; };
+    return () => { document.title = 'HIVE'; };
   }, []);
 
   // URLパラメータからルームに自動参加

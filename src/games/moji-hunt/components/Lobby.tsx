@@ -56,7 +56,7 @@ export const Lobby = ({
 
   const copyInviteLink = () => {
     if (roomCode) {
-      const url = `${window.location.origin}/boards/moji-hunt?room=${roomCode}`;
+      const url = `${window.location.origin}/hive/moji-hunt?room=${roomCode}`;
       navigator.clipboard.writeText(url);
       setShowLinkCopiedToast(true);
       setTimeout(() => setShowLinkCopiedToast(false), 2000);
@@ -84,7 +84,7 @@ export const Lobby = ({
                   <HelpCircle className="w-5 h-5" />
                 </button>
                 <img
-                  src="/boards/images/vec_logo_moji-hant.svg"
+                  src="/hive/images/vec_logo_moji-hant.svg"
                   alt="もじはんと"
                   className="h-12 mx-auto"
                   style={{ filter: 'brightness(0) invert(1)' }}
@@ -235,7 +235,7 @@ export const Lobby = ({
                 <HelpCircle className="w-5 h-5" />
               </button>
               <img
-                src="/boards/images/vec_logo_moji-hant.svg"
+                src="/hive/images/vec_logo_moji-hant.svg"
                 alt="もじはんと"
                 className="h-16 mx-auto"
                 style={{ filter: 'brightness(0) invert(1)' }}

@@ -53,7 +53,7 @@ export const Lobby = ({
 
   const copyInviteLink = () => {
     if (roomCode) {
-      const url = `${window.location.origin}/boards/spark?room=${roomCode}`;
+      const url = `${window.location.origin}/hive/spark?room=${roomCode}`;
       navigator.clipboard.writeText(url);
       setShowLinkCopiedToast(true);
       setTimeout(() => setShowLinkCopiedToast(false), 2000);
@@ -80,7 +80,7 @@ export const Lobby = ({
                 <HelpCircle className="w-5 h-5" />
               </button>
               <img
-                src="/boards/images/vec_logo_spark.svg"
+                src="/hive/images/vec_logo_spark.svg"
                 alt="SPARK"
                 className="h-8 mx-auto"
                 style={{ filter: 'brightness(0) invert(1)' }}
@@ -157,7 +157,7 @@ export const Lobby = ({
                     <span className="text-white flex-1">{player.name}</span>
                     {/* 宝石アイコンで表示 */}
                     <img
-                      src="/boards/images/i_gem_b.png"
+                      src="/hive/images/i_gem_b.png"
                       alt=""
                       className="w-5 h-5"
                     />
@@ -226,7 +226,7 @@ export const Lobby = ({
             </button>
             <div className="text-center">
               <img
-                src="/boards/images/vec_logo_spark.svg"
+                src="/hive/images/vec_logo_spark.svg"
                 alt="SPARK"
                 className="h-12 mx-auto"
                 style={{ filter: 'brightness(0) invert(1)' }}

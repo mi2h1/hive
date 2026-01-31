@@ -389,8 +389,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
   // ブラウザタブのタイトルを設定
   useEffect(() => {
-    document.title = 'Game Board - Admin Dashboard';
-    return () => { document.title = 'Game Board'; };
+    document.title = 'HIVE - Admin Dashboard';
+    return () => { document.title = 'HIVE'; };
   }, []);
 
   const aoaRooms = rooms.filter(r => r.gameType === 'aoa');

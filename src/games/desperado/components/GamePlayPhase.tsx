@@ -199,7 +199,7 @@ export const GamePlayPhase = ({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <img
-                src="/boards/images/vec_logo_desperado.svg"
+                src="/hive/images/vec_logo_desperado.svg"
                 alt="Desperado"
                 className="h-6"
                 style={{ filter: 'brightness(0) invert(1)' }}

@@ -74,7 +74,7 @@ export const Lobby = ({
                 <HelpCircle className="w-5 h-5" />
               </button>
               <img
-                src="/boards/images/vec_logo_polyform.svg"
+                src="/hive/images/vec_logo_polyform.svg"
                 alt="POLYFORM"
                 className="h-7 mx-auto filter brightness-0 invert"
               />
@@ -249,7 +249,7 @@ export const Lobby = ({
               <HelpCircle className="w-5 h-5" />
             </button>
             <img
-              src="/boards/images/vec_logo_polyform.svg"
+              src="/hive/images/vec_logo_polyform.svg"
               alt="POLYFORM"
               className="h-8 mx-auto filter brightness-0 invert"
             />

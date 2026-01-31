@@ -74,7 +74,7 @@ export const Lobby = ({
                   <HelpCircle className="w-5 h-5" />
                 </button>
                 <img
-                  src="/boards/images/vec_logo_moji-hant.svg"
+                  src="/hive/images/vec_logo_moji-hant.svg"
                   alt="もじはんと"
                   className="h-12 mx-auto"
                   style={{ filter: 'brightness(0) invert(1)' }}
@@ -208,7 +208,7 @@ export const Lobby = ({
                 <HelpCircle className="w-5 h-5" />
               </button>
               <img
-                src="/boards/images/vec_logo_moji-hant.svg"
+                src="/hive/images/vec_logo_moji-hant.svg"
                 alt="もじはんと"
                 className="h-16 mx-auto"
                 style={{ filter: 'brightness(0) invert(1)' }}

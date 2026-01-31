@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/boards/', // GitHub Pages用
+  base: '/hive/', // GitHub Pages用
   resolve: {
     // Three.jsの重複を防ぐ（dddice-js と @react-three/fiber の両方が使用）
     dedupe: ['three'],

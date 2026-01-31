@@ -8,10 +8,10 @@ interface GemProps {
 
 // 宝石の色に対応する画像パス
 const colorImages: Record<GemColor, string> = {
-  blue: '/boards/images/i_gem_b.png',
-  yellow: '/boards/images/i_gem_y.png',
-  red: '/boards/images/i_gem_r.png',
-  white: '/boards/images/i_gem_w.png',
+  blue: '/hive/images/i_gem_b.png',
+  yellow: '/hive/images/i_gem_y.png',
+  red: '/hive/images/i_gem_r.png',
+  white: '/hive/images/i_gem_w.png',
 };
 
 const sizeClasses: Record<'sm' | 'md' | 'lg', string> = {

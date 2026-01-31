@@ -38,7 +38,7 @@ export const ResultPhase = ({
           {/* ヘッダー */}
           <div className="text-center mb-6">
             <img
-              src="/boards/images/vec_logo_spark.svg"
+              src="/hive/images/vec_logo_spark.svg"
               alt="SPARK"
               className="h-10 mx-auto mb-2"
               style={{ filter: 'brightness(0) invert(1)' }}

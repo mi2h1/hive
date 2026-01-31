@@ -94,7 +94,7 @@ export function AoaGame({ onBack }: AoaGameProps) {
   useEffect(() => {
     const isIncanRule = roomData?.ruleSet?.type === 'incan_gold';
     document.title = isIncanRule ? 'インカの黄金' : 'アトランティスの深淵';
-    return () => { document.title = 'Game Board'; };
+    return () => { document.title = 'HIVE'; };
   }, [roomData?.ruleSet?.type]);
 
   // URLパラメータからルームに自動参加
@@ -204,8 +204,8 @@ export function AoaGame({ onBack }: AoaGameProps) {
 
   // ルールに応じたテーマ設定
   const isIncan = roomData?.ruleSet?.type === 'incan_gold';
-  const bgImage = isIncan ? '/boards/images/bg_incan.png' : '/boards/images/bg_aoa.jpg';
-  const logoImage = isIncan ? '/boards/images/vec_logo_incangold.svg' : '/boards/images/vec_logo_aoa_w.svg';
+  const bgImage = isIncan ? '/hive/images/bg_incan.png' : '/hive/images/bg_aoa.jpg';
+  const logoImage = isIncan ? '/hive/images/vec_logo_incangold.svg' : '/hive/images/vec_logo_aoa_w.svg';
   const overlayClass = isIncan ? 'bg-amber-950/40' : 'bg-blue-950/40';
 
   return (

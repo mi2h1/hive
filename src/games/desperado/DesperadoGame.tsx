@@ -49,7 +49,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
   useEffect(() => {
     document.title = 'デスペラード';
     return () => {
-      document.title = 'Game Board';
+      document.title = 'HIVE';
     };
   }, []);
 

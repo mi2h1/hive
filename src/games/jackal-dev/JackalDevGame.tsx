@@ -35,7 +35,7 @@ export const JackalDevGame = ({ onBack }: JackalDevGameProps) => {
   // ブラウザタブのタイトルを設定
   useEffect(() => {
     document.title = 'ジャッカルDEV';
-    return () => { document.title = 'Game Board'; };
+    return () => { document.title = 'HIVE'; };
   }, []);
 
   const gameState = roomData?.gameState;

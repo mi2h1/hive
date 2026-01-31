@@ -30,7 +30,7 @@ const getGameFromPath = (): GameType => {
   if (redirectPath) {
     // pパラメータを除いたクエリを保持
     const query = getQueryString(['p']);
-    const newPath = `/boards/${redirectPath}${query}`;
+    const newPath = `/hive/${redirectPath}${query}`;
     window.history.replaceState({}, '', newPath);
     if (redirectPath === 'aoa') return 'aoa';
     if (redirectPath === 'moji-hunt') return 'moji-hunt';
@@ -46,7 +46,7 @@ const getGameFromPath = (): GameType => {
   }
 
   // 通常のパスから取得（先頭・末尾のスラッシュを除去）
-  const path = window.location.pathname.replace('/boards', '').replace(/^\/|\/$/g, '');
+  const path = window.location.pathname.replace('/hive', '').replace(/^\/|\/$/g, '');
   if (path === 'aoa') return 'aoa';
   if (path === 'moji-hunt') return 'moji-hunt';
   if (path === 'moji-hunt-dev') return 'moji-hunt-dev';
@@ -64,7 +64,7 @@ const getGameFromPath = (): GameType => {
 // URL を更新（クエリパラメータを保持）
 const updatePath = (game: GameType) => {
   const query = getQueryString();
-  const newPath = game === 'none' ? `/boards/${query}` : `/boards/${game}${query}`;
+  const newPath = game === 'none' ? `/hive/${query}` : `/hive/${game}${query}`;
   window.history.pushState({}, '', newPath);
 };
 
@@ -87,7 +87,7 @@ function App() {
   // ゲーム一覧画面のタイトルを設定
   useEffect(() => {
     if (selectedGame === 'none') {
-      document.title = 'Game Board';
+      document.title = 'HIVE';
     }
   }, [selectedGame]);
 
@@ -118,7 +118,7 @@ function App() {
         <div className="bg-slate-800/95 rounded-xl p-8 max-w-md w-full">
           <div className="text-center mb-8">
             <Gamepad2 className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">Game Board</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">HIVE</h1>
             <p className="text-slate-400">オンラインボードゲーム</p>
           </div>
 
@@ -193,7 +193,7 @@ function App() {
         <div className="max-w-4xl mx-auto">
           <header className="text-center py-8">
             <Gamepad2 className="w-12 h-12 text-orange-400 mx-auto mb-3" />
-            <h1 className="text-2xl font-bold text-white mb-1">Game Board DEV</h1>
+            <h1 className="text-2xl font-bold text-white mb-1">HIVE DEV</h1>
             <p className="text-slate-400">
               開発版ゲーム一覧（<span className="text-orange-300">{playerName}</span> さん）
             </p>
@@ -297,7 +297,7 @@ function App() {
           {/* 左側: アイコン + タイトル */}
           <div className="flex items-center gap-3">
             <Gamepad2 className="w-8 h-8 text-indigo-400" />
-            <h1 className="text-xl font-bold text-white">Game Board</h1>
+            <h1 className="text-xl font-bold text-white">HIVE</h1>
           </div>
           {/* 右側: ようこそ + 名前 + 変更ボタン */}
           <div className="flex items-center gap-2">
@@ -375,11 +375,11 @@ function App() {
           <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-cyan-500 transition-all">
             <div
               className="h-40 bg-cover bg-center"
-              style={{ backgroundImage: 'url(/boards/images/bg_aoa.jpg)' }}
+              style={{ backgroundImage: 'url(/hive/images/bg_aoa.jpg)' }}
             >
               <div className="h-full bg-blue-950/50 flex items-center justify-center">
                 <img
-                  src="/boards/images/vec_logo_aoa_w.svg"
+                  src="/hive/images/vec_logo_aoa_w.svg"
                   alt="アトランティスの深淵"
                   className="h-12"
                   style={{ filter: 'brightness(0) invert(1)' }}
@@ -408,7 +408,7 @@ function App() {
           <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all">
             <div className="h-40 bg-gradient-to-br from-pink-600 to-orange-500 flex items-center justify-center">
               <img
-                src="/boards/images/vec_logo_moji-hant.svg"
+                src="/hive/images/vec_logo_moji-hant.svg"
                 alt="もじはんと"
                 className="h-12"
                 style={{ filter: 'brightness(0) invert(1)' }}
@@ -436,7 +436,7 @@ function App() {
           <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-indigo-500 transition-all">
             <div className="h-40 bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
               <img
-                src="/boards/images/vec_logo_jackal.svg"
+                src="/hive/images/vec_logo_jackal.svg"
                 alt="ジャッカル"
                 className="h-12"
                 style={{ filter: 'brightness(0) invert(1)' }}
@@ -464,7 +464,7 @@ function App() {
           <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-teal-500 transition-all">
             <div className="h-40 bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center">
               <img
-                src="/boards/images/vec_logo_polyform.svg"
+                src="/hive/images/vec_logo_polyform.svg"
                 alt="POLYFORM"
                 className="h-8"
                 style={{ filter: 'brightness(0) invert(1)' }}
@@ -492,7 +492,7 @@ function App() {
           <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-amber-500 transition-all">
             <div className="h-40 bg-gradient-to-br from-amber-600 to-red-600 flex items-center justify-center">
               <img
-                src="/boards/images/vec_logo_desperado.svg"
+                src="/hive/images/vec_logo_desperado.svg"
                 alt="Desperado"
                 className="h-12"
                 style={{ filter: 'brightness(0) invert(1)' }}
@@ -520,7 +520,7 @@ function App() {
           <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-cyan-500 transition-all">
             <div className="h-40 bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center">
               <img
-                src="/boards/images/vec_logo_spark.svg"
+                src="/hive/images/vec_logo_spark.svg"
                 alt="SPARK"
                 className="h-12"
                 style={{ filter: 'brightness(0) invert(1)' }}

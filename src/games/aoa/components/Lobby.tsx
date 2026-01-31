@@ -6,9 +6,9 @@ import { RULE_SET_NAMES } from '../types/game';
 // ルールに応じた設定
 const THEME_CONFIG = {
   atlantis: {
-    bg: '/boards/images/bg_aoa.jpg',
+    bg: '/hive/images/bg_aoa.jpg',
     overlay: 'bg-blue-950/40',
-    logo: '/boards/images/vec_logo_aoa_w.svg',
+    logo: '/hive/images/vec_logo_aoa_w.svg',
     accent: 'cyan',
     buttonActive: 'bg-cyan-600',
     buttonGradient: 'from-cyan-500 to-teal-600',
@@ -17,9 +17,9 @@ const THEME_CONFIG = {
     hoverText: 'hover:text-cyan-300',
   },
   incan_gold: {
-    bg: '/boards/images/bg_incan.png',
+    bg: '/hive/images/bg_incan.png',
     overlay: 'bg-amber-950/40',
-    logo: '/boards/images/vec_logo_incangold.svg',
+    logo: '/hive/images/vec_logo_incangold.svg',
     accent: 'amber',
     buttonActive: 'bg-amber-600',
     buttonGradient: 'from-amber-500 to-orange-600',
@@ -90,7 +90,7 @@ export const Lobby = ({
 
   const copyInviteLink = () => {
     if (roomCode) {
-      const url = `${window.location.origin}/boards/aoa?room=${roomCode}`;
+      const url = `${window.location.origin}/hive/aoa?room=${roomCode}`;
       navigator.clipboard.writeText(url);
       setShowLinkCopiedToast(true);
       setTimeout(() => setShowLinkCopiedToast(false), 2000);
@@ -100,11 +100,11 @@ export const Lobby = ({
   // プレイヤー名入力フォーム
   if (!hasName) {
     return (
-      <div className="min-h-screen bg-cover bg-center bg-fixed" style={{ backgroundImage: 'url(/boards/images/bg_aoa.jpg)' }}>
+      <div className="min-h-screen bg-cover bg-center bg-fixed" style={{ backgroundImage: 'url(/hive/images/bg_aoa.jpg)' }}>
         <div className="min-h-screen bg-blue-950/40 flex items-center justify-center p-4">
         <div className="bg-slate-800/95 rounded-xl p-6 max-w-md w-full">
           <img
-            src="/boards/images/vec_logo_aoa.svg"
+            src="/hive/images/vec_logo_aoa.svg"
             alt="アトランティスの深淵"
             className="h-28 mx-auto mb-6"
             style={{ filter: 'brightness(0) invert(1)' }}
@@ -313,7 +313,7 @@ export const Lobby = ({
                         <div className="font-bold text-sm">{RULE_SET_NAMES[type]}</div>
                       </div>
                       <img
-                        src={type === 'atlantis' ? '/boards/images/vec_logo_aoa_w.svg' : '/boards/images/vec_logo_incangold.svg'}
+                        src={type === 'atlantis' ? '/hive/images/vec_logo_aoa_w.svg' : '/hive/images/vec_logo_incangold.svg'}
                         alt=""
                         className={type === 'atlantis' ? 'h-4' : 'h-5'}
                         style={{ filter: 'brightness(0) invert(1)' }}
@@ -348,11 +348,11 @@ export const Lobby = ({
 
   // ルーム作成/参加画面
   return (
-    <div className="min-h-screen bg-cover bg-center bg-fixed" style={{ backgroundImage: 'url(/boards/images/bg_aoa.jpg)' }}>
+    <div className="min-h-screen bg-cover bg-center bg-fixed" style={{ backgroundImage: 'url(/hive/images/bg_aoa.jpg)' }}>
       <div className="min-h-screen bg-blue-950/40 flex items-center justify-center p-4">
       <div className="bg-slate-800/95 rounded-xl p-6 max-w-md w-full">
         <img
-          src="/boards/images/vec_logo_aoa.svg"
+          src="/hive/images/vec_logo_aoa.svg"
           alt="アトランティスの深淵"
           className="h-24 mx-auto mb-2"
           style={{ filter: 'brightness(0) invert(1)' }}
