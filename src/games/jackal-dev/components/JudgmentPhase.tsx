@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Heart } from 'lucide-react';
 import { Card } from './Card';
+import { JackalCallOverlay } from './JackalCallOverlay';
 import type { GameState } from '../types/game';
 
 interface JudgmentPhaseProps {
@@ -21,15 +22,21 @@ export const JudgmentPhase = ({
 }: JudgmentPhaseProps) => {
   const { judgmentResult, round, players, turnOrder, settings } = gameState;
   const initialLife = settings.initialLife;
+  const [showOverlay, setShowOverlay] = useState(true);
   const [stage, setStage] = useState<AnimationStage>('jackal');
+
+  // オーバーレイアニメーション終了時
+  const handleOverlayEnd = useCallback(() => {
+    setShowOverlay(false);
+  }, []);
 
   // 残りのアクティブプレイヤー数
   const activePlayers = players.filter(p => !p.isEliminated);
   const isGameOver = activePlayers.length <= 1;
 
-  // アニメーションのタイミング制御
+  // アニメーションのタイミング制御（オーバーレイ終了後に開始）
   useEffect(() => {
-    if (!judgmentResult) return;
+    if (!judgmentResult || showOverlay) return;
 
     const timers: ReturnType<typeof setTimeout>[] = [];
 
@@ -48,7 +55,7 @@ export const JudgmentPhase = ({
     return () => {
       timers.forEach(timer => clearTimeout(timer));
     };
-  }, [judgmentResult]);
+  }, [judgmentResult, showOverlay]);
 
   // ゲーム終了時の自動遷移（3秒後、またはクリックで即座に遷移）
   useEffect(() => {
@@ -72,6 +79,15 @@ export const JudgmentPhase = ({
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center">
         <div className="text-white">判定結果を読み込み中...</div>
+      </div>
+    );
+  }
+
+  // オーバーレイ表示中
+  if (showOverlay) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900">
+        <JackalCallOverlay onAnimationEnd={handleOverlayEnd} />
       </div>
     );
   }
