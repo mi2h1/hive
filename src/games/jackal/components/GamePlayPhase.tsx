@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Heart, FlaskConical } from 'lucide-react';
-import { Card } from './Card';
+import { FlaskConical } from 'lucide-react';
 import { CardReference } from './CardReference';
-import type { GameState, Player, Card as CardType } from '../types/game';
+import { PlayerCardsPolygon } from './PlayerCardsPolygon';
+import { DeclarationPanel } from './DeclarationPanel';
+import type { GameState } from '../types/game';
 
 interface GamePlayPhaseProps {
   gameState: GameState;
@@ -49,6 +50,7 @@ export const GamePlayPhase = ({
 
   // アクティブなプレイヤー（脱落していない）
   const activePlayers = players.filter(p => !p.isEliminated);
+  const eliminatedPlayers = players.filter(p => p.isEliminated);
 
   // 宣言可能な最小値
   const minDeclareValue = (currentDeclaredValue ?? 0) + 1;
@@ -78,18 +80,13 @@ export const GamePlayPhase = ({
     }
   };
 
-  // プレイヤーのカードを取得
-  const getPlayerCard = (player: Player): CardType | undefined => {
-    return dealtCards[player.id];
-  };
-
   const inputValueNum = parseInt(inputValue, 10);
   const isValidInput = !isNaN(inputValueNum) && inputValueNum >= minDeclareValue;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 p-4 pb-44 md:pb-4">
       <div className="max-w-7xl mx-auto">
-        {/* ヘッダー（全幅） */}
+        {/* ヘッダー */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <img
@@ -115,7 +112,7 @@ export const GamePlayPhase = ({
           </div>
         </div>
 
-        {/* デバッグ用: プレイヤー切り替え（全幅） */}
+        {/* デバッグ用: プレイヤー切り替え */}
         {debugMode && (
           <div className="bg-orange-900/30 border border-orange-600/50 rounded-xl p-3 mb-4">
             <div className="flex flex-wrap items-center gap-2">
@@ -149,194 +146,65 @@ export const GamePlayPhase = ({
           </div>
         )}
 
-        {/* カラムレイアウト */}
-        <div className="flex gap-4">
-          {/* 左カラム: カード一覧（PC専用） */}
-          <div className="hidden lg:block w-44 flex-shrink-0">
-            <CardReference />
-          </div>
-
-          {/* 右カラム: メインコンテンツ */}
+        {/* メインレイアウト: PC(lg) = 左右分割 / タブレット(md) = 上下分割 / スマホ = 多角形+下部固定 */}
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* 左カラム（PC: 70%程度） */}
           <div className="flex-1">
-          {/* 上段: インフォボード（スマホ: 全幅 / PC: 70%+30%横並び） */}
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
-          {/* インフォボード（スマホ: 全幅 / PC: 70%） */}
-          <div className="w-full md:w-[70%] h-40 bg-slate-800/80 rounded-xl p-4 flex flex-col justify-center">
-            {/* 現在の宣言値 */}
-            <div className="text-center mb-3">
-              <div className="text-slate-400 text-sm mb-1">
-                {lastDeclarer ? `${lastDeclarer.name}の宣言` : '最初の宣言を待っています'}
-              </div>
-              <div className="text-5xl font-bold text-white">
-                {currentDeclaredValue !== null ? currentDeclaredValue : '—'}
-              </div>
-            </div>
+            {/* 多角形配置のプレイヤーカード + 中央宣言値 */}
+            <PlayerCardsPolygon
+              activePlayers={activePlayers}
+              eliminatedPlayers={eliminatedPlayers}
+              turnOrder={turnOrder}
+              currentTurnPlayerId={currentTurnPlayerId}
+              controlledPlayerId={controlledPlayerId}
+              dealtCards={dealtCards}
+              initialLife={initialLife}
+              currentDeclaredValue={currentDeclaredValue}
+              lastDeclarerName={lastDeclarer?.name}
+              currentPlayerName={currentPlayer?.name}
+              isMyTurn={isMyTurn}
+              phase={phase}
+            />
 
-            {/* ターン表示 */}
-            <div className="text-center py-2 rounded-lg bg-slate-700/50">
-              {phase === 'declaring' && (
-                <span className="text-white">
-                  {isMyTurn ? (
-                    <span className="text-yellow-400 font-bold text-lg">あなたの番です</span>
-                  ) : (
-                    <span>{currentPlayer?.name}の番...</span>
-                  )}
-                </span>
-              )}
-              {phase === 'round_start' && (
-                <span className="text-white">ラウンド開始！</span>
-              )}
+            {/* タブレット用: 宣言パネル（mdで表示、lgで非表示） */}
+            <div className="hidden md:block lg:hidden mt-4">
+              <DeclarationPanel
+                inputValue={inputValue}
+                setInputValue={setInputValue}
+                minDeclareValue={minDeclareValue}
+                currentDeclaredValue={currentDeclaredValue}
+                isMyTurn={isMyTurn}
+                isValidInput={isValidInput}
+                currentPlayerName={currentPlayer?.name}
+                phase={phase as 'declaring' | 'round_start'}
+                onDeclare={handleDeclare}
+                onCallJackal={handleCallJackal}
+                onKeyDown={handleKeyDown}
+              />
             </div>
           </div>
 
-          {/* 宣言エリア（PC: 30%横並び / スマホ: 下部固定で別途表示） */}
-          <div className="hidden md:flex w-[30%] h-40 bg-slate-800/80 rounded-xl p-4 flex-col">
-            {phase === 'declaring' && isMyTurn ? (
-              <>
-                {/* 数字入力 */}
-                <div className="flex-1 flex flex-col justify-center">
-                  <div className="text-slate-400 text-xs mb-2 text-center">
-                    {currentDeclaredValue !== null
-                      ? `${minDeclareValue}以上を宣言`
-                      : '数字を宣言'}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => {
-                        const current = parseInt(inputValue, 10) || minDeclareValue;
-                        if (current > minDeclareValue) {
-                          setInputValue(String(current - 1));
-                        }
-                      }}
-                      disabled={!inputValue || parseInt(inputValue, 10) <= minDeclareValue}
-                      className="w-10 h-10 bg-slate-600 hover:bg-slate-500 disabled:bg-slate-700 disabled:text-slate-500 rounded-lg text-white font-bold text-xl transition-all flex-shrink-0"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder={String(minDeclareValue)}
-                      min={minDeclareValue}
-                      className="flex-1 min-w-0 px-2 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xl text-center font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                    <button
-                      onClick={() => {
-                        const current = parseInt(inputValue, 10) || minDeclareValue - 1;
-                        setInputValue(String(current + 1));
-                      }}
-                      className="w-10 h-10 bg-slate-600 hover:bg-slate-500 rounded-lg text-white font-bold text-xl transition-all flex-shrink-0"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
+          {/* 右カラム（PC専用: lg:w-72） */}
+          <div className="hidden lg:flex lg:w-72 flex-col gap-4">
+            {/* 宣言パネル */}
+            <div className="h-40">
+              <DeclarationPanel
+                inputValue={inputValue}
+                setInputValue={setInputValue}
+                minDeclareValue={minDeclareValue}
+                currentDeclaredValue={currentDeclaredValue}
+                isMyTurn={isMyTurn}
+                isValidInput={isValidInput}
+                currentPlayerName={currentPlayer?.name}
+                phase={phase as 'declaring' | 'round_start'}
+                onDeclare={handleDeclare}
+                onCallJackal={handleCallJackal}
+                onKeyDown={handleKeyDown}
+              />
+            </div>
 
-                {/* 宣言ボタン / ジャッカルボタン */}
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={handleDeclare}
-                    disabled={!isValidInput}
-                    className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 rounded-lg text-white font-bold transition-all text-sm"
-                  >
-                    宣言
-                  </button>
-                  {currentDeclaredValue !== null && (
-                    <button
-                      onClick={handleCallJackal}
-                      className="flex-1 py-2 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all text-sm"
-                    >
-                      ジャッカル！
-                    </button>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-slate-500 text-sm text-center whitespace-pre-line">
-                {isMyTurn ? 'ラウンド開始中...' : `${currentPlayer?.name}の\nターンです`}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 下段: プレイヤーカード（全幅） */}
-        <div className="bg-slate-800/50 rounded-xl p-4">
-          <div className="flex flex-wrap justify-center gap-4">
-            {/* アクティブプレイヤー（ターン順） */}
-            {turnOrder
-              .map(pid => activePlayers.find(p => p.id === pid))
-              .filter((p): p is Player => p !== undefined)
-              .map((player) => {
-                const card = getPlayerCard(player);
-                const isCurrent = player.id === currentTurnPlayerId;
-                const isMe = player.id === controlledPlayerId;
-
-                return (
-                  <div
-                    key={player.id}
-                    className={`flex flex-col items-center p-3 rounded-lg transition-all ${
-                      isCurrent ? 'bg-yellow-500/20 ring-2 ring-yellow-500' : 'bg-slate-700/50'
-                    }`}
-                  >
-                    <Card
-                      card={card}
-                      hidden={isMe}
-                      size="lg"
-                      highlighted={isCurrent}
-                    />
-                    <div className="mt-2 text-center">
-                      <div className={`text-sm font-medium truncate max-w-20 ${isMe ? 'text-yellow-300' : 'text-white'}`}>
-                        {player.name}
-                        {isMe && ' (自分)'}
-                      </div>
-                      <div className="flex items-center justify-center gap-0.5 mt-1">
-                        {/* 現在のライフ（塗りつぶし） */}
-                        {Array.from({ length: player.life }).map((_, i) => (
-                          <Heart key={`filled-${i}`} className="w-3 h-3 text-red-400 fill-red-400" />
-                        ))}
-                        {/* 失ったライフ（中抜き） */}
-                        {Array.from({ length: initialLife - player.life }).map((_, i) => (
-                          <Heart key={`empty-${i}`} className="w-3 h-3 text-red-400/50" strokeWidth={2} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-            {/* 脱落プレイヤー（右側にグレーアウト表示） */}
-            {players
-              .filter(p => p.isEliminated)
-              .sort((a, b) => (a.eliminatedAt ?? 0) - (b.eliminatedAt ?? 0))
-              .map((player) => {
-                const isMe = player.id === controlledPlayerId;
-
-                return (
-                  <div
-                    key={player.id}
-                    className="flex flex-col items-center p-3 rounded-lg bg-slate-700/30 opacity-50 grayscale"
-                  >
-                    <Card
-                      hidden={true}
-                      size="lg"
-                    />
-                    <div className="mt-2 text-center">
-                      <div className={`text-sm font-medium truncate max-w-20 text-slate-400`}>
-                        {player.name}
-                        {isMe && ' (自分)'}
-                      </div>
-                      <div className="flex items-center justify-center gap-0.5 mt-1">
-                        {/* 全て失ったライフ（中抜き） */}
-                        {Array.from({ length: initialLife }).map((_, i) => (
-                          <Heart key={`empty-${i}`} className="w-3 h-3 text-red-400/50" strokeWidth={2} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            {/* カード一覧 */}
+            <CardReference />
           </div>
         </div>
 
@@ -353,12 +221,7 @@ export const GamePlayPhase = ({
             </div>
           </div>
         )}
-          </div>
-          {/* 右カラム終わり */}
-        </div>
-        {/* カラムレイアウト終わり */}
       </div>
-      {/* max-w-7xl終わり */}
 
       {/* スマホ用: 下部固定の入力パネル */}
       <div className="fixed bottom-0 left-0 right-0 md:hidden bg-slate-900/95 backdrop-blur border-t border-slate-700 p-4">
