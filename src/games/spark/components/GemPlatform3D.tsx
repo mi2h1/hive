@@ -201,7 +201,7 @@ export const GemPlatform3D = ({ gems, className = '' }: GemPlatform3DProps) => {
       <Canvas
         key={key}
         shadows
-        camera={{ position: [0, 6, 3], fov: 35 }}
+        camera={{ position: [0, 8, 0.01], fov: 35 }}
         gl={{ antialias: true, alpha: true }}
       >
         <color attach="background" args={[bgColor]} />
