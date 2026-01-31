@@ -361,17 +361,13 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     },
   }), [handleRoll]);
 
-  // 六角形のクリップパス（横長の六角形）
-  const hexClipPath = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
-
   return (
-    <div className="relative w-[400px] h-[300px] mx-auto">
-      {/* フェルト部分（六角形） */}
+    <div className="relative w-[320px] h-[320px] mx-auto">
+      {/* フェルト部分（正方形） */}
       <div
-        className="absolute inset-0 bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 overflow-hidden"
+        className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 overflow-hidden shadow-xl"
         style={{
-          clipPath: hexClipPath,
-          boxShadow: 'inset 0 4px 16px rgba(0,0,0,0.4), inset 0 -2px 8px rgba(255,255,255,0.1)',
+          boxShadow: 'inset 0 4px 16px rgba(0,0,0,0.4), inset 0 -2px 8px rgba(255,255,255,0.1), 0 0 0 3px rgba(251, 191, 36, 0.3), 0 8px 32px rgba(0,0,0,0.5)',
         }}
       >
         <canvas
@@ -381,24 +377,12 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         />
       </div>
 
-      {/* 六角形のボーダー */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          clipPath: hexClipPath,
-          boxShadow: '0 0 0 3px rgba(251, 191, 36, 0.4), 0 8px 32px rgba(0,0,0,0.5)',
-        }}
-      />
-
       {/* WebGLフォールバック表示 */}
       {webglError && !isRolling && (() => {
         // ローカルで振ったダイスを優先、なければゲーム状態から取得
         const diceToShow = fallbackDice || displayedDice;
         return (
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ clipPath: hexClipPath }}
-          >
+          <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
             {diceToShow ? (
               // ダイスの結果を表示
               <div className="flex items-center gap-4">
@@ -416,10 +400,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
 
       {/* 2Dモードでロール中のアニメーション */}
       {webglError && isRolling && (
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ clipPath: hexClipPath }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
           <div className="flex items-center gap-4 animate-bounce">
             <Dice1 className="w-16 h-16 text-white/60 animate-spin" />
             <Dice6 className="w-16 h-16 text-white/60 animate-spin" style={{ animationDirection: 'reverse' }} />
@@ -429,10 +410,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
 
       {/* 接続中表示 */}
       {!isConnected && !webglError && (
-        <div
-          className="absolute inset-0 flex items-center justify-center bg-black/50"
-          style={{ clipPath: hexClipPath }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50">
           <p className="text-amber-400 animate-pulse">{connectionStatus}</p>
         </div>
       )}
