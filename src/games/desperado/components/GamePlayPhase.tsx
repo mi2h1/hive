@@ -225,26 +225,28 @@ export const GamePlayPhase = ({
           <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4">
             {/* 左カラム: ダイスフィールド */}
             <div className="bg-slate-800/90 rounded-xl p-4 space-y-4">
-              {/* ステータス表示 */}
-              {gameState.phase === 'rolling' && (
-                <div className="text-center">
-                  {!allPlayersReady ? (
-                    <p className="text-slate-400 animate-pulse">全員の準備完了を待っています...</p>
-                  ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled && currentPlayer.currentRoll ? (
-                    <p className="text-amber-400 font-bold">キープするか振り直すか選んでください</p>
-                  ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
-                    <p className="text-amber-400 font-bold">あなたの番です</p>
-                  ) : someoneIsRolling ? (
-                    <p className="text-amber-400">
-                      {`${rollingPlayer?.name}がダイスを振っています`}
-                    </p>
-                  ) : currentPlayer?.hasRolled ? (
-                    <p className="text-slate-400">{currentTurnPlayer?.name}の番を待っています...</p>
-                  ) : (
-                    <p className="text-amber-400">{currentTurnPlayer?.name}の番です</p>
-                  )}
-                </div>
-              )}
+              {/* ステータス表示（min-height: 2行分を確保） */}
+              <div className="text-center min-h-[3rem] flex items-center justify-center">
+                {gameState.phase === 'rolling' && (
+                  <>
+                    {!allPlayersReady ? (
+                      <p className="text-slate-400 animate-pulse">全員の準備完了を待っています...</p>
+                    ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled && currentPlayer.currentRoll ? (
+                      <p className="text-amber-400 font-bold">キープするか振り直すか選んでください</p>
+                    ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
+                      <p className="text-amber-400 font-bold">あなたの番です</p>
+                    ) : someoneIsRolling ? (
+                      <p className="text-amber-400">
+                        {`${rollingPlayer?.name}がダイスを振っています`}
+                      </p>
+                    ) : currentPlayer?.hasRolled ? (
+                      <p className="text-slate-400">{currentTurnPlayer?.name}の番を待っています...</p>
+                    ) : (
+                      <p className="text-amber-400">{currentTurnPlayer?.name}の番です</p>
+                    )}
+                  </>
+                )}
+              </div>
 
               {/* DiceRoller */}
               <DiceRoller
@@ -255,54 +257,76 @@ export const GamePlayPhase = ({
                 onRollComplete={handleRollComplete}
                 isMyTurn={isMyTurn && !currentPlayer?.hasRolled && gameState.phase === 'rolling'}
                 onStartRoll={handleStartRoll}
-                showButton={!!(
-                  gameState.phase === 'rolling' &&
-                  allPlayersReady &&
-                  isMyTurn &&
-                  currentPlayer &&
-                  !currentPlayer.hasRolled &&
-                  !currentPlayer.currentRoll
-                )}
+                showButton={false}
                 rollingPlayerId={gameState.rollingPlayerId}
                 onConnected={handleDddiceConnected}
                 displayedDice={currentTurnPlayer?.currentRoll ?? null}
               />
 
-              {/* 振り直し/キープ選択 */}
-              {gameState.phase === 'rolling' &&
-                isMyTurn &&
-                currentPlayer &&
-                !currentPlayer.hasRolled &&
-                currentPlayer.currentRoll && (
-                  <div className="space-y-3">
-                    <div className="text-center">
-                      <p className="text-white font-bold">
-                        {getRollDisplayName(currentPlayer.currentRoll)}
-                      </p>
-                      <p className="text-slate-400 text-sm">
-                        残り振り直し: {currentPlayer.rerollsRemaining ?? 0}回
-                      </p>
-                    </div>
-                    <div className="flex gap-3">
-                      {(currentPlayer.rerollsRemaining ?? 0) > 0 && (
-                        <button
-                          onClick={handleReroll}
-                          className="flex-1 px-6 py-3 bg-slate-600 hover:bg-slate-500
-                            rounded-lg text-white font-bold transition-all"
-                        >
-                          振り直す
-                        </button>
-                      )}
+              {/* ボタンエリア（高さ固定） */}
+              <div className="min-h-[7rem] flex flex-col justify-center">
+                {/* ダイスを振るボタン */}
+                {gameState.phase === 'rolling' &&
+                  allPlayersReady &&
+                  isMyTurn &&
+                  currentPlayer &&
+                  !currentPlayer.hasRolled &&
+                  !currentPlayer.currentRoll && (
+                    <div className="flex justify-center">
                       <button
-                        onClick={handleKeepRoll}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
-                          hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
+                        onClick={() => diceRollerRef.current?.triggerRoll()}
+                        className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500
+                          hover:from-amber-600 hover:to-orange-600 rounded-full text-white
+                          font-bold text-lg transition-all shadow-lg border-2 border-amber-300/30"
                       >
-                        キープ
+                        ダイスを振る
                       </button>
                     </div>
+                  )}
+
+                {/* ロール中表示 */}
+                {someoneIsRolling && (
+                  <div className="text-center">
+                    <p className="text-amber-300 animate-pulse font-bold">ダイスを振っています...</p>
                   </div>
                 )}
+
+                {/* 振り直し/キープ選択 */}
+                {gameState.phase === 'rolling' &&
+                  isMyTurn &&
+                  currentPlayer &&
+                  !currentPlayer.hasRolled &&
+                  currentPlayer.currentRoll && (
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <p className="text-white font-bold">
+                          {getRollDisplayName(currentPlayer.currentRoll)}
+                        </p>
+                        <p className="text-slate-400 text-sm">
+                          残り振り直し: {currentPlayer.rerollsRemaining ?? 0}回
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        {(currentPlayer.rerollsRemaining ?? 0) > 0 && (
+                          <button
+                            onClick={handleReroll}
+                            className="flex-1 px-6 py-3 bg-slate-600 hover:bg-slate-500
+                              rounded-lg text-white font-bold transition-all"
+                          >
+                            振り直す
+                          </button>
+                        )}
+                        <button
+                          onClick={handleKeepRoll}
+                          className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
+                            hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all"
+                        >
+                          キープ
+                        </button>
+                      </div>
+                    </div>
+                  )}
+              </div>
             </div>
 
             {/* 右カラム: プレイヤー一覧 */}

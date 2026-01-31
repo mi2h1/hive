@@ -414,26 +414,6 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
           <p className="text-amber-400 animate-pulse">{connectionStatus}</p>
         </div>
       )}
-
-      {/* ボタン表示 */}
-      {showButton && (isConnected || webglError) && isMyTurn && !isRolling && (
-        <button
-          onClick={handleRoll}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 px-6 py-2
-            bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600
-            rounded-full text-white font-bold text-base transition-all shadow-lg
-            border-2 border-amber-300/30"
-        >
-          ダイスを振る
-        </button>
-      )}
-
-      {/* ロール中表示 */}
-      {isRolling && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-          <p className="text-amber-300 animate-pulse font-bold text-sm">ダイスを振っています...</p>
-        </div>
-      )}
     </div>
   );
 });
