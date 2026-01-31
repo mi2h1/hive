@@ -197,24 +197,10 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     if (!isSdkReady || isConnected) return;
 
     // 自分が2Dモード（WebGL失敗）の場合
+    // 他のプレイヤーのWebGL状態に関係なく、独立して2Dモードで動作
     if (webglError) {
-      console.log('[DiceRoller] Already in 2D mode, skipping room setup');
-      // ホストで、まだスラッグがなければ空文字を設定（他のプレイヤーにルーム無しを通知）
-      if (isHost && !dddiceRoomSlug) {
-        console.log('[DiceRoller] Host in 2D mode, setting empty slug');
-        onDddiceRoomCreated('');
-      }
+      console.log('[DiceRoller] In 2D mode, operating independently');
       setIsConnected(true);
-      onConnected?.();
-      return;
-    }
-
-    // ルームスラッグが空文字の場合（ホストがWebGL失敗）、自分も2Dモードに
-    if (dddiceRoomSlug === '') {
-      console.log('[DiceRoller] Host has no WebGL, falling back to 2D');
-      setWebglError(true);
-      setIsConnected(true);
-      setConnectionStatus('2Dモードで動作中');
       onConnected?.();
       return;
     }
@@ -224,16 +210,10 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     const dddice = dddiceRef.current;
     if (!dddice) return;
 
-    // ホストでスラッグがない → ルーム作成
     // スラッグがある → 参加
-    // どちらでもない → 待機
-    const shouldCreateRoom = isHost && !dddiceRoomSlug;
+    // スラッグがない → ルーム作成（ホスト優先、ホストがWebGL失敗なら他の人が作成）
     const shouldJoinRoom = !!dddiceRoomSlug;
-
-    if (!shouldCreateRoom && !shouldJoinRoom) {
-      setConnectionStatus('他のプレイヤーを待っています...');
-      return;
-    }
+    const shouldCreateRoom = !dddiceRoomSlug;
 
     // 既に処理中なら重複実行を防ぐ
     if (isSettingUpRoom.current) return;
@@ -242,7 +222,19 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     const setupRoom = async () => {
       try {
         if (shouldCreateRoom) {
-          // ホスト: 新しいルームを作成
+          // ホストでない場合は少し待つ（ホストが先にルーム作成する機会を与える）
+          if (!isHost) {
+            setConnectionStatus('ダイスを準備中...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            // 待機中にslugが設定されたかチェック
+            if (dddiceRoomSlugRef.current) {
+              console.log('[DiceRoller] Slug was set while waiting, will join instead');
+              isSettingUpRoom.current = false;
+              return; // useEffectが再実行されて参加処理に入る
+            }
+          }
+
+          // ルームを作成
           setConnectionStatus('ダイスフィールドを準備中...');
 
           const response = await dddice.api?.room?.create();
