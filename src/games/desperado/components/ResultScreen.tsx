@@ -4,6 +4,7 @@ import type { GameState } from '../types/game';
 interface ResultScreenProps {
   gameState: GameState;
   playerId: string;
+  isHost: boolean;
   onPlayAgain: () => void;
   onLeaveRoom: () => void;
 }
@@ -11,6 +12,7 @@ interface ResultScreenProps {
 export const ResultScreen = ({
   gameState,
   playerId,
+  isHost,
   onPlayAgain,
   onLeaveRoom,
 }: ResultScreenProps) => {
@@ -90,15 +92,21 @@ export const ResultScreen = ({
 
           {/* アクションボタン */}
           <div className="space-y-3">
-            <button
-              onClick={onPlayAgain}
-              className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
-                hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all
-                flex items-center justify-center gap-2"
-            >
-              <RotateCcw className="w-5 h-5" />
-              もう一度遊ぶ
-            </button>
+            {isHost ? (
+              <button
+                onClick={onPlayAgain}
+                className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500
+                  hover:from-amber-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all
+                  flex items-center justify-center gap-2"
+              >
+                <RotateCcw className="w-5 h-5" />
+                もう一度遊ぶ
+              </button>
+            ) : (
+              <div className="w-full px-6 py-3 bg-slate-700/50 rounded-lg text-center">
+                <p className="text-slate-400">ホストの選択を待っています...</p>
+              </div>
+            )}
             <button
               onClick={onLeaveRoom}
               className="w-full px-6 py-3 bg-slate-700 hover:bg-slate-600

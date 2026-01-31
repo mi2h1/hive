@@ -170,6 +170,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
       <ResultScreen
         gameState={gameState}
         playerId={playerId}
+        isHost={isHost}
         onPlayAgain={handlePlayAgain}
         onLeaveRoom={handleLeaveToGameTop}
       />
