@@ -32,22 +32,52 @@ export const JackalCallOverlay = ({ onAnimationEnd }: JackalCallOverlayProps) =>
     };
   }, [onAnimationEnd]);
 
-  // トゲトゲ（スターバースト）のポイント数
-  const points = 16;
-  const outerRadius = 200;
-  const innerRadius = 140;
+  // 横長の吹き出し風スターバースト
+  const points = 14; // トゲの数
+  const centerX = 300;
+  const centerY = 150;
+  const outerRadiusX = 280; // 横方向の外側半径
+  const outerRadiusY = 140; // 縦方向の外側半径
+  const innerRadiusX = 220; // 横方向の内側半径（トゲの谷）
+  const innerRadiusY = 100; // 縦方向の内側半径
+  const curveDepth = 0.4; // 谷の凹み具合（0-1）
 
-  // スターバーストのパスを生成
-  const generateStarburstPath = () => {
-    const pathPoints: string[] = [];
-    for (let i = 0; i < points * 2; i++) {
-      const angle = (i * Math.PI) / points - Math.PI / 2;
-      const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      const x = 200 + radius * Math.cos(angle);
-      const y = 200 + radius * Math.sin(angle);
-      pathPoints.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+  // 吹き出し風スターバーストのパスを生成（トゲ間が弧を描く）
+  const generateBubbleStarburstPath = () => {
+    const pathParts: string[] = [];
+    const angleStep = (2 * Math.PI) / points;
+
+    for (let i = 0; i < points; i++) {
+      // トゲの先端
+      const tipAngle = angleStep * i - Math.PI / 2;
+      const tipX = centerX + outerRadiusX * Math.cos(tipAngle);
+      const tipY = centerY + outerRadiusY * Math.sin(tipAngle);
+
+      // 次のトゲの先端
+      const nextTipAngle = angleStep * (i + 1) - Math.PI / 2;
+      const nextTipX = centerX + outerRadiusX * Math.cos(nextTipAngle);
+      const nextTipY = centerY + outerRadiusY * Math.sin(nextTipAngle);
+
+      // トゲ間の谷（内側に凹む）
+      const valleyAngle = (tipAngle + nextTipAngle) / 2;
+      const valleyX = centerX + innerRadiusX * Math.cos(valleyAngle);
+      const valleyY = centerY + innerRadiusY * Math.sin(valleyAngle);
+
+      // 制御点（さらに内側に凹ませる）
+      const controlX = centerX + innerRadiusX * curveDepth * Math.cos(valleyAngle);
+      const controlY = centerY + innerRadiusY * curveDepth * Math.sin(valleyAngle);
+
+      if (i === 0) {
+        pathParts.push(`M ${tipX} ${tipY}`);
+      }
+
+      // トゲの先端から谷へ（二次ベジェ曲線で凹む）
+      pathParts.push(`Q ${controlX} ${controlY} ${valleyX} ${valleyY}`);
+      // 谷から次のトゲへ（二次ベジェ曲線で凹む）
+      pathParts.push(`Q ${controlX} ${controlY} ${nextTipX} ${nextTipY}`);
     }
-    return pathPoints.join(' ') + ' Z';
+
+    return pathParts.join(' ') + ' Z';
   };
 
   return (
@@ -59,21 +89,21 @@ export const JackalCallOverlay = ({ onAnimationEnd }: JackalCallOverlayProps) =>
       {/* 背景のオーバーレイ */}
       <div className="absolute inset-0 bg-black/30" />
 
-      {/* トゲトゲ枠 + ロゴ */}
+      {/* トゲトゲ枠 + ロゴ（右上がりに傾斜） */}
       <div
         className={`relative transition-transform duration-500 ease-out ${
           phase === 'enter'
-            ? 'scale-50'
+            ? 'scale-50 -rotate-12'
             : phase === 'exit'
-            ? 'scale-125'
-            : 'scale-100'
+            ? 'scale-125 -rotate-12'
+            : 'scale-100 -rotate-12'
         }`}
       >
-        {/* スターバーストSVG */}
+        {/* 吹き出し風スターバーストSVG */}
         <svg
-          width="400"
-          height="400"
-          viewBox="0 0 400 400"
+          width="600"
+          height="300"
+          viewBox="0 0 600 300"
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         >
           <defs>
@@ -91,7 +121,7 @@ export const JackalCallOverlay = ({ onAnimationEnd }: JackalCallOverlayProps) =>
             </filter>
           </defs>
           <path
-            d={generateStarburstPath()}
+            d={generateBubbleStarburstPath()}
             fill="url(#jackalStarburst)"
             filter="url(#jackalGlow)"
             className="drop-shadow-2xl"
@@ -99,11 +129,11 @@ export const JackalCallOverlay = ({ onAnimationEnd }: JackalCallOverlayProps) =>
         </svg>
 
         {/* ジャッカルロゴ */}
-        <div className="relative z-10 w-48 h-48 flex items-center justify-center">
+        <div className="relative z-10 w-72 h-48 flex items-center justify-center">
           <img
             src="/hive/images/vec_logo_jackal.svg"
             alt="JACKAL"
-            className="w-32 h-32 filter brightness-0 invert drop-shadow-lg"
+            className="w-48 h-48 filter brightness-0 invert drop-shadow-lg"
           />
         </div>
       </div>
