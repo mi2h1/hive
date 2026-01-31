@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Gamepad2 } from 'lucide-react';
+import { Gamepad2, Pencil, X } from 'lucide-react';
 import { usePlayer } from './shared/hooks/usePlayer';
 import { AoaGame } from './games/aoa/AoaGame';
 import { MojiHuntGame } from './games/moji-hunt/MojiHuntGame';
@@ -72,6 +72,8 @@ function App() {
   const { playerName, setPlayerName, hasName, isLoading } = usePlayer();
   const [nameInput, setNameInput] = useState('');
   const [selectedGame, setSelectedGame] = useState<GameType>(getGameFromPath);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [newNameInput, setNewNameInput] = useState('');
 
   // ブラウザの戻る/進むに対応
   useEffect(() => {
@@ -276,18 +278,96 @@ function App() {
     );
   }
 
+  // 名前変更ハンドラー
+  const handleNameChange = () => {
+    const trimmed = newNameInput.trim();
+    if (trimmed) {
+      setPlayerName(trimmed);
+      setShowNameModal(false);
+      setNewNameInput('');
+    }
+  };
+
   // ゲーム選択画面
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* ヘッダー */}
-        <header className="text-center py-8">
-          <Gamepad2 className="w-12 h-12 text-indigo-400 mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-white mb-1">Game Board</h1>
-          <p className="text-slate-400">
-            ようこそ、<span className="text-indigo-300">{playerName}</span> さん
-          </p>
-        </header>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950">
+      {/* 全幅ヘッダー */}
+      <header className="bg-slate-800/80 border-b border-slate-700">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          {/* 左側: アイコン + タイトル */}
+          <div className="flex items-center gap-3">
+            <Gamepad2 className="w-8 h-8 text-indigo-400" />
+            <h1 className="text-xl font-bold text-white">Game Board</h1>
+          </div>
+          {/* 右側: ようこそ + 名前 + 変更ボタン */}
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 text-sm hidden sm:inline">ようこそ、</span>
+            <span className="text-indigo-300 font-medium">{playerName}</span>
+            <span className="text-slate-400 text-sm hidden sm:inline">さん</span>
+            <button
+              onClick={() => {
+                setNewNameInput(playerName || '');
+                setShowNameModal(true);
+              }}
+              className="ml-2 p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+              title="名前を変更"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* 名前変更モーダル */}
+      {showNameModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-xl p-6 max-w-sm w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white">名前を変更</h2>
+              <button
+                onClick={() => setShowNameModal(false)}
+                className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <input
+              type="text"
+              value={newNameInput}
+              onChange={(e) => setNewNameInput(e.target.value)}
+              placeholder="新しい名前を入力..."
+              className="w-full px-4 py-3 bg-slate-700 text-white rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
+              maxLength={20}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleNameChange();
+                }
+              }}
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowNameModal(false)}
+                className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleNameChange}
+                disabled={!newNameInput.trim()}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600
+                  hover:from-indigo-600 hover:to-purple-700 disabled:from-gray-500 disabled:to-gray-600
+                  rounded-lg text-white font-bold transition-all"
+              >
+                変更
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-4xl mx-auto p-4 pt-8">
 
         {/* ゲーム一覧 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
