@@ -141,6 +141,7 @@ export const JackalGame = ({ onBack }: JackalGameProps) => {
     if (!gameState) return;
     if (gameState.currentTurnPlayerId !== actingPlayerId) return;
     if (gameState.currentDeclaredValue === null) return;
+    if (!gameState.lastDeclarerId) return; // lastDeclarerIdがない場合は処理しない
 
     // ?カードがある場合は山札から1枚引く
     let mysteryDrawnCard: Card | null = null;
@@ -154,7 +155,7 @@ export const JackalGame = ({ onBack }: JackalGameProps) => {
 
     // 判定
     const declaredValue = gameState.currentDeclaredValue;
-    const lastDeclarerId = gameState.lastDeclarerId!;
+    const lastDeclarerId = gameState.lastDeclarerId;
 
     let loserId: string;
     let reason: 'over' | 'jackal';
