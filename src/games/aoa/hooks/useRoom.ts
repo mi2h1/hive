@@ -288,8 +288,10 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
         setRoomData(normalizedData);
         setError(null);
       } else {
+        // 部屋が削除された（ホストが退出した）
         setRoomData(null);
-        setError('ルームが見つかりません');
+        setRoomCode(null);
+        setError('ホストがゲームを終了しました');
       }
     }, (err) => {
       console.error('Room subscription error:', err);
