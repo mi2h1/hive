@@ -226,13 +226,18 @@ export const GamePlayPhase = ({
             {/* 左カラム: ダイスフィールド */}
             <div className="bg-slate-800/90 rounded-xl p-4 space-y-4">
               {/* ステータス表示（min-height: 2行分を確保） */}
-              <div className="text-center min-h-[3rem] flex items-center justify-center">
+              <div className="text-center min-h-[3.5rem] flex flex-col items-center justify-center">
                 {gameState.phase === 'rolling' && (
                   <>
                     {!allPlayersReady ? (
                       <p className="text-slate-400 animate-pulse">全員の準備完了を待っています...</p>
+                    ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled && gameState.rollingPlayerId === playerId ? (
+                      <p className="text-amber-400 font-bold animate-pulse">ダイスロール中...</p>
                     ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled && currentPlayer.currentRoll ? (
-                      <p className="text-amber-400 font-bold">キープするか振り直すか選んでください</p>
+                      <>
+                        <p className="text-amber-400 font-bold">キープするか振り直すか選んでください</p>
+                        <p className="text-slate-400 text-sm">残り振り直し: {currentPlayer.rerollsRemaining ?? 0}回</p>
+                      </>
                     ) : isMyTurn && currentPlayer && !currentPlayer.hasRolled ? (
                       <p className="text-amber-400 font-bold">あなたの番です</p>
                     ) : someoneIsRolling ? (
@@ -262,14 +267,15 @@ export const GamePlayPhase = ({
               />
 
               {/* ボタンエリア（高さ固定） */}
-              <div className="min-h-[7rem] flex flex-col justify-center">
+              <div className="min-h-[6rem] flex flex-col justify-center">
                 {/* ダイスを振るボタン */}
                 {gameState.phase === 'rolling' &&
                   allPlayersReady &&
                   isMyTurn &&
                   currentPlayer &&
                   !currentPlayer.hasRolled &&
-                  !currentPlayer.currentRoll && (
+                  !currentPlayer.currentRoll &&
+                  !someoneIsRolling && (
                     <div className="flex justify-center">
                       <button
                         onClick={() => diceRollerRef.current?.triggerRoll()}
@@ -282,13 +288,6 @@ export const GamePlayPhase = ({
                     </div>
                   )}
 
-                {/* ロール中表示 */}
-                {someoneIsRolling && (
-                  <div className="text-center">
-                    <p className="text-amber-300 animate-pulse font-bold">ダイスを振っています...</p>
-                  </div>
-                )}
-
                 {/* 振り直し/キープ選択 */}
                 {gameState.phase === 'rolling' &&
                   isMyTurn &&
@@ -297,11 +296,8 @@ export const GamePlayPhase = ({
                   currentPlayer.currentRoll && (
                     <div className="space-y-3">
                       <div className="text-center">
-                        <p className="text-white font-bold">
+                        <p className="text-white font-bold text-lg">
                           {getRollDisplayName(currentPlayer.currentRoll)}
-                        </p>
-                        <p className="text-slate-400 text-sm">
-                          残り振り直し: {currentPlayer.rerollsRemaining ?? 0}回
                         </p>
                       </div>
                       <div className="flex gap-3">
