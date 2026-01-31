@@ -219,6 +219,37 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     if (isSettingUpRoom.current) return;
     isSettingUpRoom.current = true;
 
+    const joinRoom = async (slug: string) => {
+      // 参加者: 既存のルームに参加
+      setConnectionStatus('参加中...');
+
+      try {
+        const joinResponse = await dddice.api?.room?.join(slug);
+
+        // ダイス音を無効化（自分のparticipant設定を更新）
+        const participants = joinResponse?.data?.participants || [];
+        const myParticipant = participants[participants.length - 1]; // 最後に参加した人が自分
+        if (myParticipant?.id) {
+          try {
+            await dddice.api?.room?.updateParticipant(slug, myParticipant.id, {
+              settings: { roll: { disableShakingSound: true } }
+            } as Partial<typeof myParticipant>);
+          } catch {
+            // 設定更新失敗は無視
+          }
+        }
+      } catch (joinErr) {
+        // 既に参加している場合はエラーを無視するが、ログは出す
+        console.warn('Room join warning:', joinErr);
+      }
+
+      // WebSocket接続
+      dddice.connect(slug);
+      setIsConnected(true);
+      setConnectionStatus('接続完了');
+      onConnectedRef.current?.();
+    };
+
     const setupRoom = async () => {
       try {
         if (shouldCreateRoom) {
@@ -227,10 +258,11 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
             setConnectionStatus('ダイスを準備中...');
             await new Promise(resolve => setTimeout(resolve, 2000));
             // 待機中にslugが設定されたかチェック
-            if (dddiceRoomSlugRef.current) {
-              console.log('[DiceRoller] Slug was set while waiting, will join instead');
-              isSettingUpRoom.current = false;
-              return; // useEffectが再実行されて参加処理に入る
+            const slugAfterWait = dddiceRoomSlugRef.current;
+            if (slugAfterWait) {
+              console.log('[DiceRoller] Slug was set while waiting, joining room:', slugAfterWait);
+              await joinRoom(slugAfterWait);
+              return;
             }
           }
 
@@ -268,34 +300,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
             isSettingUpRoom.current = false;
           }
         } else if (shouldJoinRoom && dddiceRoomSlug) {
-          // 参加者: 既存のルームに参加
-          setConnectionStatus('参加中...');
-
-          try {
-            const joinResponse = await dddice.api?.room?.join(dddiceRoomSlug);
-
-            // ダイス音を無効化（自分のparticipant設定を更新）
-            const participants = joinResponse?.data?.participants || [];
-            const myParticipant = participants[participants.length - 1]; // 最後に参加した人が自分
-            if (myParticipant?.id) {
-              try {
-                await dddice.api?.room?.updateParticipant(dddiceRoomSlug, myParticipant.id, {
-                  settings: { roll: { disableShakingSound: true } }
-                } as Partial<typeof myParticipant>);
-              } catch {
-                // 設定更新失敗は無視
-              }
-            }
-          } catch (joinErr) {
-            // 既に参加している場合はエラーを無視するが、ログは出す
-            console.warn('Room join warning:', joinErr);
-          }
-
-          // WebSocket接続
-          dddice.connect(dddiceRoomSlug);
-          setIsConnected(true);
-          setConnectionStatus('接続完了');
-          onConnected?.();
+          await joinRoom(dddiceRoomSlug);
         }
       } catch (err) {
         console.error('Room setup error:', err);
