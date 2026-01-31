@@ -401,6 +401,7 @@ export const JackalGame = ({ onBack }: JackalGameProps) => {
       <JudgmentPhase
         gameState={gameState}
         playerId={playerId ?? ''}
+        isHost={isHost}
         onNextRound={handleNextRound}
         onLeaveRoom={leaveRoom}
       />

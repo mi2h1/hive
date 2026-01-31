@@ -372,6 +372,7 @@ export const JackalDevGame = ({ onBack }: JackalDevGameProps) => {
       <JudgmentPhase
         gameState={gameState}
         playerId={playerId ?? ''}
+        isHost={isHost}
         onNextRound={handleNextRound}
         onLeaveRoom={leaveRoom}
       />

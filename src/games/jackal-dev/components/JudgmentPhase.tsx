@@ -7,6 +7,7 @@ import type { GameState } from '../types/game';
 interface JudgmentPhaseProps {
   gameState: GameState;
   playerId: string;
+  isHost: boolean;
   onNextRound: () => void;
   onLeaveRoom: () => void;
 }
@@ -17,6 +18,7 @@ type AnimationStage = 'jackal' | 'declared' | 'total' | 'result' | 'cards' | 'do
 export const JudgmentPhase = ({
   gameState,
   playerId,
+  isHost,
   onNextRound,
   onLeaveRoom,
 }: JudgmentPhaseProps) => {
@@ -322,7 +324,7 @@ export const JudgmentPhase = ({
               <div className="text-slate-400 mb-2">ゲーム終了</div>
               <div className="text-white/60 text-sm animate-pulse">タップして結果画面へ</div>
             </div>
-          ) : (
+          ) : isHost ? (
             <div className="flex gap-3">
               <button
                 onClick={onLeaveRoom}
@@ -336,6 +338,18 @@ export const JudgmentPhase = ({
               >
                 次のラウンドへ
               </button>
+            </div>
+          ) : (
+            <div className="flex gap-3 items-center">
+              <button
+                onClick={onLeaveRoom}
+                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
+              >
+                退出
+              </button>
+              <div className="flex-1 py-3 text-center text-slate-400 text-sm animate-pulse">
+                ホストの操作を待っています...
+              </div>
             </div>
           )}
         </div>
