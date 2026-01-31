@@ -57,6 +57,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
   useEffect(() => {
     if (hasAutoJoined.current) return;
     if (roomCode) return; // 既にルームに参加している場合はスキップ
+    if (!playerId || !playerName) return; // プレイヤー情報がロードされるまで待つ
 
     const urlRoomCode = getRoomCodeFromUrl();
     if (urlRoomCode && urlRoomCode.length === 4) {
@@ -64,7 +65,7 @@ export const DesperadoGame = ({ onBack }: DesperadoGameProps) => {
       clearRoomCodeFromUrl();
       joinRoom(urlRoomCode);
     }
-  }, [roomCode, joinRoom]);
+  }, [roomCode, joinRoom, playerId, playerName]);
 
   const gameState = roomData?.gameState;
   const phase = gameState?.phase ?? 'waiting';
