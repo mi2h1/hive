@@ -101,10 +101,11 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
 
         console.log('[DiceRoller] Creating dddice instance...');
 
-        // ダイスサイズを大きく設定
+        // ダイスサイズを大きく設定、アウトラインを無効化
         const dddice = new ThreeDDice(canvasRef.current!, DDDICE_API_KEY, {
           dice: {
-            size: 2.5, // さらに大きく
+            size: 2.5,
+            drawOutlines: false,
           },
         });
         dddiceRef.current = dddice;
