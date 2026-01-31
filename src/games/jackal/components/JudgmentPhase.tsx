@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Heart } from 'lucide-react';
 import { Card } from './Card';
 import { JackalCallOverlay } from './JackalCallOverlay';
+import { MysteryCardReveal } from './MysteryCardReveal';
 import type { GameState } from '../types/game';
 
 interface JudgmentPhaseProps {
@@ -25,20 +26,33 @@ export const JudgmentPhase = ({
   const { judgmentResult, round, players, turnOrder, settings } = gameState;
   const initialLife = settings.initialLife;
   const [showOverlay, setShowOverlay] = useState(true);
+  const [showMysteryReveal, setShowMysteryReveal] = useState(false);
   const [stage, setStage] = useState<AnimationStage>('jackal');
+
+  // ハテナカードがあるかどうか
+  const hasMysteryCard = !!judgmentResult?.mysteryCard;
 
   // オーバーレイアニメーション終了時
   const handleOverlayEnd = useCallback(() => {
     setShowOverlay(false);
+    // ハテナカードがある場合はハテナ演出を表示
+    if (hasMysteryCard) {
+      setShowMysteryReveal(true);
+    }
+  }, [hasMysteryCard]);
+
+  // ハテナカード演出終了時
+  const handleMysteryRevealEnd = useCallback(() => {
+    setShowMysteryReveal(false);
   }, []);
 
   // 残りのアクティブプレイヤー数
   const activePlayers = players.filter(p => !p.isEliminated);
   const isGameOver = activePlayers.length <= 1;
 
-  // アニメーションのタイミング制御（オーバーレイ終了後に開始）
+  // アニメーションのタイミング制御（オーバーレイ・ハテナ演出終了後に開始）
   useEffect(() => {
-    if (!judgmentResult || showOverlay) return;
+    if (!judgmentResult || showOverlay || showMysteryReveal) return;
 
     const timers: ReturnType<typeof setTimeout>[] = [];
 
@@ -57,7 +71,7 @@ export const JudgmentPhase = ({
     return () => {
       timers.forEach(timer => clearTimeout(timer));
     };
-  }, [judgmentResult, showOverlay]);
+  }, [judgmentResult, showOverlay, showMysteryReveal]);
 
   // ゲーム終了時の自動遷移（3秒後、またはクリックで即座に遷移）
   useEffect(() => {
@@ -90,6 +104,18 @@ export const JudgmentPhase = ({
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900">
         <JackalCallOverlay onAnimationEnd={handleOverlayEnd} />
+      </div>
+    );
+  }
+
+  // ハテナカード演出表示中
+  if (showMysteryReveal && judgmentResult?.mysteryCard) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center p-4">
+        <MysteryCardReveal
+          mysteryCard={judgmentResult.mysteryCard}
+          onAnimationEnd={handleMysteryRevealEnd}
+        />
       </div>
     );
   }
