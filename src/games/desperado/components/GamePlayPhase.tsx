@@ -206,6 +206,14 @@ export const GamePlayPhase = ({
               />
               <span className="text-amber-400 font-bold">ラウンド {gameState.currentRound}</span>
             </div>
+            {/* 中央: デスペラード発動中表示 */}
+            <div className="flex-1 text-center">
+              {gameState.desperadoRolledThisRound && (
+                <span className="text-red-400 font-bold animate-pulse text-sm">
+                  デスペラード発動中！ペナルティ2倍！
+                </span>
+              )}
+            </div>
             <button
               onClick={onLeaveRoom}
               className="px-4 py-2 bg-slate-700/80 hover:bg-slate-600
@@ -214,12 +222,6 @@ export const GamePlayPhase = ({
               退出
             </button>
           </div>
-
-          {gameState.desperadoRolledThisRound && (
-            <p className="text-red-400 font-bold text-center mb-4 animate-pulse">
-              デスペラード発動中！ペナルティ2倍！
-            </p>
-          )}
 
           {/* 2カラムレイアウト（左:ダイス 広め、右:プレイヤー 狭め） */}
           <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4">
