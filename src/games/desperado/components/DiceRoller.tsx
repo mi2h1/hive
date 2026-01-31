@@ -358,7 +358,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   }), [handleRoll]);
 
   return (
-    <div className="relative w-[320px] h-[320px] mx-auto">
+    <div className="relative w-[280px] h-[280px] mx-auto">
       {/* フェルト部分（正方形） */}
       <div
         className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 overflow-hidden shadow-xl"
