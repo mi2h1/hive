@@ -20,9 +20,7 @@ interface DiceRollerProps {
   dddiceRoomSlug: string | null;
   onDddiceRoomCreated: (slug: string) => void;
   onRollComplete: (die1: number, die2: number) => void;
-  isMyTurn: boolean;
   onStartRoll: () => void;
-  showButton: boolean;
   rollingPlayerId: string | null;
   onConnected?: () => void; // dddice接続完了時のコールバック
   displayedDice?: { die1: number; die2: number } | null; // 2Dモード: ゲーム状態から取得したダイス結果
@@ -38,9 +36,7 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
   dddiceRoomSlug,
   onDddiceRoomCreated,
   onRollComplete,
-  isMyTurn,
   onStartRoll,
-  showButton,
   rollingPlayerId,
   onConnected,
   displayedDice,

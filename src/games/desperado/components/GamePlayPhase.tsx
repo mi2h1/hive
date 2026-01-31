@@ -255,9 +255,7 @@ export const GamePlayPhase = ({
                 dddiceRoomSlug={gameState.dddiceRoomSlug}
                 onDddiceRoomCreated={handleDddiceRoomCreated}
                 onRollComplete={handleRollComplete}
-                isMyTurn={isMyTurn && !currentPlayer?.hasRolled && gameState.phase === 'rolling'}
                 onStartRoll={handleStartRoll}
-                showButton={false}
                 rollingPlayerId={gameState.rollingPlayerId}
                 onConnected={handleDddiceConnected}
                 displayedDice={currentTurnPlayer?.currentRoll ?? null}
