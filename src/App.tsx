@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Gamepad2, Pencil, X } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { usePlayer } from './shared/hooks/usePlayer';
 import { AoaGame } from './games/aoa/AoaGame';
 import { MojiHuntGame } from './games/moji-hunt/MojiHuntGame';
@@ -117,8 +117,12 @@ function App() {
       <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center p-4">
         <div className="bg-slate-800/95 rounded-xl p-8 max-w-md w-full">
           <div className="text-center mb-8">
-            <Gamepad2 className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">HIVE</h1>
+            <img
+              src="/hive/images/vec_logo_hive.svg"
+              alt="HIVE"
+              className="h-12 mx-auto mb-4"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
             <p className="text-slate-400">オンラインボードゲーム</p>
           </div>
 
@@ -192,7 +196,12 @@ function App() {
       <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-4">
         <div className="max-w-4xl mx-auto">
           <header className="text-center py-8">
-            <Gamepad2 className="w-12 h-12 text-orange-400 mx-auto mb-3" />
+            <img
+              src="/hive/images/vec_logo_hive.svg"
+              alt="HIVE"
+              className="h-10 mx-auto mb-3"
+              style={{ filter: 'brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(350deg)' }}
+            />
             <h1 className="text-2xl font-bold text-white mb-1">HIVE DEV</h1>
             <p className="text-slate-400">
               開発版ゲーム一覧（<span className="text-orange-300">{playerName}</span> さん）
@@ -294,10 +303,14 @@ function App() {
       {/* 全幅ヘッダー */}
       <header className="bg-slate-800/80 border-b border-slate-700">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          {/* 左側: アイコン + タイトル */}
-          <div className="flex items-center gap-3">
-            <Gamepad2 className="w-8 h-8 text-indigo-400" />
-            <h1 className="text-xl font-bold text-white">HIVE</h1>
+          {/* 左側: ロゴ */}
+          <div className="flex items-center">
+            <img
+              src="/hive/images/vec_logo_hive.svg"
+              alt="HIVE"
+              className="h-7"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
           </div>
           {/* 右側: ようこそ + 名前 + 変更ボタン */}
           <div className="flex items-center gap-2">
