@@ -76,13 +76,13 @@ npm run build
 
 ## ドキュメント
 
-- `CLAUDE.md` - 開発ポリシー・プロジェクト概要
+- `docs/project-context.md` - プロジェクト概要
+- `docs/aoa-spec.md` - AOA仕様書
 - `docs/moji-hunt-spec.md` - もじはんと仕様書
 - `docs/jackal-spec.md` - ジャッカル仕様書
 - `docs/polyform-spec.md` - POLYFORM仕様書
 - `docs/desperado-spec.md` - デスペラード仕様書
 - `docs/spark-spec.md` - SPARK仕様書
-- `src/games/aoa/README.md` - AOA詳細
 
 ## ライセンス
 
