@@ -220,7 +220,7 @@ export const GamePlayPhase = ({
                       onKeyDown={handleKeyDown}
                       placeholder={String(minDeclareValue)}
                       min={minDeclareValue}
-                      className="flex-1 min-w-0 px-2 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xl text-center font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="flex-1 min-w-0 px-2 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xl text-center font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button
                       onClick={() => {
@@ -390,7 +390,7 @@ export const GamePlayPhase = ({
                 onKeyDown={handleKeyDown}
                 placeholder={String(minDeclareValue)}
                 min={minDeclareValue}
-                className="flex-1 min-w-0 px-3 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white text-2xl text-center font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="flex-1 min-w-0 px-3 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white text-2xl text-center font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <button
                 onClick={() => {
