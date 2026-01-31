@@ -84,7 +84,7 @@ export const GamePlayPhase = ({
   const isValidInput = !isNaN(inputValueNum) && inputValueNum >= minDeclareValue;
 
   // ジャッカルは2手目以降（誰かが既に宣言した後）のみ可能
-  const canCallJackal = lastDeclarerId !== null;
+  const canCallJackal = !!lastDeclarerId;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 p-4 pb-44 md:pb-4">
