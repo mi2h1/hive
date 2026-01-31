@@ -356,12 +356,16 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
     },
   }), [handleRoll]);
 
+  // 六角形のクリップパス（横長の六角形）
+  const hexClipPath = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+
   return (
-    <div className="relative w-full h-64">
-      {/* フェルト部分 */}
+    <div className="relative w-[400px] h-[300px] mx-auto">
+      {/* フェルト部分（六角形） */}
       <div
-        className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 overflow-hidden shadow-xl"
+        className="absolute inset-0 bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 overflow-hidden"
         style={{
+          clipPath: hexClipPath,
           boxShadow: 'inset 0 4px 16px rgba(0,0,0,0.4), inset 0 -2px 8px rgba(255,255,255,0.1)',
         }}
       >
@@ -372,12 +376,24 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
         />
       </div>
 
+      {/* 六角形のボーダー */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          clipPath: hexClipPath,
+          boxShadow: '0 0 0 3px rgba(251, 191, 36, 0.4), 0 8px 32px rgba(0,0,0,0.5)',
+        }}
+      />
+
       {/* WebGLフォールバック表示 */}
       {webglError && !isRolling && (() => {
         // ローカルで振ったダイスを優先、なければゲーム状態から取得
         const diceToShow = fallbackDice || displayedDice;
         return (
-          <div className="absolute inset-0 flex items-center justify-center rounded-xl">
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ clipPath: hexClipPath }}
+          >
             {diceToShow ? (
               // ダイスの結果を表示
               <div className="flex items-center gap-4">
@@ -395,7 +411,10 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
 
       {/* 2Dモードでロール中のアニメーション */}
       {webglError && isRolling && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-xl">
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ clipPath: hexClipPath }}
+        >
           <div className="flex items-center gap-4 animate-bounce">
             <Dice1 className="w-16 h-16 text-white/60 animate-spin" />
             <Dice6 className="w-16 h-16 text-white/60 animate-spin" style={{ animationDirection: 'reverse' }} />
@@ -405,7 +424,10 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
 
       {/* 接続中表示 */}
       {!isConnected && !webglError && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50">
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/50"
+          style={{ clipPath: hexClipPath }}
+        >
           <p className="text-amber-400 animate-pulse">{connectionStatus}</p>
         </div>
       )}
@@ -414,9 +436,9 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
       {showButton && (isConnected || webglError) && isMyTurn && !isRolling && (
         <button
           onClick={handleRoll}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-3
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 px-6 py-2
             bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600
-            rounded-full text-white font-bold text-lg transition-all shadow-lg
+            rounded-full text-white font-bold text-base transition-all shadow-lg
             border-2 border-amber-300/30"
         >
           ダイスを振る
@@ -425,8 +447,8 @@ export const DiceRoller = forwardRef<DiceRollerHandle, DiceRollerProps>(({
 
       {/* ロール中表示 */}
       {isRolling && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <p className="text-amber-300 animate-pulse font-bold">ダイスを振っています...</p>
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+          <p className="text-amber-300 animate-pulse font-bold text-sm">ダイスを振っています...</p>
         </div>
       )}
     </div>
