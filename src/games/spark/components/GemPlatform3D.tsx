@@ -132,18 +132,18 @@ const PlatformScene = ({ gems }: { gems: { id: string; color: GemColor }[] }) =>
           </mesh>
         </RigidBody>
 
-        {/* 見えない壁（宝石が落ちないように） */}
+        {/* 見えない壁（宝石が落ちないように）- 高さを十分に確保 */}
         <RigidBody type="fixed" position={[0, 0, -2.4]}>
-          <CuboidCollider args={[2.4, 1.5, 0.1]} />
+          <CuboidCollider args={[2.4, 5, 0.1]} />
         </RigidBody>
         <RigidBody type="fixed" position={[0, 0, 2.4]}>
-          <CuboidCollider args={[2.4, 1.5, 0.1]} />
+          <CuboidCollider args={[2.4, 5, 0.1]} />
         </RigidBody>
         <RigidBody type="fixed" position={[-2.4, 0, 0]}>
-          <CuboidCollider args={[0.1, 1.5, 2.4]} />
+          <CuboidCollider args={[0.1, 5, 2.4]} />
         </RigidBody>
         <RigidBody type="fixed" position={[2.4, 0, 0]}>
-          <CuboidCollider args={[0.1, 1.5, 2.4]} />
+          <CuboidCollider args={[0.1, 5, 2.4]} />
         </RigidBody>
 
         {/* 宝石 */}
