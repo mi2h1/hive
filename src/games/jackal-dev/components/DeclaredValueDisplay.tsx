@@ -1,5 +1,7 @@
 // 中央に表示する宣言値コンポーネント
 
+import { useState, useEffect, useRef } from 'react';
+
 interface DeclaredValueDisplayProps {
   currentDeclaredValue: number | null;
   lastDeclarerName?: string;
@@ -15,10 +17,32 @@ export const DeclaredValueDisplay = ({
   currentPlayerName,
   phase,
 }: DeclaredValueDisplayProps) => {
+  const [isAnimating, setIsAnimating] = useState(false);
+  const prevValueRef = useRef<number | null>(null);
+
+  // 宣言値が変わった時にアニメーションを発火
+  useEffect(() => {
+    // 初回レンダリングや null からの変化でもアニメーション
+    if (currentDeclaredValue !== null && currentDeclaredValue !== prevValueRef.current) {
+      setIsAnimating(true);
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+      }, 300); // アニメーション時間
+
+      prevValueRef.current = currentDeclaredValue;
+      return () => clearTimeout(timer);
+    }
+    prevValueRef.current = currentDeclaredValue;
+  }, [currentDeclaredValue]);
+
   return (
     <div className="flex flex-col items-center justify-center text-center">
       {/* 宣言値 */}
-      <div className="text-5xl md:text-6xl font-bold text-white mb-2">
+      <div
+        className={`text-5xl md:text-6xl font-bold text-white mb-2 transition-transform duration-300 ease-out ${
+          isAnimating ? 'scale-125' : 'scale-100'
+        }`}
+      >
         {currentDeclaredValue !== null ? currentDeclaredValue : '—'}
       </div>
 
