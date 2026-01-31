@@ -82,29 +82,40 @@ export const PlayerCardsPolygon = ({
               }}
             >
               <div
-                className={`flex flex-col items-center p-2 md:p-3 rounded-lg transition-all ${
+                className={`flex flex-col items-center p-2 md:p-3 lg:p-4 rounded-lg transition-all ${
                   isCurrent ? 'bg-yellow-500/20 ring-2 ring-yellow-500' : 'bg-slate-700/50'
                 }`}
               >
-                <Card
-                  card={card}
-                  hidden={isMe}
-                  size="lg"
-                  highlighted={isCurrent}
-                />
-                <div className="mt-2 text-center">
-                  <div className={`text-xs md:text-sm font-medium truncate max-w-16 md:max-w-20 ${isMe ? 'text-yellow-300' : 'text-white'}`}>
+                {/* スマホ/タブレット: lg, PC: xl */}
+                <div className="lg:hidden">
+                  <Card
+                    card={card}
+                    hidden={isMe}
+                    size="lg"
+                    highlighted={isCurrent}
+                  />
+                </div>
+                <div className="hidden lg:block">
+                  <Card
+                    card={card}
+                    hidden={isMe}
+                    size="xl"
+                    highlighted={isCurrent}
+                  />
+                </div>
+                <div className="mt-2 lg:mt-3 text-center">
+                  <div className={`text-xs md:text-sm lg:text-base font-medium truncate max-w-16 md:max-w-20 lg:max-w-28 ${isMe ? 'text-yellow-300' : 'text-white'}`}>
                     {player.name}
                     {isMe && ' (自分)'}
                   </div>
-                  <div className="flex items-center justify-center gap-0.5 mt-1">
+                  <div className="flex items-center justify-center gap-0.5 lg:gap-1 mt-1">
                     {/* 現在のライフ（塗りつぶし） */}
                     {Array.from({ length: player.life }).map((_, i) => (
-                      <Heart key={`filled-${i}`} className="w-3 h-3 text-red-400 fill-red-400" />
+                      <Heart key={`filled-${i}`} className="w-3 h-3 lg:w-4 lg:h-4 text-red-400 fill-red-400" />
                     ))}
                     {/* 失ったライフ（中抜き） */}
                     {Array.from({ length: initialLife - player.life }).map((_, i) => (
-                      <Heart key={`empty-${i}`} className="w-3 h-3 text-red-400/50" strokeWidth={2} />
+                      <Heart key={`empty-${i}`} className="w-3 h-3 lg:w-4 lg:h-4 text-red-400/50" strokeWidth={2} />
                     ))}
                   </div>
                 </div>

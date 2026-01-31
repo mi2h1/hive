@@ -3,7 +3,7 @@ import type { Card as CardType } from '../types/game';
 interface CardProps {
   card?: CardType;
   hidden?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   highlighted?: boolean;
 }
 
@@ -43,6 +43,7 @@ export const Card = ({
     sm: 'w-12 h-12',
     md: 'w-16 h-16',
     lg: 'w-20 h-20',
+    xl: 'w-28 h-28',
   };
 
   const baseClasses = `
