@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
 import { Lobby } from './components/Lobby';
@@ -9,8 +9,26 @@ interface PolyformGameProps {
   onBack?: () => void;
 }
 
+// URLからルームコードを取得
+const getRoomCodeFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('room');
+};
+
+// URLからルームコードパラメータを削除
+const clearRoomCodeFromUrl = () => {
+  const params = new URLSearchParams(window.location.search);
+  params.delete('room');
+  const newSearch = params.toString();
+  const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '');
+  window.history.replaceState({}, '', newUrl);
+};
+
 export const PolyformGame = ({ onBack }: PolyformGameProps) => {
   const { playerId, playerName } = usePlayer();
+
+  // URLパラメータからの自動参加を一度だけ実行
+  const hasAutoJoined = useRef(false);
   const {
     roomCode,
     roomData,
@@ -32,6 +50,20 @@ export const PolyformGame = ({ onBack }: PolyformGameProps) => {
       document.title = 'Game Board';
     };
   }, []);
+
+  // URLパラメータからルームに自動参加
+  useEffect(() => {
+    if (hasAutoJoined.current) return;
+    if (roomCode) return; // 既にルームに参加している場合はスキップ
+    if (!playerId || !playerName) return; // プレイヤー情報がロードされるまで待つ
+
+    const urlRoomCode = getRoomCodeFromUrl();
+    if (urlRoomCode && urlRoomCode.length === 4) {
+      hasAutoJoined.current = true;
+      clearRoomCodeFromUrl();
+      joinRoom(urlRoomCode);
+    }
+  }, [roomCode, joinRoom, playerId, playerName]);
 
   // フェードアウト状態
   const [isFadingOut, setIsFadingOut] = useState(false);
