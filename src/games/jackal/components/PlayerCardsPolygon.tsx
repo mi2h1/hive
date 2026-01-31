@@ -86,8 +86,16 @@ export const PlayerCardsPolygon = ({
                   isCurrent ? 'bg-yellow-500/20 ring-2 ring-yellow-500' : 'bg-slate-700/50'
                 }`}
               >
-                {/* スマホ/タブレット: lg, PC: xl */}
-                <div className="lg:hidden">
+                {/* スマホ: md, タブレット: lg, PC: xl */}
+                <div className="md:hidden">
+                  <Card
+                    card={card}
+                    hidden={isMe}
+                    size="md"
+                    highlighted={isCurrent}
+                  />
+                </div>
+                <div className="hidden md:block lg:hidden">
                   <Card
                     card={card}
                     hidden={isMe}
