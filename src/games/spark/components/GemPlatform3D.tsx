@@ -78,28 +78,19 @@ interface GemPlatform3DProps {
 
 // 宝石台のシーン
 const PlatformScene = ({ gems }: { gems: { id: string; color: GemColor }[] }) => {
-  // 各宝石の初期位置・回転を決定（gemのidベースで決定的に）
+  // 各宝石の初期位置・回転を決定（完全ランダム）
+  // シーンがリマウントされるたびに新しい位置が生成される
   const gemConfigs = useMemo(() => {
     return gems.slice(0, 9).map((gem, index) => {
-      // IDから決定的な乱数を生成
-      const hash = gem.id.split('').reduce((acc, char) => {
-        return ((acc << 5) - acc) + char.charCodeAt(0);
-      }, 0);
+      // 初期位置（上から落とす）- ランダムに散らばらせる
+      const x = (Math.random() - 0.5) * 3.5;
+      const y = 2.5 + index * 0.8 + Math.random() * 0.3;
+      const z = (Math.random() - 0.5) * 3.5;
 
-      const random = (offset: number) => {
-        const val = Math.abs((hash + offset * 12345) % 10000) / 10000;
-        return val;
-      };
-
-      // 初期位置（上から落とす）- 台を広げたので配置も広げる
-      const x = (random(0) - 0.5) * 3.0;
-      const y = 2.5 + index * 0.8 + random(1) * 0.3;
-      const z = (random(2) - 0.5) * 3.0;
-
-      // 初期回転
-      const rx = random(3) * Math.PI * 2;
-      const ry = random(4) * Math.PI * 2;
-      const rz = random(5) * Math.PI * 2;
+      // 初期回転もランダム
+      const rx = Math.random() * Math.PI * 2;
+      const ry = Math.random() * Math.PI * 2;
+      const rz = Math.random() * Math.PI * 2;
 
       return {
         ...gem,
@@ -107,7 +98,8 @@ const PlatformScene = ({ gems }: { gems: { id: string; color: GemColor }[] }) =>
         initialRotation: [rx, ry, rz] as [number, number, number],
       };
     });
-  }, [gems]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gems.length]);
 
   return (
     <>
