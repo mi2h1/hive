@@ -8,18 +8,21 @@ export interface Position {
 /**
  * プレイヤー数に応じた多角形頂点の位置を計算
  * @param playerCount プレイヤー数
- * @param radius 中心からの距離（パーセント、デフォルト40）
+ * @param radius 中心からの距離（パーセント、デフォルト32）
  * @returns 各プレイヤーの位置（パーセント座標）
  */
 export const calculatePolygonPositions = (
   playerCount: number,
-  radius: number = 40
+  radius: number = 32
 ): Position[] => {
+  // 中心を少し下にずらす（カードの上半分がはみ出ないように）
+  const centerY = 52;
+
   // 2人: 横並び
   if (playerCount === 2) {
     return [
-      { x: 30, y: 50 },
-      { x: 70, y: 50 },
+      { x: 30, y: centerY },
+      { x: 70, y: centerY },
     ];
   }
 
@@ -31,7 +34,7 @@ export const calculatePolygonPositions = (
     const angle = startAngle + angleStep * i;
     return {
       x: 50 + radius * Math.cos(angle),
-      y: 50 + radius * Math.sin(angle),
+      y: centerY + radius * Math.sin(angle),
     };
   });
 };
