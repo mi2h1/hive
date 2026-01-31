@@ -50,11 +50,11 @@ const Gem3D = ({ color, initialPosition, initialRotation }: Gem3DProps) => {
       position={initialPosition}
       rotation={initialRotation}
       colliders="hull"
-      restitution={0.3}
-      friction={0.8}
-      linearDamping={0.3}
-      angularDamping={0.3}
-      linearVelocity={[0, -2, 0]}
+      restitution={0.5}
+      friction={0.4}
+      linearDamping={0.5}
+      angularDamping={0.5}
+      linearVelocity={[0, -3, 0]}
     >
       <mesh castShadow receiveShadow>
         <octahedronGeometry args={[0.35, 0]} />
@@ -91,10 +91,10 @@ const PlatformScene = ({ gems }: { gems: { id: string; color: GemColor }[] }) =>
         return val;
       };
 
-      // 初期位置（上から落とす）
-      const x = (random(0) - 0.5) * 1.5;
-      const y = 2 + index * 0.5 + random(1) * 0.5;
-      const z = (random(2) - 0.5) * 1.5;
+      // 初期位置（上から落とす）- 台を広げたので配置も広げる
+      const x = (random(0) - 0.5) * 3.0;
+      const y = 2.5 + index * 0.8 + random(1) * 0.3;
+      const z = (random(2) - 0.5) * 3.0;
 
       // 初期回転
       const rx = random(3) * Math.PI * 2;
@@ -126,7 +126,7 @@ const PlatformScene = ({ gems }: { gems: { id: string; color: GemColor }[] }) =>
       <pointLight position={[3, 3, 3]} intensity={0.5} color="#ffffff" />
 
       {/* 物理シミュレーション */}
-      <Physics gravity={[0, -15, 0]}>
+      <Physics gravity={[0, -20, 0]}>
         {/* 台（床）- 宝石の先端が埋まらないよう下げる */}
         <RigidBody type="fixed" position={[0, -0.8, 0]}>
           <CuboidCollider args={[2.25, 0.1, 2.25]} />
