@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FlaskConical, UserPlus, Crown } from 'lucide-react';
+import { FlaskConical, UserPlus, Crown, Link } from 'lucide-react';
 import type { Player, RuleSet, RuleSetType } from '../types/game';
 import { RULE_SET_NAMES } from '../types/game';
 
@@ -78,12 +78,22 @@ export const Lobby = ({
   const [nameInput, setNameInput] = useState('');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [showCopiedToast, setShowCopiedToast] = useState(false);
+  const [showLinkCopiedToast, setShowLinkCopiedToast] = useState(false);
 
   const copyRoomCode = () => {
     if (roomCode) {
       navigator.clipboard.writeText(roomCode);
       setShowCopiedToast(true);
       setTimeout(() => setShowCopiedToast(false), 2000);
+    }
+  };
+
+  const copyInviteLink = () => {
+    if (roomCode) {
+      const url = `${window.location.origin}/boards/aoa?room=${roomCode}`;
+      navigator.clipboard.writeText(url);
+      setShowLinkCopiedToast(true);
+      setTimeout(() => setShowLinkCopiedToast(false), 2000);
     }
   };
 
@@ -175,7 +185,7 @@ export const Lobby = ({
           </div>
 
           {/* ルームコード */}
-          <div className="bg-slate-700 rounded-lg p-4 mb-6 text-center relative">
+          <div className="bg-slate-700 rounded-lg p-4 mb-4 text-center relative">
             <div className="text-slate-400 text-sm mb-1">ルームコード</div>
             <button
               onClick={copyRoomCode}
@@ -191,6 +201,23 @@ export const Lobby = ({
             {showCopiedToast && (
               <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-600 text-white text-sm rounded-full animate-fade-in">
                 コピーしました
+              </div>
+            )}
+          </div>
+
+          {/* 招待リンク */}
+          <div className="mb-6 relative">
+            <button
+              onClick={copyInviteLink}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2
+                bg-slate-600 hover:bg-slate-500 rounded-lg text-slate-200 text-sm transition-colors"
+            >
+              <Link className="w-4 h-4" />
+              招待リンクをコピー
+            </button>
+            {showLinkCopiedToast && (
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-600 text-white text-sm rounded-full animate-fade-in whitespace-nowrap">
+                リンクをコピーしました
               </div>
             )}
           </div>

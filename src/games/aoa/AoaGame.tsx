@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
@@ -13,6 +13,21 @@ import { MysteryRevealAnimation } from './components/MysteryRevealAnimation';
 interface AoaGameProps {
   onBack: () => void;
 }
+
+// URLからルームコードを取得
+const getRoomCodeFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('room');
+};
+
+// URLからルームコードパラメータを削除
+const clearRoomCodeFromUrl = () => {
+  const params = new URLSearchParams(window.location.search);
+  params.delete('room');
+  const newSearch = params.toString();
+  const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '');
+  window.history.replaceState({}, '', newUrl);
+};
 
 export function AoaGame({ onBack }: AoaGameProps) {
   // デバッグモード検出（URLパラメータ ?debug=true）
@@ -72,12 +87,29 @@ export function AoaGame({ onBack }: AoaGameProps) {
     updatePlayerDecision,
   });
 
+  // URLパラメータからの自動参加を一度だけ実行
+  const hasAutoJoined = useRef(false);
+
   // ブラウザタブのタイトルを設定
   useEffect(() => {
     const isIncanRule = roomData?.ruleSet?.type === 'incan_gold';
     document.title = isIncanRule ? 'インカの黄金' : 'アトランティスの深淵';
     return () => { document.title = 'Game Board'; };
   }, [roomData?.ruleSet?.type]);
+
+  // URLパラメータからルームに自動参加
+  useEffect(() => {
+    if (hasAutoJoined.current) return;
+    if (roomCode) return; // 既にルームに参加している場合はスキップ
+    if (!playerId || !playerName) return; // プレイヤー情報がロードされるまで待つ
+
+    const urlRoomCode = getRoomCodeFromUrl();
+    if (urlRoomCode && urlRoomCode.length === 4) {
+      hasAutoJoined.current = true;
+      clearRoomCodeFromUrl();
+      joinRoom(urlRoomCode);
+    }
+  }, [roomCode, joinRoom, playerId, playerName]);
 
   // ローディング中
   if (isPlayerLoading) {
