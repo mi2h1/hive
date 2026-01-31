@@ -321,21 +321,22 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
             return;
           }
 
-          if (data.gameState.phase !== 'waiting') {
-            setError('ゲームは既に開始されています');
-            setIsLoading(false);
-            resolve(false);
-            return;
-          }
-
           const players = normalizeArray<Player>(data.gameState.players);
 
-          // 既に参加済みかチェック
+          // 既に参加済みかチェック（ゲーム中でも復帰可能）
           const existingPlayer = players.find(p => p.id === playerId);
           if (existingPlayer) {
             setRoomCode(upperCode);
             setIsLoading(false);
             resolve(true);
+            return;
+          }
+
+          // 新規参加者はゲーム開始後は参加不可
+          if (data.gameState.phase !== 'waiting') {
+            setError('ゲームは既に開始されています');
+            setIsLoading(false);
+            resolve(false);
             return;
           }
 

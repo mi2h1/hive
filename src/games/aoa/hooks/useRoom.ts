@@ -384,20 +384,20 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
             return;
           }
 
-          // ゲームが開始済みかチェック
-          if (data.gameState.phase !== 'waiting') {
-            setError('ゲームは既に開始されています');
-            setIsLoading(false);
-            resolve(false);
-            return;
-          }
-
-          // 既に参加済みかチェック
+          // 既に参加済みかチェック（ゲーム中でも復帰可能）
           const existingPlayer = data.gameState.players.find(p => p.id === playerId);
           if (existingPlayer) {
             setRoomCode(upperCode);
             setIsLoading(false);
             resolve(true);
+            return;
+          }
+
+          // 新規参加者はゲーム開始後は参加不可
+          if (data.gameState.phase !== 'waiting') {
+            setError('ゲームは既に開始されています');
+            setIsLoading(false);
+            resolve(false);
             return;
           }
 
