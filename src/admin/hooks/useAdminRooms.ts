@@ -28,14 +28,6 @@ interface JackalPlayer {
   isEliminated: boolean;
 }
 
-interface PolyformPlayer {
-  id: string;
-  name: string;
-  score: number;
-  completedWhite: number;
-  completedBlack: number;
-}
-
 interface DesperadoPlayer {
   id: string;
   name: string;
@@ -94,21 +86,6 @@ interface JackalRoom {
     players: JackalPlayer[] | Record<string, JackalPlayer>;
     currentTurnPlayerId?: string;
     currentDeclaredValue?: number;
-  };
-}
-
-// POLYFORMの部屋データ型
-interface PolyformRoom {
-  code: string;
-  hostId: string;
-  createdAt: number;
-  gameState: {
-    phase: string;
-    currentPlayerIndex: number;
-    currentTurnNumber: number;
-    finalRound: boolean;
-    players: PolyformPlayer[] | Record<string, PolyformPlayer>;
-    playerOrder: string[];
   };
 }
 
