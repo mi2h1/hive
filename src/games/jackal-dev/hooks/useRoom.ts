@@ -146,9 +146,6 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
       const players = normalizeArray<Player>(room.gameState?.players);
       const currentHostId = room.hostId;
 
-      // ゲーム中はプレゼンスによるプレイヤー削除を行わない（一時切断対策）
-      if (gamePhase !== 'waiting') return;
-
       // テストプレイヤーはプレゼンス対象外（常にオンライン扱い）
       const isTestPlayer = (id: string) => id.startsWith('test-');
       const testPlayerIds = players.filter(p => isTestPlayer(p.id)).map(p => p.id);
@@ -159,20 +156,26 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
       if (offlinePlayers.length > 0) {
         const remainingPlayers = players.filter(p => effectiveOnlineIds.includes(p.id));
 
-        // 全員オフラインになっても即削除しない（ネットワーク一時切断対策）
-        if (remainingPlayers.length > 0) {
-          const updates: Record<string, unknown> = {
-            'gameState/players': remainingPlayers,
-          };
-
-          // ホスト切断時の処理：最初の残りプレイヤーに引き継ぎ
-          if (!effectiveOnlineIds.includes(currentHostId)) {
-            const newHostId = remainingPlayers[0].id;
-            updates['hostId'] = newHostId;
-          }
-
-          await update(roomRef, updates);
+        // 全員オフラインなら部屋を削除（フェーズに関係なく）
+        if (remainingPlayers.length === 0) {
+          await remove(roomRef);
+          return;
         }
+
+        // ゲーム中は個々のプレイヤー削除を行わない（一時切断対策）
+        if (gamePhase !== 'waiting') return;
+
+        const updates: Record<string, unknown> = {
+          'gameState/players': remainingPlayers,
+        };
+
+        // ホスト切断時の処理：最初の残りプレイヤーに引き継ぎ
+        if (!effectiveOnlineIds.includes(currentHostId)) {
+          const newHostId = remainingPlayers[0].id;
+          updates['hostId'] = newHostId;
+        }
+
+        await update(roomRef, updates);
       }
     });
 
