@@ -45,6 +45,15 @@ interface DesperadoPlayer {
   currentRoll?: { die1: number; die2: number } | null;
 }
 
+interface SparkPlayer {
+  id: string;
+  name: string;
+  vault: unknown[];
+  secured: unknown[];
+  isReady: boolean;
+  isResting: boolean;
+}
+
 // AOAの部屋データ型
 interface AoaRoom {
   code: string;
@@ -118,6 +127,19 @@ interface DesperadoRoom {
   };
 }
 
+// SPARKの部屋データ型
+interface SparkRoom {
+  code: string;
+  hostId: string;
+  createdAt: number;
+  gameState: {
+    phase: string;
+    round: number;
+    players: SparkPlayer[] | Record<string, SparkPlayer>;
+    winnerId?: string | null;
+  };
+}
+
 export interface AdminMojiHuntPlayerDetail {
   id: string;
   name: string;
@@ -129,7 +151,7 @@ export interface AdminMojiHuntPlayerDetail {
 }
 
 export interface AdminRoom {
-  gameType: 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform-dev' | 'desperado';
+  gameType: 'aoa' | 'moji-hunt' | 'jackal' | 'desperado' | 'spark';
   code: string;
   hostId: string;
   createdAt: number;
@@ -159,6 +181,10 @@ export interface AdminRoom {
     desperadoRound?: number;
     desperadoRolledThisRound?: boolean;
     desperadoPlayers?: Array<{ id: string; name: string; lives: number; hasRolled: boolean; isEliminated: boolean }>;
+    // SPARK
+    sparkRound?: number;
+    sparkReadyCount?: number;
+    sparkRestingCount?: number;
   };
 }
 
@@ -169,22 +195,18 @@ export const useAdminRooms = () => {
   useEffect(() => {
     const aoaRef = ref(db, 'rooms');
     const mojiHuntRef = ref(db, 'moji-hunt-rooms');
-    const mojiHuntDevRef = ref(db, 'moji-hunt-dev-rooms');
     const jackalRef = ref(db, 'jackal-rooms');
-    const jackalDevRef = ref(db, 'jackal-dev-rooms');
-    const polyformDevRef = ref(db, 'polyform-dev-rooms');
     const desperadoRef = ref(db, 'desperado-rooms');
+    const sparkRef = ref(db, 'spark-rooms');
 
     let aoaRooms: AdminRoom[] = [];
     let mojiHuntRooms: AdminRoom[] = [];
-    let mojiHuntDevRooms: AdminRoom[] = [];
     let jackalRooms: AdminRoom[] = [];
-    let jackalDevRooms: AdminRoom[] = [];
-    let polyformDevRooms: AdminRoom[] = [];
     let desperadoRooms: AdminRoom[] = [];
+    let sparkRooms: AdminRoom[] = [];
 
     const updateRooms = () => {
-      setRooms([...aoaRooms, ...mojiHuntRooms, ...mojiHuntDevRooms, ...jackalRooms, ...jackalDevRooms, ...polyformDevRooms, ...desperadoRooms].sort((a, b) => b.createdAt - a.createdAt));
+      setRooms([...aoaRooms, ...mojiHuntRooms, ...jackalRooms, ...desperadoRooms, ...sparkRooms].sort((a, b) => b.createdAt - a.createdAt));
       setIsLoading(false);
     };
 
@@ -277,62 +299,6 @@ export const useAdminRooms = () => {
       updateRooms();
     });
 
-    // もじはんと（開発版）の部屋を監視
-    onValue(mojiHuntDevRef, (snapshot) => {
-      if (!snapshot.exists()) {
-        mojiHuntDevRooms = [];
-        updateRooms();
-        return;
-      }
-
-      const data = snapshot.val();
-      mojiHuntDevRooms = Object.entries(data).map(([code, room]) => {
-        const r = room as MojiHuntRoom;
-        const rawPlayers = r.gameState?.players;
-        const players: MojiHuntPlayer[] = Array.isArray(rawPlayers)
-          ? rawPlayers
-          : Object.values(rawPlayers || {}) as MojiHuntPlayer[];
-
-        const currentTurnPlayer = players.find(p => p.id === r.gameState?.currentTurnPlayerId);
-        const eliminatedCount = players.filter(p => p.isEliminated).length;
-
-        // プレイヤー詳細情報
-        const mojiHuntPlayers: AdminMojiHuntPlayerDetail[] = players.map(p => ({
-          id: p.id,
-          name: p.name,
-          isEliminated: p.isEliminated || false,
-          isReady: p.isReady || false,
-          normalizedWord: p.normalizedWord || '',
-          revealedPositions: Array.isArray(p.revealedPositions) ? p.revealedPositions : [],
-          revealedCharacters: Array.isArray(p.revealedCharacters) ? p.revealedCharacters : [],
-        }));
-
-        // 使用済み文字
-        const rawUsedChars = r.gameState?.usedCharacters;
-        const usedCharacters: string[] = Array.isArray(rawUsedChars)
-          ? rawUsedChars
-          : rawUsedChars ? Object.values(rawUsedChars) : [];
-
-        return {
-          gameType: 'moji-hunt-dev' as const,
-          code,
-          hostId: r.hostId,
-          createdAt: r.createdAt || 0,
-          phase: r.gameState?.phase || 'unknown',
-          playerCount: players.length,
-          players: players.map(p => ({ id: p.id, name: p.name })),
-          details: {
-            currentTopic: r.gameState?.currentTopic,
-            currentTurnPlayerName: currentTurnPlayer?.name,
-            eliminatedCount,
-            mojiHuntPlayers,
-            usedCharacters,
-          },
-        };
-      });
-      updateRooms();
-    });
-
     // ジャッカルの部屋を監視
     onValue(jackalRef, (snapshot) => {
       if (!snapshot.exists()) {
@@ -370,95 +336,6 @@ export const useAdminRooms = () => {
               name: p.name,
               life: p.life,
               isEliminated: p.isEliminated,
-            })),
-          },
-        };
-      });
-      updateRooms();
-    });
-
-    // ジャッカル（開発版）の部屋を監視
-    onValue(jackalDevRef, (snapshot) => {
-      if (!snapshot.exists()) {
-        jackalDevRooms = [];
-        updateRooms();
-        return;
-      }
-
-      const data = snapshot.val();
-      jackalDevRooms = Object.entries(data).map(([code, room]) => {
-        const r = room as JackalRoom;
-        const rawPlayers = r.gameState?.players;
-        const players: JackalPlayer[] = Array.isArray(rawPlayers)
-          ? rawPlayers
-          : Object.values(rawPlayers || {}) as JackalPlayer[];
-
-        const currentTurnPlayer = players.find(p => p.id === r.gameState?.currentTurnPlayerId);
-        const eliminatedCount = players.filter(p => p.isEliminated).length;
-
-        return {
-          gameType: 'jackal-dev' as const,
-          code,
-          hostId: r.hostId,
-          createdAt: r.createdAt || 0,
-          phase: r.gameState?.phase || 'unknown',
-          playerCount: players.length,
-          players: players.map(p => ({ id: p.id, name: p.name })),
-          details: {
-            jackalRound: r.gameState?.round,
-            currentTurnPlayerName: currentTurnPlayer?.name,
-            currentDeclaredValue: r.gameState?.currentDeclaredValue ?? undefined,
-            eliminatedCount,
-            jackalPlayers: players.map(p => ({
-              id: p.id,
-              name: p.name,
-              life: p.life,
-              isEliminated: p.isEliminated,
-            })),
-          },
-        };
-      });
-      updateRooms();
-    });
-
-    // POLYFORM（開発版）の部屋を監視
-    onValue(polyformDevRef, (snapshot) => {
-      if (!snapshot.exists()) {
-        polyformDevRooms = [];
-        updateRooms();
-        return;
-      }
-
-      const data = snapshot.val();
-      polyformDevRooms = Object.entries(data).map(([code, room]) => {
-        const r = room as PolyformRoom;
-        const rawPlayers = r.gameState?.players;
-        const players: PolyformPlayer[] = Array.isArray(rawPlayers)
-          ? rawPlayers
-          : Object.values(rawPlayers || {}) as PolyformPlayer[];
-
-        const playerOrder = r.gameState?.playerOrder || [];
-        const currentPlayerId = playerOrder[r.gameState?.currentPlayerIndex || 0];
-        const currentTurnPlayer = players.find(p => p.id === currentPlayerId);
-
-        return {
-          gameType: 'polyform-dev' as const,
-          code,
-          hostId: r.hostId,
-          createdAt: r.createdAt || 0,
-          phase: r.gameState?.phase || 'unknown',
-          playerCount: players.length,
-          players: players.map(p => ({ id: p.id, name: p.name })),
-          details: {
-            currentTurnPlayerName: currentTurnPlayer?.name,
-            currentTurnNumber: r.gameState?.currentTurnNumber,
-            finalRound: r.gameState?.finalRound,
-            polyformPlayers: players.map(p => ({
-              id: p.id,
-              name: p.name,
-              score: p.score,
-              completedWhite: p.completedWhite,
-              completedBlack: p.completedBlack,
             })),
           },
         };
@@ -511,14 +388,49 @@ export const useAdminRooms = () => {
       updateRooms();
     });
 
+    // SPARKの部屋を監視
+    onValue(sparkRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        sparkRooms = [];
+        updateRooms();
+        return;
+      }
+
+      const data = snapshot.val();
+      sparkRooms = Object.entries(data).map(([code, room]) => {
+        const r = room as SparkRoom;
+        const rawPlayers = r.gameState?.players;
+        const players: SparkPlayer[] = Array.isArray(rawPlayers)
+          ? rawPlayers
+          : Object.values(rawPlayers || {}) as SparkPlayer[];
+
+        const readyCount = players.filter(p => p.isReady).length;
+        const restingCount = players.filter(p => p.isResting).length;
+
+        return {
+          gameType: 'spark' as const,
+          code,
+          hostId: r.hostId,
+          createdAt: r.createdAt || 0,
+          phase: r.gameState?.phase || 'unknown',
+          playerCount: players.length,
+          players: players.map(p => ({ id: p.id, name: p.name })),
+          details: {
+            sparkRound: r.gameState?.round,
+            sparkReadyCount: readyCount,
+            sparkRestingCount: restingCount,
+          },
+        };
+      });
+      updateRooms();
+    });
+
     return () => {
       off(aoaRef);
       off(mojiHuntRef);
-      off(mojiHuntDevRef);
       off(jackalRef);
-      off(jackalDevRef);
-      off(polyformDevRef);
       off(desperadoRef);
+      off(sparkRef);
     };
   }, []);
 
@@ -527,11 +439,9 @@ export const useAdminRooms = () => {
     switch (gameType) {
       case 'aoa': return `rooms/${code}`;
       case 'moji-hunt': return `moji-hunt-rooms/${code}`;
-      case 'moji-hunt-dev': return `moji-hunt-dev-rooms/${code}`;
       case 'jackal': return `jackal-rooms/${code}`;
-      case 'jackal-dev': return `jackal-dev-rooms/${code}`;
-      case 'polyform-dev': return `polyform-dev-rooms/${code}`;
       case 'desperado': return `desperado-rooms/${code}`;
+      case 'spark': return `spark-rooms/${code}`;
     }
   };
 

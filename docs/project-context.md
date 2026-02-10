@@ -31,11 +31,9 @@ src/
 │       └── useAdminRooms.ts
 ├── games/
 │   ├── aoa/                   # アトランティスの深淵
-│   ├── moji-hunt/             # もじはんと（本番）
-│   ├── moji-hunt-dev/         # もじはんと（開発版）
-│   ├── jackal/                # ジャッカル（本番）
-│   ├── jackal-dev/            # ジャッカル（開発版）
-│   ├── polyform-dev/          # POLYFORM（開発版）
+│   ├── moji-hunt/             # もじはんと
+│   ├── jackal/                # ジャッカル
+│   ├── polyform/              # POLYFORM
 │   ├── spark/                 # SPARK
 │   └── desperado/             # デスペラード
 └── shared/
@@ -62,11 +60,9 @@ games/[game-name]/
 | アトランティスの深淵 | `/hive/aoa` | 稼働中 | `docs/aoa-spec.md` |
 | もじはんと | `/hive/moji-hunt` | 稼働中 | `docs/moji-hunt-spec.md` |
 | ジャッカル | `/hive/jackal` | 稼働中 | `docs/jackal-spec.md` |
+| POLYFORM | `/hive/polyform` | 稼働中 | `docs/polyform-spec.md` |
 | SPARK | `/hive/spark` | 稼働中 | `docs/spark-spec.md` |
 | デスペラード | `/hive/desperado` | 稼働中 | `docs/desperado-spec.md` |
-| POLYFORM | `/hive/polyform-dev` | 開発中 | `docs/polyform-spec.md` |
-
-開発版（`-dev`）は本番と同構造 + デバッグ機能付き。
 
 ---
 
@@ -77,10 +73,8 @@ games/[game-name]/
 | `/hive/` | ゲーム選択 |
 | `/hive/aoa` | アトランティスの深淵 |
 | `/hive/moji-hunt` | もじはんと |
-| `/hive/moji-hunt-dev` | もじはんと（開発版） |
 | `/hive/jackal` | ジャッカル |
-| `/hive/jackal-dev` | ジャッカル（開発版） |
-| `/hive/polyform-dev` | POLYFORM（開発版） |
+| `/hive/polyform` | POLYFORM |
 | `/hive/spark` | SPARK |
 | `/hive/desperado` | デスペラード |
 | `/hive/admin` | 管理画面 |

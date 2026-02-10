@@ -205,16 +205,6 @@ interface GameState {
 - ゲーム統計（使用文字数、攻撃回数）
 - もう一度遊ぶボタン
 
-## 開発版との差異
-
-`moji-hunt-dev`には以下のデバッグ機能が追加：
-
-- テストプレイヤー追加ボタン
-- 各プレイヤーの言葉を個別に設定
-- 各プレイヤーとしてお題チェンジ投票
-- 1人でもゲーム開始可能
-- DEBUGバッジ表示
-
 ## Firebase構造
 
 ```
@@ -223,10 +213,6 @@ moji-hunt-rooms/
     ├── hostId: string
     ├── createdAt: number
     └── gameState: GameState
-
-moji-hunt-dev-rooms/
-└── {roomCode}/
-    └── ... (同構造)
 ```
 
 ## 部屋の自動削除

@@ -46,7 +46,7 @@ const getPhaseLabel = (gameType: string, phase: string) => {
       case 'game_end': return 'ゲーム終了';
       default: return phase;
     }
-  } else if (gameType === 'moji-hunt' || gameType === 'moji-hunt-dev') {
+  } else if (gameType === 'moji-hunt') {
     switch (phase) {
       case 'waiting': return 'ロビー';
       case 'word_input': return 'ワード入力';
@@ -54,7 +54,7 @@ const getPhaseLabel = (gameType: string, phase: string) => {
       case 'game_end': return 'ゲーム終了';
       default: return phase;
     }
-  } else if (gameType === 'jackal' || gameType === 'jackal-dev') {
+  } else if (gameType === 'jackal') {
     switch (phase) {
       case 'waiting': return 'ロビー';
       case 'round_start': return 'ラウンド開始';
@@ -64,12 +64,13 @@ const getPhaseLabel = (gameType: string, phase: string) => {
       case 'game_end': return 'ゲーム終了';
       default: return phase;
     }
-  } else if (gameType === 'polyform-dev') {
+  } else if (gameType === 'spark') {
     switch (phase) {
       case 'waiting': return 'ロビー';
-      case 'playing': return 'プレイ中';
-      case 'finalRound': return '最終ラウンド';
-      case 'finishing': return '仕上げ';
+      case 'selecting': return 'アクション選択';
+      case 'revealing': return 'アクション公開';
+      case 'resolving': return '解決中';
+      case 'replenishing': return '宝石補充';
       case 'ended': return 'ゲーム終了';
       default: return phase;
     }
@@ -85,10 +86,14 @@ const getPhaseColor = (phase: string) => {
     case 'playing':
     case 'decision':
     case 'reveal':
-    case 'declaring': return 'bg-green-500';
+    case 'declaring':
+    case 'selecting': return 'bg-green-500';
     case 'judging':
     case 'finalRound':
-    case 'finishing': return 'bg-orange-500';
+    case 'finishing':
+    case 'revealing':
+    case 'resolving':
+    case 'replenishing': return 'bg-orange-500';
     case 'game_end':
     case 'ended':
     case 'round_end': return 'bg-blue-500';
@@ -103,11 +108,6 @@ const getGameInfo = (room: AdminRoom) => {
       label: isIncan ? 'インカの黄金' : 'アトランティスの深淵',
       color: isIncan ? 'from-amber-600 to-yellow-600' : 'from-cyan-600 to-teal-600',
     };
-  } else if (room.gameType === 'moji-hunt-dev') {
-    return {
-      label: 'もじはんと [DEV]',
-      color: 'from-orange-600 to-amber-500',
-    };
   } else if (room.gameType === 'moji-hunt') {
     return {
       label: 'もじはんと',
@@ -118,15 +118,10 @@ const getGameInfo = (room: AdminRoom) => {
       label: 'ジャッカル',
       color: 'from-emerald-600 to-green-600',
     };
-  } else if (room.gameType === 'jackal-dev') {
+  } else if (room.gameType === 'spark') {
     return {
-      label: 'ジャッカル [DEV]',
-      color: 'from-lime-600 to-emerald-500',
-    };
-  } else if (room.gameType === 'polyform-dev') {
-    return {
-      label: 'POLYFORM [DEV]',
-      color: 'from-violet-600 to-purple-600',
+      label: 'SPARK',
+      color: 'from-cyan-600 to-blue-600',
     };
   } else {
     return {
@@ -182,7 +177,7 @@ const RoomCard = ({ room, onDelete }: { room: AdminRoom; onDelete: () => void })
             ラウンド {room.details.round}/5
           </div>
         )}
-        {(room.gameType === 'moji-hunt' || room.gameType === 'moji-hunt-dev') && (
+        {(room.gameType === 'moji-hunt') && (
           <div className="text-slate-400 text-sm mb-2 flex gap-3">
             {/* 左カラム: 情報 */}
             <div className="flex-1 space-y-1">
@@ -243,7 +238,7 @@ const RoomCard = ({ room, onDelete }: { room: AdminRoom; onDelete: () => void })
             })()}
           </div>
         )}
-        {(room.gameType === 'jackal' || room.gameType === 'jackal-dev') && (
+        {(room.gameType === 'jackal') && (
           <div className="text-slate-400 text-sm mb-2 space-y-1">
             {room.details.jackalRound !== undefined && (
               <div>ラウンド {room.details.jackalRound}</div>
@@ -259,13 +254,16 @@ const RoomCard = ({ room, onDelete }: { room: AdminRoom; onDelete: () => void })
             )}
           </div>
         )}
-        {room.gameType === 'polyform-dev' && (
+        {room.gameType === 'spark' && (
           <div className="text-slate-400 text-sm mb-2 space-y-1">
-            {room.details.currentTurnNumber !== undefined && (
-              <div>ターン {room.details.currentTurnNumber}{room.details.finalRound && <span className="text-orange-400 ml-2">(最終ラウンド)</span>}</div>
+            {room.details.sparkRound !== undefined && (
+              <div>ラウンド {room.details.sparkRound}</div>
             )}
-            {room.details.currentTurnPlayerName && (room.phase === 'playing' || room.phase === 'finalRound') && (
-              <div>手番: <span className="text-yellow-400">{room.details.currentTurnPlayerName}</span></div>
+            {room.phase === 'selecting' && room.details.sparkReadyCount !== undefined && (
+              <div>選択済み: <span className="text-cyan-400">{room.details.sparkReadyCount}/{room.playerCount}</span></div>
+            )}
+            {room.details.sparkRestingCount !== undefined && room.details.sparkRestingCount > 0 && (
+              <div>休み中: <span className="text-slate-500">{room.details.sparkRestingCount}人</span></div>
             )}
           </div>
         )}
@@ -292,7 +290,7 @@ const RoomCard = ({ room, onDelete }: { room: AdminRoom; onDelete: () => void })
         {expanded && (
           <div className="mt-3 pt-3 border-t border-slate-700">
             <div className="space-y-2">
-              {(room.gameType === 'moji-hunt' || room.gameType === 'moji-hunt-dev') && room.details.mojiHuntPlayers ? (
+              {(room.gameType === 'moji-hunt') && room.details.mojiHuntPlayers ? (
                 // もじはんと: ワードと公開状況を表示
                 room.details.mojiHuntPlayers.map((player, i) => (
                   <div key={player.id} className="text-sm">
@@ -329,7 +327,7 @@ const RoomCard = ({ room, onDelete }: { room: AdminRoom; onDelete: () => void })
                     )}
                   </div>
                 ))
-              ) : (room.gameType === 'jackal' || room.gameType === 'jackal-dev') && room.details.jackalPlayers ? (
+              ) : (room.gameType === 'jackal') && room.details.jackalPlayers ? (
                 // ジャッカル: ライフと脱落状態を表示
                 room.details.jackalPlayers.map((player, i) => (
                   <div key={player.id} className="flex items-center gap-2 text-sm">
@@ -346,21 +344,6 @@ const RoomCard = ({ room, onDelete }: { room: AdminRoom; onDelete: () => void })
                     {player.isEliminated && (
                       <span className="text-xs text-red-500">脱落</span>
                     )}
-                  </div>
-                ))
-              ) : room.gameType === 'polyform-dev' && room.details.polyformPlayers ? (
-                // POLYFORM: スコアと完成パズル数を表示
-                room.details.polyformPlayers.map((player, i) => (
-                  <div key={player.id} className="flex items-center gap-2 text-sm">
-                    <span className="text-slate-500 w-4">{i + 1}.</span>
-                    <span className="text-slate-300">{player.name}</span>
-                    {room.players[i]?.id === room.hostId && (
-                      <span className="text-xs text-yellow-500">(ホスト)</span>
-                    )}
-                    <span className="text-xs text-violet-400">{player.score}点</span>
-                    <span className="text-xs text-slate-500">
-                      (白{player.completedWhite} 黒{player.completedBlack})
-                    </span>
                   </div>
                 ))
               ) : (
@@ -395,10 +378,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
   const aoaRooms = rooms.filter(r => r.gameType === 'aoa');
   const mojiHuntRooms = rooms.filter(r => r.gameType === 'moji-hunt');
-  const mojiHuntDevRooms = rooms.filter(r => r.gameType === 'moji-hunt-dev');
   const jackalRooms = rooms.filter(r => r.gameType === 'jackal');
-  const jackalDevRooms = rooms.filter(r => r.gameType === 'jackal-dev');
-  const polyformDevRooms = rooms.filter(r => r.gameType === 'polyform-dev');
+  const sparkRooms = rooms.filter(r => r.gameType === 'spark');
 
   // 1時間以上前の部屋数
   const oldRoomsCount = rooms.filter(r => Date.now() - r.createdAt > 60 * 60 * 1000).length;
@@ -462,7 +443,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
         </header>
 
         {/* サマリー */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
           <div className="bg-slate-800/60 rounded-xl p-3 text-center">
             <div className="text-2xl font-bold text-white">{rooms.length}</div>
             <div className="text-slate-500 text-xs">総部屋数</div>
@@ -476,20 +457,12 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             <div className="text-slate-500 text-xs">もじはんと</div>
           </div>
           <div className="bg-slate-800/60 rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-orange-400">{mojiHuntDevRooms.length}</div>
-            <div className="text-slate-500 text-xs">もじはんと DEV</div>
-          </div>
-          <div className="bg-slate-800/60 rounded-xl p-3 text-center">
             <div className="text-2xl font-bold text-emerald-400">{jackalRooms.length}</div>
             <div className="text-slate-500 text-xs">ジャッカル</div>
           </div>
           <div className="bg-slate-800/60 rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-lime-400">{jackalDevRooms.length}</div>
-            <div className="text-slate-500 text-xs">ジャッカル DEV</div>
-          </div>
-          <div className="bg-slate-800/60 rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-violet-400">{polyformDevRooms.length}</div>
-            <div className="text-slate-500 text-xs">POLYFORM DEV</div>
+            <div className="text-2xl font-bold text-blue-400">{sparkRooms.length}</div>
+            <div className="text-slate-500 text-xs">SPARK</div>
           </div>
         </div>
 

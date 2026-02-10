@@ -3,16 +3,13 @@ import { Pencil, X } from 'lucide-react';
 import { usePlayer } from './shared/hooks/usePlayer';
 import { AoaGame } from './games/aoa/AoaGame';
 import { MojiHuntGame } from './games/moji-hunt/MojiHuntGame';
-import { MojiHuntDevGame } from './games/moji-hunt-dev/MojiHuntDevGame';
 import { JackalGame } from './games/jackal/JackalGame';
-import { JackalDevGame } from './games/jackal-dev/JackalDevGame';
 import { PolyformGame } from './games/polyform/PolyformGame';
-import { PolyformDevGame } from './games/polyform-dev/PolyformDevGame';
 import { DesperadoGame } from './games/desperado/DesperadoGame';
 import { SparkGame } from './games/spark/SparkGame';
 import { AdminPage } from './admin/AdminPage';
 
-type GameType = 'none' | 'aoa' | 'moji-hunt' | 'moji-hunt-dev' | 'jackal' | 'jackal-dev' | 'polyform' | 'polyform-dev' | 'desperado' | 'spark' | 'boards-dev' | 'admin';
+type GameType = 'none' | 'aoa' | 'moji-hunt' | 'jackal' | 'polyform' | 'desperado' | 'spark' | 'boards-dev' | 'admin';
 
 // クエリパラメータを保持（?v=xxx などのキャッシュバスター用）
 const getQueryString = (excludeKeys: string[] = []) => {
@@ -34,11 +31,8 @@ const getGameFromPath = (): GameType => {
     window.history.replaceState({}, '', newPath);
     if (redirectPath === 'aoa') return 'aoa';
     if (redirectPath === 'moji-hunt') return 'moji-hunt';
-    if (redirectPath === 'moji-hunt-dev') return 'moji-hunt-dev';
     if (redirectPath === 'jackal') return 'jackal';
-    if (redirectPath === 'jackal-dev') return 'jackal-dev';
     if (redirectPath === 'polyform') return 'polyform';
-    if (redirectPath === 'polyform-dev') return 'polyform-dev';
     if (redirectPath === 'desperado') return 'desperado';
     if (redirectPath === 'spark') return 'spark';
     if (redirectPath === 'boards-dev') return 'boards-dev';
@@ -49,11 +43,8 @@ const getGameFromPath = (): GameType => {
   const path = window.location.pathname.replace('/hive', '').replace(/^\/|\/$/g, '');
   if (path === 'aoa') return 'aoa';
   if (path === 'moji-hunt') return 'moji-hunt';
-  if (path === 'moji-hunt-dev') return 'moji-hunt-dev';
   if (path === 'jackal') return 'jackal';
-  if (path === 'jackal-dev') return 'jackal-dev';
   if (path === 'polyform') return 'polyform';
-  if (path === 'polyform-dev') return 'polyform-dev';
   if (path === 'desperado') return 'desperado';
   if (path === 'spark') return 'spark';
   if (path === 'boards-dev') return 'boards-dev';
@@ -169,20 +160,11 @@ function App() {
   if (selectedGame === 'moji-hunt') {
     return <MojiHuntGame onBack={() => selectGame('none')} />;
   }
-  if (selectedGame === 'moji-hunt-dev') {
-    return <MojiHuntDevGame onBack={() => selectGame('none')} />;
-  }
   if (selectedGame === 'jackal') {
     return <JackalGame onBack={() => selectGame('none')} />;
   }
-  if (selectedGame === 'jackal-dev') {
-    return <JackalDevGame onBack={() => selectGame('none')} />;
-  }
   if (selectedGame === 'polyform') {
     return <PolyformGame onBack={() => selectGame('none')} />;
-  }
-  if (selectedGame === 'polyform-dev') {
-    return <PolyformDevGame onBack={() => selectGame('none')} />;
   }
   if (selectedGame === 'desperado') {
     return <DesperadoGame onBack={() => selectGame('none')} />;
@@ -209,54 +191,6 @@ function App() {
           </header>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* もじはんとDEV */}
-            <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
-              <div className="h-32 bg-gradient-to-br from-pink-600 to-orange-500 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white">もじはんと DEV</span>
-              </div>
-              <div className="p-4">
-                <button
-                  onClick={() => selectGame('moji-hunt-dev')}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500
-                    hover:from-orange-600 hover:to-amber-600 rounded-lg text-white font-bold transition-all"
-                >
-                  開く
-                </button>
-              </div>
-            </div>
-
-            {/* ジャッカルDEV */}
-            <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
-              <div className="h-32 bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white">ジャッカル DEV</span>
-              </div>
-              <div className="p-4">
-                <button
-                  onClick={() => selectGame('jackal-dev')}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500
-                    hover:from-orange-600 hover:to-amber-600 rounded-lg text-white font-bold transition-all"
-                >
-                  開く
-                </button>
-              </div>
-            </div>
-
-            {/* PolyformDEV */}
-            <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
-              <div className="h-32 bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white">POLYFORM DEV</span>
-              </div>
-              <div className="p-4">
-                <button
-                  onClick={() => selectGame('polyform-dev')}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500
-                    hover:from-orange-600 hover:to-amber-600 rounded-lg text-white font-bold transition-all"
-                >
-                  開く
-                </button>
-              </div>
-            </div>
-
             {/* SPARK（開発中） */}
             <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-orange-500 transition-all">
               <div className="h-32 bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center">
