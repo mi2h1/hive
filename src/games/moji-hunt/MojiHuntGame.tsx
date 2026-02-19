@@ -6,6 +6,7 @@ import { Lobby } from './components/Lobby';
 import { WordInputPhase } from './components/WordInputPhase';
 import { GamePlayPhase } from './components/GamePlayPhase';
 import { ResultScreen } from './components/ResultScreen';
+import { TopicSelectionPhase } from './components/TopicSelectionPhase';
 import { GameStartTransition } from './components/GameStartTransition';
 import { RulesModal } from './components/RulesModal';
 import type { LocalPlayerState } from './types/game';
@@ -54,6 +55,7 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
     joinRoom,
     leaveRoom,
     updateGameState,
+    updateTopicMode,
   } = useRoom(playerId, playerName);
 
   // URLパラメータからルームに自動参加
@@ -87,6 +89,7 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
   const settings = gameState?.settings ?? DEFAULT_SETTINGS;
   const phase = gameState?.phase ?? 'waiting';
   const currentTopic = gameState?.currentTopic ?? '';
+  const topicMode = roomData?.topicMode ?? 'random';
 
   const prevTopicRef = useRef<string | null>(null);
 
@@ -94,10 +97,9 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
   useEffect(() => {
     const prevPhase = prevPhaseRef.current;
 
-    // 他プレイヤーが waiting → word_input の遷移を検知した時
-    // または game_end → word_input の遷移を検知した時（もう一度遊ぶ）
+    // word_input への遷移を検知した時（ランダムモード: waiting/game_end→word_input、選択式: topic_selection→word_input）
     if (
-      (prevPhase === 'waiting' || prevPhase === 'game_end') &&
+      (prevPhase === 'waiting' || prevPhase === 'game_end' || prevPhase === 'topic_selection') &&
       phase === 'word_input' &&
       !showTransition
     ) {
@@ -131,26 +133,60 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
 
     // ローカル状態をリセット（前回のゲームの状態をクリア）
     setLocalState(null);
-
-    // お題をランダムに選出（先に決める）
-    const topic = getRandomTopic();
-    setTransitionTopic(topic);
-
-    // トランジションを即座に表示
-    setShowTransition(true);
     setIsStartingGame(true);
 
-    // 少し待ってからゲーム状態を更新
-    setTimeout(() => {
-      // ターン順をシャッフル
-      const playerIds = players.map(p => p.id);
-      const shuffledOrder = [...playerIds].sort(() => Math.random() - 0.5);
+    const roundNumber = gameState.roundNumber ?? 0;
 
+    if (topicMode === 'selection') {
+      // 選択式: topic_selection フェーズへ
+      const topicSelectorId = players[roundNumber % players.length].id;
+
+      setTimeout(() => {
+        const playerIds = players.map(p => p.id);
+        const shuffledOrder = [...playerIds].sort(() => Math.random() - 0.5);
+
+        updateGameState({
+          phase: 'topic_selection',
+          turnOrder: shuffledOrder,
+          currentTurnPlayerId: shuffledOrder[0],
+          topicSelectorId,
+          roundNumber,
+          topicChangeVotes: [],
+        });
+      }, 300);
+    } else {
+      // ランダム: 現行通り word_input へ
+      const topic = getRandomTopic();
+      setTransitionTopic(topic);
+      setShowTransition(true);
+
+      setTimeout(() => {
+        const playerIds = players.map(p => p.id);
+        const shuffledOrder = [...playerIds].sort(() => Math.random() - 0.5);
+
+        updateGameState({
+          phase: 'word_input',
+          currentTopic: topic,
+          turnOrder: shuffledOrder,
+          currentTurnPlayerId: shuffledOrder[0],
+          topicChangeVotes: [],
+          roundNumber,
+        });
+      }, 300);
+    }
+  };
+
+  // お題選択式: 担当プレイヤーがお題を確定
+  const handleSelectTopic = (topic: string) => {
+    if (!gameState) return;
+
+    setTransitionTopic(topic);
+    setShowTransition(true);
+
+    setTimeout(() => {
       updateGameState({
         phase: 'word_input',
         currentTopic: topic,
-        turnOrder: shuffledOrder,
-        currentTurnPlayerId: shuffledOrder[0],
         topicChangeVotes: [],
       });
     }, 300);
@@ -217,11 +253,6 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
 
     // 全員投票したらお題を変更
     if (newVotes.length >= players.length) {
-      // 新しいお題を選出
-      const newTopic = getRandomTopic();
-      setTransitionTopic(newTopic);
-      setShowTransition(true);
-
       // 全員の入力をリセット
       const resetPlayers = players.map(p => ({
         ...p,
@@ -235,11 +266,26 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
       // ローカル状態もリセット
       setLocalState(null);
 
-      updateGameState({
-        currentTopic: newTopic,
-        topicChangeVotes: [],
-        players: resetPlayers,
-      });
+      if (topicMode === 'selection') {
+        // 選択式: topic_selection に戻す（同じ担当者で）
+        updateGameState({
+          phase: 'topic_selection',
+          currentTopic: '',
+          topicChangeVotes: [],
+          players: resetPlayers,
+        });
+      } else {
+        // ランダム: 新しいお題を選出
+        const newTopic = getRandomTopic();
+        setTransitionTopic(newTopic);
+        setShowTransition(true);
+
+        updateGameState({
+          currentTopic: newTopic,
+          topicChangeVotes: [],
+          players: resetPlayers,
+        });
+      }
     } else {
       // まだ全員投票していない
       updateGameState({ topicChangeVotes: newVotes });
@@ -287,6 +333,8 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
         onLeaveRoom={leaveRoom}
         onStartGame={handleStartGame}
         onBack={handleBack}
+        topicMode={topicMode}
+        onUpdateTopicMode={updateTopicMode}
         debugMode={debugMode}
         isFadingOut={isStartingGame}
       />
@@ -341,6 +389,16 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
           </button>
         </header>
 
+        {phase === 'topic_selection' && gameState && (
+          <TopicSelectionPhase
+            players={players}
+            currentPlayerId={playerId ?? ''}
+            topicSelectorId={gameState.topicSelectorId ?? ''}
+            roundNumber={gameState.roundNumber ?? 0}
+            onSelectTopic={handleSelectTopic}
+          />
+        )}
+
         {phase === 'word_input' && gameState && (
           <WordInputPhase
             settings={settings}
@@ -375,16 +433,13 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
             playerId={playerId ?? ''}
             isHost={isHost}
             onPlayAgain={() => {
-              // 新しいお題を選出
-              const newTopic = getRandomTopic();
-              setTransitionTopic(newTopic);
-              setShowTransition(true);
-
               // ローカル状態をリセット
               setLocalState(null);
               setIsStartingGame(false);
 
-              // プレイヤーをリセットして直接word_inputへ
+              const nextRound = (gameState.roundNumber ?? 0) + 1;
+
+              // プレイヤーをリセット
               const resetPlayers = players.map(p => ({
                 id: p.id,
                 name: p.name,
@@ -400,18 +455,44 @@ export const MojiHuntGame = ({ onBack }: MojiHuntGameProps) => {
               const playerIds = players.map(p => p.id);
               const shuffledOrder = [...playerIds].sort(() => Math.random() - 0.5);
 
-              updateGameState({
-                phase: 'word_input',
-                players: resetPlayers,
-                currentTopic: newTopic,
-                currentTurnPlayerId: shuffledOrder[0],
-                turnOrder: shuffledOrder,
-                usedCharacters: [],
-                attackHistory: [],
-                lastAttackHadHit: false,
-                winnerId: null,
-                topicChangeVotes: [],
-              });
+              if (topicMode === 'selection') {
+                // 選択式: topic_selection へ（次の担当者で）
+                const topicSelectorId = players[nextRound % players.length].id;
+
+                updateGameState({
+                  phase: 'topic_selection',
+                  players: resetPlayers,
+                  currentTopic: '',
+                  currentTurnPlayerId: shuffledOrder[0],
+                  turnOrder: shuffledOrder,
+                  usedCharacters: [],
+                  attackHistory: [],
+                  lastAttackHadHit: false,
+                  winnerId: null,
+                  topicChangeVotes: [],
+                  roundNumber: nextRound,
+                  topicSelectorId,
+                });
+              } else {
+                // ランダム: 現行通り word_input へ
+                const newTopic = getRandomTopic();
+                setTransitionTopic(newTopic);
+                setShowTransition(true);
+
+                updateGameState({
+                  phase: 'word_input',
+                  players: resetPlayers,
+                  currentTopic: newTopic,
+                  currentTurnPlayerId: shuffledOrder[0],
+                  turnOrder: shuffledOrder,
+                  usedCharacters: [],
+                  attackHistory: [],
+                  lastAttackHadHit: false,
+                  winnerId: null,
+                  topicChangeVotes: [],
+                  roundNumber: nextRound,
+                });
+              }
             }}
             onLeaveRoom={() => {
               leaveRoom();

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { Crown, FlaskConical, HelpCircle, Link } from 'lucide-react';
-import type { Player } from '../types/game';
+import { Crown, FlaskConical, HelpCircle, Link, Shuffle, UserPen } from 'lucide-react';
+import type { Player, TopicMode } from '../types/game';
 import { RulesModal } from './RulesModal';
 
 interface LobbyProps {
@@ -16,6 +16,9 @@ interface LobbyProps {
   onLeaveRoom: () => void;
   onStartGame: () => void;
   onBack?: () => void;
+  // お題モード
+  topicMode?: TopicMode;
+  onUpdateTopicMode?: (mode: TopicMode) => void;
   // デバッグ用
   debugMode?: boolean;
   onAddTestPlayer?: () => void;
@@ -36,6 +39,8 @@ export const Lobby = ({
   onLeaveRoom,
   onStartGame,
   onBack,
+  topicMode = 'random',
+  onUpdateTopicMode,
   debugMode = false,
   onAddTestPlayer,
   isFadingOut = false,
@@ -198,9 +203,39 @@ export const Lobby = ({
                   </div>
                 ))}
               </div>
-              <p className="text-slate-500 text-xs mt-3 text-center">
-                お題はゲーム開始時にランダムで決まります
-              </p>
+            </div>
+
+            {/* お題モード選択 */}
+            <div className="mb-4">
+              <div className="text-slate-400 text-sm mb-2">お題モード</div>
+              <div className="space-y-1">
+                {([
+                  { mode: 'random' as TopicMode, label: 'お題ランダム', icon: Shuffle, description: '自動でお題が決まる' },
+                  { mode: 'selection' as TopicMode, label: 'お題選択式', icon: UserPen, description: 'プレイヤーがお題を選ぶ' },
+                ] as const).map(({ mode, label, icon: Icon, description }) => {
+                  const isActive = topicMode === mode;
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() => isHost && onUpdateTopicMode?.(mode)}
+                      disabled={!isHost}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+                        isActive
+                          ? 'bg-pink-600 text-white'
+                          : isHost
+                            ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                            : 'bg-slate-700/50 text-slate-400 cursor-not-allowed'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <div className="text-left">
+                        <div className="font-bold text-sm">{label}</div>
+                        <div className={`text-xs ${isActive ? 'text-white/70' : 'text-slate-500'}`}>{description}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* 退出ボタン */}

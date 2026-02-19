@@ -1,5 +1,8 @@
 // ゲームフェーズ
-export type GamePhase = 'waiting' | 'word_input' | 'playing' | 'game_end';
+export type GamePhase = 'waiting' | 'topic_selection' | 'word_input' | 'playing' | 'game_end';
+
+// お題モード
+export type TopicMode = 'random' | 'selection';
 
 // お題リスト
 export const TOPICS = [
@@ -91,6 +94,12 @@ export const getRandomTopic = (): string => {
   return TOPICS[Math.floor(Math.random() * TOPICS.length)];
 };
 
+// ランダムにお題候補を複数取得（重複なし）
+export const getRandomTopicCandidates = (count: number): string[] => {
+  const shuffled = [...TOPICS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+};
+
 // プレイヤー状態（Firebase同期対象）
 export interface Player {
   id: string;
@@ -146,7 +155,7 @@ export interface GameSettings {
 export interface GameState {
   phase: GamePhase;
   settings: GameSettings;
-  currentTopic: string; // ゲーム開始時にランダム選出されたお題
+  currentTopic: string; // ゲーム開始時に選出されたお題
   players: Player[];
   currentTurnPlayerId: string | null;
   turnOrder: string[]; // プレイヤーIDの順番
@@ -156,12 +165,15 @@ export interface GameState {
   winnerId: string | null;
   currentAttack?: CurrentAttack | null; // 現在の攻撃演出（全員に表示）
   topicChangeVotes: string[]; // お題チェンジに投票したプレイヤーID
+  roundNumber: number; // ラウンド番号（お題担当ローテーション用）
+  topicSelectorId: string | null; // お題選択式での担当プレイヤーID
 }
 
 // ルームデータ
 export interface RoomData {
   hostId: string;
   gameState: GameState;
+  topicMode: TopicMode; // お題モード（ランダム or 選択式）
   createdAt: number;
 }
 
@@ -195,4 +207,6 @@ export const createInitialGameState = (): Omit<GameState, 'players'> => ({
   lastAttackHadHit: false,
   winnerId: null,
   topicChangeVotes: [],
+  roundNumber: 0,
+  topicSelectorId: null,
 });

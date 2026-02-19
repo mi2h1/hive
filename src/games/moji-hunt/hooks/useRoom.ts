@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ref, set, onValue, off, update, remove, get, onDisconnect } from 'firebase/database';
 import { db } from '../../../lib/firebase';
-import type { GameState, Player, RoomData, GameSettings, AttackResult, AttackHit } from '../types/game';
+import type { GameState, Player, RoomData, GameSettings, AttackResult, AttackHit, TopicMode } from '../types/game';
 import { createInitialPlayer, createInitialGameState, DEFAULT_SETTINGS } from '../types/game';
 
 // 古いルームを削除（24時間以上前のルーム）
@@ -188,6 +188,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
 
         const normalizedData: RoomData = {
           ...data,
+          topicMode: data.topicMode ?? 'random',
           gameState: {
             ...gs,
             players: normalizedPlayers,
@@ -202,6 +203,9 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
               })),
             })),
             settings: gs?.settings ?? DEFAULT_SETTINGS,
+            topicChangeVotes: normalizeArray<string>(gs?.topicChangeVotes),
+            roundNumber: gs?.roundNumber ?? 0,
+            topicSelectorId: gs?.topicSelectorId ?? null,
           },
         };
         setRoomData(normalizedData);
@@ -247,6 +251,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
           ...createInitialGameState(),
           players: [initialPlayer],
         },
+        topicMode: 'random',
         createdAt: Date.now(),
       };
 
@@ -378,6 +383,19 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     }
   }, [roomCode]);
 
+  // お題モードを更新（ホストのみ）
+  const updateTopicMode = useCallback(async (mode: TopicMode) => {
+    if (!roomCode || !roomData) return;
+
+    try {
+      await update(ref(db, `moji-hunt-rooms/${roomCode}`), {
+        topicMode: mode,
+      });
+    } catch (err) {
+      console.error('Update topic mode error:', err);
+    }
+  }, [roomCode, roomData]);
+
   // 設定を更新（ホストのみ）
   const updateSettings = useCallback(async (settings: Partial<GameSettings>) => {
     if (!roomCode || !roomData) return;
@@ -431,6 +449,7 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
     joinRoom,
     leaveRoom,
     updateGameState,
+    updateTopicMode,
     updateSettings,
     addTestPlayer,
   };
