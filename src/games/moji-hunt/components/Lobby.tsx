@@ -209,7 +209,7 @@ export const Lobby = ({
 
               {/* お題モード選択 */}
               <div>
-                <div className="text-slate-400 text-sm mb-2">お題モード</div>
+                <div className="text-slate-400 text-sm mb-2">お題モード <span className="text-slate-500 text-xs">（ホストのみ変更可）</span></div>
                 <div className="space-y-1">
                   {([
                     { mode: 'random' as TopicMode, label: 'お題ランダム', icon: Shuffle, description: '自動でお題が決まる' },
