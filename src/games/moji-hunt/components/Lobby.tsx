@@ -174,67 +174,70 @@ export const Lobby = ({
               </div>
             )}
 
-            {/* 参加者一覧 */}
-            <div className="mb-4">
-              {/* デバッグ用: テストプレイヤー追加 */}
-              {debugMode && onAddTestPlayer && players.length < 5 && (
-                <button
-                  onClick={onAddTestPlayer}
-                  className="w-full mb-2 px-3 py-2 bg-orange-600 hover:bg-orange-700
-                    rounded-lg text-white text-sm font-bold transition-all"
-                >
-                  + テストプレイヤーを追加
-                </button>
-              )}
-              <div className="text-slate-400 text-sm mb-2">
-                参加者 ({players.length}/5)
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {players.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center gap-1 bg-slate-700 px-3 py-1.5 rounded-lg text-sm"
+            {/* 参加者 + お題モード（2カラム） */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              {/* 参加者一覧 */}
+              <div>
+                {/* デバッグ用: テストプレイヤー追加 */}
+                {debugMode && onAddTestPlayer && players.length < 5 && (
+                  <button
+                    onClick={onAddTestPlayer}
+                    className="w-full mb-2 px-3 py-2 bg-orange-600 hover:bg-orange-700
+                      rounded-lg text-white text-sm font-bold transition-all"
                   >
-                    {player.id === hostId && <Crown className="w-4 h-4 text-yellow-400" />}
-                    <span className="text-white">{player.name}</span>
-                    {player.name === playerName && (
-                      <span className="text-slate-400 text-xs">(自分)</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* お題モード選択 */}
-            <div className="mb-4">
-              <div className="text-slate-400 text-sm mb-2">お題モード</div>
-              <div className="space-y-1">
-                {([
-                  { mode: 'random' as TopicMode, label: 'お題ランダム', icon: Shuffle, description: '自動でお題が決まる' },
-                  { mode: 'selection' as TopicMode, label: 'お題選択式', icon: UserPen, description: 'プレイヤーがお題を選ぶ' },
-                ] as const).map(({ mode, label, icon: Icon, description }) => {
-                  const isActive = topicMode === mode;
-                  return (
-                    <button
-                      key={mode}
-                      onClick={() => isHost && onUpdateTopicMode?.(mode)}
-                      disabled={!isHost}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                        isActive
-                          ? 'bg-pink-600 text-white'
-                          : isHost
-                            ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                            : 'bg-slate-700/50 text-slate-400 cursor-not-allowed'
-                      }`}
+                    + テストプレイヤーを追加
+                  </button>
+                )}
+                <div className="text-slate-400 text-sm mb-2">
+                  参加者 ({players.length}/5)
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {players.map((player) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-1 bg-slate-700 px-3 py-1.5 rounded-lg text-sm"
                     >
-                      <Icon className="w-4 h-4 shrink-0" />
-                      <div className="text-left">
-                        <div className="font-bold text-sm">{label}</div>
-                        <div className={`text-xs ${isActive ? 'text-white/70' : 'text-slate-500'}`}>{description}</div>
-                      </div>
-                    </button>
-                  );
-                })}
+                      {player.id === hostId && <Crown className="w-4 h-4 text-yellow-400" />}
+                      <span className="text-white">{player.name}</span>
+                      {player.name === playerName && (
+                        <span className="text-slate-400 text-xs">(自分)</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* お題モード選択 */}
+              <div>
+                <div className="text-slate-400 text-sm mb-2">お題モード</div>
+                <div className="space-y-1">
+                  {([
+                    { mode: 'random' as TopicMode, label: 'お題ランダム', icon: Shuffle, description: '自動でお題が決まる' },
+                    { mode: 'selection' as TopicMode, label: 'お題選択式', icon: UserPen, description: 'プレイヤーがお題を選ぶ' },
+                  ] as const).map(({ mode, label, icon: Icon, description }) => {
+                    const isActive = topicMode === mode;
+                    return (
+                      <button
+                        key={mode}
+                        onClick={() => isHost && onUpdateTopicMode?.(mode)}
+                        disabled={!isHost}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+                          isActive
+                            ? 'bg-pink-600 text-white'
+                            : isHost
+                              ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                              : 'bg-slate-700/50 text-slate-400 cursor-not-allowed'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <div className="text-left">
+                          <div className="font-bold text-sm">{label}</div>
+                          <div className={`text-xs ${isActive ? 'text-white/70' : 'text-slate-500'}`}>{description}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
