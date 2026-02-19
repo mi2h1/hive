@@ -11,7 +11,7 @@ interface TopicSelectionPhaseProps {
   onSelectTopic: (topic: string) => void;
 }
 
-const CANDIDATE_COUNT = 5;
+const CANDIDATE_COUNT = 6;
 
 export const TopicSelectionPhase = ({
   players,
@@ -85,12 +85,12 @@ const SelectorView = ({
               別の候補
             </button>
           </div>
-          <div className="space-y-2">
+          <div className="grid grid-cols-3 gap-2">
             {candidates.map((topic) => (
               <button
                 key={topic}
                 onClick={() => setSelectedTopic(selectedTopic === topic ? null : topic)}
-                className={`w-full px-4 py-3 rounded-lg text-lg font-bold transition-all ${
+                className={`px-3 py-3 rounded-lg text-sm font-bold transition-all ${
                   selectedTopic === topic
                     ? 'bg-pink-500 text-white ring-2 ring-pink-300'
                     : 'bg-white/10 text-white hover:bg-white/20'
@@ -104,7 +104,7 @@ const SelectorView = ({
           {/* 自由記述モードへ切替 */}
           <button
             onClick={() => { setIsCustomMode(true); setSelectedTopic(null); }}
-            className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 text-sm transition-all"
+            className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 text-sm transition-all"
           >
             <PenLine className="w-4 h-4" />
             自分でお題を入力する
