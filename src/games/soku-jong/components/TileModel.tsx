@@ -14,7 +14,7 @@ const TILE_SEGMENTS = 4;
 const IVORY = '#f5f0e8';
 const BROWN = '#5c3a1e';
 
-// 角丸BoxGeometry生成（6マテリアルグループ維持）
+// 角丸BoxGeometry生成（6マテリアルグループ維持、フラットノーマル保持）
 const createRoundedBoxGeometry = (
   width: number, height: number, depth: number,
   radius: number, segments: number,
@@ -29,7 +29,6 @@ const createRoundedBoxGeometry = (
   for (let i = 0; i < pos.count; i++) {
     v.set(pos.getX(i), pos.getY(i), pos.getZ(i));
 
-    // 内側ボックスからのはみ出し量を計算
     const dx = Math.max(0, Math.abs(v.x) - innerW);
     const dy = Math.max(0, Math.abs(v.y) - innerH);
     const dz = Math.max(0, Math.abs(v.z) - innerD);
@@ -44,7 +43,8 @@ const createRoundedBoxGeometry = (
     }
   }
 
-  geometry.computeVertexNormals();
+  // computeVertexNormals() を呼ばない → 元のBoxGeometryのフラットノーマルを維持
+  // 面は完全にフラットに見え、辺は硬いエッジ遷移になる
   return geometry;
 };
 
@@ -71,7 +71,6 @@ const createSideTexture = (brownEdge: 'left' | 'right' | 'top' | 'bottom'): Canv
   ctx.fillStyle = BROWN;
   if (brownEdge === 'right') ctx.fillRect(size - 1, 0, 1, size);
   if (brownEdge === 'left') ctx.fillRect(0, 0, 1, size);
-  // Canvas Y軸はUV V軸と反転（flipY=true）
   if (brownEdge === 'bottom') ctx.fillRect(0, size - 1, size, 1);
   if (brownEdge === 'top') ctx.fillRect(0, 0, size, 1);
 
@@ -100,11 +99,15 @@ export const TileModel = ({
     [],
   );
 
-  // 側面テクスチャ（UV方向に合わせてブラウン帯の位置を指定）
+  // 側面テクスチャ（BoxGeometryのUV方向に合わせてブラウン帯を配置）
+  // +X (group 0): u=0が前面、u=1が背面 → canvas右端(x=max→u=1)にブラウン
+  // -X (group 1): u=0が背面、u=1が前面 → canvas左端(x=0→u=0)にブラウン
+  // +Y (group 2): v=1が背面、v=0が前面 → canvas上端(y=0→flipY→v=1)にブラウン
+  // -Y (group 3): v=0が背面、v=1が前面 → canvas下端(y=max→flipY→v=0)にブラウン
   const sidePX = useMemo(() => createSideTexture('right'), []);
   const sideNX = useMemo(() => createSideTexture('left'), []);
-  const sidePY = useMemo(() => createSideTexture('bottom'), []);
-  const sideNY = useMemo(() => createSideTexture('top'), []);
+  const sidePY = useMemo(() => createSideTexture('top'), []);
+  const sideNY = useMemo(() => createSideTexture('bottom'), []);
 
   // material index: 0=+X, 1=-X, 2=+Y, 3=-Y, 4=+Z(表), 5=-Z(裏)
   return (

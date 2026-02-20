@@ -76,9 +76,9 @@ interface TileTestPageProps {
 
 export const TileTestPage = ({ onBack }: TileTestPageProps) => {
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col">
+    <div className="fixed inset-0 bg-slate-900 flex flex-col">
       {/* ヘッダー */}
-      <header className="bg-slate-800/90 border-b border-slate-700 px-4 py-3 flex items-center gap-4">
+      <header className="bg-slate-800/90 border-b border-slate-700 px-4 py-3 flex items-center gap-4 shrink-0">
         <button
           onClick={onBack}
           className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 text-sm transition-colors"
@@ -89,11 +89,10 @@ export const TileTestPage = ({ onBack }: TileTestPageProps) => {
       </header>
 
       {/* 3D Canvas */}
-      <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 56px)' }}>
+      <div className="flex-1 min-h-0">
         <Canvas
           camera={{ position: [0, 0, 3], fov: 40 }}
           gl={{ antialias: true }}
-          style={{ width: '100%', height: '100%' }}
         >
           <color attach="background" args={['#0f172a']} />
           <TileScene />
