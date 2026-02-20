@@ -15,6 +15,58 @@ const TILE_SEGMENTS = 4;
 const IVORY = '#f5f0e8';
 const BROWN = '#5c3a1e';
 
+// RoundedBoxGeometry のUVを標準BoxGeometry互換のリニアマッピングに上書き
+const fixUVs = (geom: RoundedBoxGeometry, w: number, h: number, d: number) => {
+  const pos = geom.attributes.position.array as Float32Array;
+  const uvs = geom.attributes.uv.array as Float32Array;
+
+  for (const group of geom.groups) {
+    const start = group.start!;
+    const count = group.count!;
+    const face = group.materialIndex!;
+
+    for (let i = 0; i < count; i++) {
+      const vi = start + i;
+      const px = pos[vi * 3];
+      const py = pos[vi * 3 + 1];
+      const pz = pos[vi * 3 + 2];
+
+      let u: number, v: number;
+      switch (face) {
+        case 0: // +X: u=front→back along -Z, v=bottom→top along +Y
+          u = (d / 2 - pz) / d;
+          v = (py + h / 2) / h;
+          break;
+        case 1: // -X: u=back→front along +Z, v=bottom→top along +Y
+          u = (pz + d / 2) / d;
+          v = (py + h / 2) / h;
+          break;
+        case 2: // +Y: u=left→right along +X, v=front→back along -Z
+          u = (px + w / 2) / w;
+          v = (d / 2 - pz) / d;
+          break;
+        case 3: // -Y: u=left→right along +X, v=back→front along +Z
+          u = (px + w / 2) / w;
+          v = (pz + d / 2) / d;
+          break;
+        case 4: // +Z (front): u=left→right along +X, v=bottom→top along +Y
+          u = (px + w / 2) / w;
+          v = (py + h / 2) / h;
+          break;
+        case 5: // -Z (back): u=right→left along -X, v=bottom→top along +Y
+          u = (w / 2 - px) / w;
+          v = (py + h / 2) / h;
+          break;
+        default:
+          u = 0; v = 0;
+      }
+
+      uvs[vi * 2] = u;
+      uvs[vi * 2 + 1] = v;
+    }
+  }
+};
+
 // テクスチャパスの生成
 const getTexturePath = (kind: TileKind, isRed: boolean): string => {
   const base = '/hive/images/soku-jong';
@@ -51,6 +103,7 @@ const createSideTexture = (brownEdge: 'left' | 'right' | 'top' | 'bottom'): Canv
 const sharedGeometry = new RoundedBoxGeometry(
   TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH, TILE_SEGMENTS, TILE_RADIUS,
 );
+fixUVs(sharedGeometry, TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH);
 
 interface TileModelProps {
   kind: TileKind;
@@ -67,7 +120,7 @@ export const TileModel = ({
 }: TileModelProps) => {
   const faceTexture = useTexture(getTexturePath(kind, isRed));
 
-  // 側面テクスチャ（RoundedBoxGeometryのUV方向に合わせてブラウン帯を配置）
+  // 側面テクスチャ
   const sidePX = useMemo(() => createSideTexture('right'), []);
   const sideNX = useMemo(() => createSideTexture('left'), []);
   const sidePY = useMemo(() => createSideTexture('top'), []);
