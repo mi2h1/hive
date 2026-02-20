@@ -36,7 +36,7 @@ const getGameFromPath = (): GameType => {
     if (redirectPath === 'polyform') return 'polyform';
     if (redirectPath === 'desperado') return 'desperado';
     if (redirectPath === 'spark') return 'spark';
-    if (redirectPath === 'soku-jong') return 'soku-jong';
+    if (redirectPath === 'soku-jong' || redirectPath.startsWith('soku-jong/')) return 'soku-jong';
     if (redirectPath === 'boards-dev') return 'boards-dev';
     if (redirectPath === 'admin') return 'admin';
   }
@@ -49,7 +49,7 @@ const getGameFromPath = (): GameType => {
   if (path === 'polyform') return 'polyform';
   if (path === 'desperado') return 'desperado';
   if (path === 'spark') return 'spark';
-  if (path === 'soku-jong') return 'soku-jong';
+  if (path === 'soku-jong' || path.startsWith('soku-jong/')) return 'soku-jong';
   if (path === 'boards-dev') return 'boards-dev';
   if (path === 'admin') return 'admin';
   return 'none';

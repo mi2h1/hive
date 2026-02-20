@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
 import { Lobby } from './components/Lobby';
+import { TileTestPage } from './components/TileTestPage';
 
 interface SokuJongGameProps {
   onBack: () => void;
@@ -61,6 +62,12 @@ export const SokuJongGame = ({ onBack }: SokuJongGameProps) => {
       joinRoom(urlRoomCode);
     }
   }, [roomCode, joinRoom, playerId, playerName]);
+
+  // /test サブルートの検出
+  const subPath = window.location.pathname.replace('/hive/soku-jong', '').replace(/^\//, '');
+  if (subPath === 'test') {
+    return <TileTestPage onBack={onBack} />;
+  }
 
   const gameState = roomData?.gameState;
   const phase = gameState?.phase ?? 'waiting';
