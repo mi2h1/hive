@@ -35,7 +35,8 @@ src/
 │   ├── jackal/                # ジャッカル
 │   ├── polyform/              # POLYFORM
 │   ├── spark/                 # SPARK
-│   └── desperado/             # デスペラード
+│   ├── desperado/             # デスペラード
+│   └── soku-jong/             # 速雀
 └── shared/
     └── hooks/
         └── usePlayer.ts       # プレイヤー名管理（共用）
@@ -63,6 +64,7 @@ games/[game-name]/
 | POLYFORM | `/hive/polyform` | 稼働中 | `docs/polyform-spec.md` |
 | SPARK | `/hive/spark` | 稼働中 | `docs/spark-spec.md` |
 | デスペラード | `/hive/desperado` | 稼働中 | `docs/desperado-spec.md` |
+| 速雀 | `/hive/soku-jong` | 開発中 | `docs/soku-jong-spec.md` |
 
 ---
 
@@ -77,6 +79,7 @@ games/[game-name]/
 | `/hive/polyform` | POLYFORM |
 | `/hive/spark` | SPARK |
 | `/hive/desperado` | デスペラード |
+| `/hive/soku-jong` | 速雀 |
 | `/hive/admin` | 管理画面 |
 
 GitHub Pagesでは `404.html` によるSPAリダイレクトを使用。

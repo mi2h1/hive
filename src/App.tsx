@@ -7,9 +7,10 @@ import { JackalGame } from './games/jackal/JackalGame';
 import { PolyformGame } from './games/polyform/PolyformGame';
 import { DesperadoGame } from './games/desperado/DesperadoGame';
 import { SparkGame } from './games/spark/SparkGame';
+import { SokuJongGame } from './games/soku-jong/SokuJongGame';
 import { AdminPage } from './admin/AdminPage';
 
-type GameType = 'none' | 'aoa' | 'moji-hunt' | 'jackal' | 'polyform' | 'desperado' | 'spark' | 'boards-dev' | 'admin';
+type GameType = 'none' | 'aoa' | 'moji-hunt' | 'jackal' | 'polyform' | 'desperado' | 'spark' | 'soku-jong' | 'boards-dev' | 'admin';
 
 // クエリパラメータを保持（?v=xxx などのキャッシュバスター用）
 const getQueryString = (excludeKeys: string[] = []) => {
@@ -35,6 +36,7 @@ const getGameFromPath = (): GameType => {
     if (redirectPath === 'polyform') return 'polyform';
     if (redirectPath === 'desperado') return 'desperado';
     if (redirectPath === 'spark') return 'spark';
+    if (redirectPath === 'soku-jong') return 'soku-jong';
     if (redirectPath === 'boards-dev') return 'boards-dev';
     if (redirectPath === 'admin') return 'admin';
   }
@@ -47,6 +49,7 @@ const getGameFromPath = (): GameType => {
   if (path === 'polyform') return 'polyform';
   if (path === 'desperado') return 'desperado';
   if (path === 'spark') return 'spark';
+  if (path === 'soku-jong') return 'soku-jong';
   if (path === 'boards-dev') return 'boards-dev';
   if (path === 'admin') return 'admin';
   return 'none';
@@ -171,6 +174,9 @@ function App() {
   }
   if (selectedGame === 'spark') {
     return <SparkGame onBack={() => selectGame('none')} />;
+  }
+  if (selectedGame === 'soku-jong') {
+    return <SokuJongGame onBack={() => selectGame('none')} />;
   }
   if (selectedGame === 'boards-dev') {
     // 開発版ゲーム一覧
@@ -484,6 +490,29 @@ function App() {
                   onClick={() => selectGame('spark')}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500
                     hover:from-cyan-600 hover:to-blue-600 rounded-lg text-white font-bold transition-all"
+                >
+                  遊ぶ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 速雀 */}
+          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-emerald-500 transition-all">
+            <div className="h-40 bg-gradient-to-br from-emerald-600 to-green-600 flex items-center justify-center">
+              <span className="text-4xl font-bold text-white">速雀</span>
+            </div>
+            <div className="p-4">
+              <h2 className="text-lg font-bold text-white mb-2">速雀</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                索子＋發・中だけの簡易麻雀ゲーム。<br />
+                2面子を揃えて和了を目指せ！
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => selectGame('soku-jong')}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500
+                    hover:from-emerald-600 hover:to-green-600 rounded-lg text-white font-bold transition-all"
                 >
                   遊ぶ
                 </button>

@@ -43,8 +43,19 @@
 - ロビーUIの改善（参加者+お題モードの2カラム配置）
 - 開発規約・進捗ログドキュメントの新規作成
 
+### 2026-02-21
+- 速雀（SOKU-JONG）の初期構築
+  - 仕様書を `docs/soku-jong-spec.md` に配置
+  - `src/games/soku-jong/` ディレクトリ作成（types, hooks, components, lib）
+  - 型定義（Tile, Player, GameState, RoomData等）
+  - Firebase連携フック（useRoom）
+  - ロビー画面（Lobby）
+  - メインコンポーネント（SokuJongGame）
+  - App.tsx にゲーム登録（ルーティング・選択画面）
+  - ゲームロジックは未実装（骨組みのみ）
+
 ---
 
 ## 次のタスク
 
-- （未定）
+- 速雀: ゲームロジック実装（配牌・ツモ・打牌・和了判定・点数計算）
