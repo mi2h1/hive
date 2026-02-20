@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { BoxGeometry, CanvasTexture, SRGBColorSpace, NearestFilter, Vector3 } from 'three';
+import { CanvasTexture, SRGBColorSpace, NearestFilter } from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { useTexture } from '@react-three/drei';
 import type { TileKind } from '../types/game';
 
@@ -13,40 +14,6 @@ const TILE_SEGMENTS = 4;
 // マテリアルカラー
 const IVORY = '#f5f0e8';
 const BROWN = '#5c3a1e';
-
-// 角丸BoxGeometry生成（6マテリアルグループ維持、フラットノーマル保持）
-const createRoundedBoxGeometry = (
-  width: number, height: number, depth: number,
-  radius: number, segments: number,
-): BoxGeometry => {
-  const geometry = new BoxGeometry(width, height, depth, segments, segments, segments);
-  const pos = geometry.attributes.position;
-  const innerW = width / 2 - radius;
-  const innerH = height / 2 - radius;
-  const innerD = depth / 2 - radius;
-  const v = new Vector3();
-
-  for (let i = 0; i < pos.count; i++) {
-    v.set(pos.getX(i), pos.getY(i), pos.getZ(i));
-
-    const dx = Math.max(0, Math.abs(v.x) - innerW);
-    const dy = Math.max(0, Math.abs(v.y) - innerH);
-    const dz = Math.max(0, Math.abs(v.z) - innerD);
-    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-    if (dist > 0) {
-      const cx = Math.sign(v.x) * Math.min(Math.abs(v.x), innerW);
-      const cy = Math.sign(v.y) * Math.min(Math.abs(v.y), innerH);
-      const cz = Math.sign(v.z) * Math.min(Math.abs(v.z), innerD);
-      const scale = radius / dist;
-      pos.setXYZ(i, cx + (v.x - cx) * scale, cy + (v.y - cy) * scale, cz + (v.z - cz) * scale);
-    }
-  }
-
-  // computeVertexNormals() を呼ばない → 元のBoxGeometryのフラットノーマルを維持
-  // 面は完全にフラットに見え、辺は硬いエッジ遷移になる
-  return geometry;
-};
 
 // テクスチャパスの生成
 const getTexturePath = (kind: TileKind, isRed: boolean): string => {
@@ -80,6 +47,11 @@ const createSideTexture = (brownEdge: 'left' | 'right' | 'top' | 'bottom'): Canv
   return texture;
 };
 
+// ジオメトリをモジュールレベルで1つだけ生成（全牌で共有）
+const sharedGeometry = new RoundedBoxGeometry(
+  TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH, TILE_SEGMENTS, TILE_RADIUS,
+);
+
 interface TileModelProps {
   kind: TileKind;
   isRed?: boolean;
@@ -94,16 +66,8 @@ export const TileModel = ({
   rotation = [0, 0, 0],
 }: TileModelProps) => {
   const faceTexture = useTexture(getTexturePath(kind, isRed));
-  const geometry = useMemo(
-    () => createRoundedBoxGeometry(TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH, TILE_RADIUS, TILE_SEGMENTS),
-    [],
-  );
 
-  // 側面テクスチャ（BoxGeometryのUV方向に合わせてブラウン帯を配置）
-  // +X (group 0): u=0が前面、u=1が背面 → canvas右端(x=max→u=1)にブラウン
-  // -X (group 1): u=0が背面、u=1が前面 → canvas左端(x=0→u=0)にブラウン
-  // +Y (group 2): v=1が背面、v=0が前面 → canvas上端(y=0→flipY→v=1)にブラウン
-  // -Y (group 3): v=0が背面、v=1が前面 → canvas下端(y=max→flipY→v=0)にブラウン
+  // 側面テクスチャ（RoundedBoxGeometryのUV方向に合わせてブラウン帯を配置）
   const sidePX = useMemo(() => createSideTexture('right'), []);
   const sideNX = useMemo(() => createSideTexture('left'), []);
   const sidePY = useMemo(() => createSideTexture('top'), []);
@@ -111,7 +75,7 @@ export const TileModel = ({
 
   // material index: 0=+X, 1=-X, 2=+Y, 3=-Y, 4=+Z(表), 5=-Z(裏)
   return (
-    <mesh position={position} rotation={rotation} geometry={geometry}>
+    <mesh position={position} rotation={rotation} geometry={sharedGeometry}>
       <meshPhysicalMaterial attach="material-0" map={sidePX} clearcoat={0.8} clearcoatRoughness={0.2} roughness={0.3} />
       <meshPhysicalMaterial attach="material-1" map={sideNX} clearcoat={0.8} clearcoatRoughness={0.2} roughness={0.3} />
       <meshPhysicalMaterial attach="material-2" map={sidePY} clearcoat={0.8} clearcoatRoughness={0.2} roughness={0.3} />
