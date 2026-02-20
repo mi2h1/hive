@@ -1,6 +1,4 @@
-import { useMemo } from 'react';
-import { CanvasTexture, SRGBColorSpace } from 'three';
-import { RoundedBox } from '@react-three/drei';
+import { useTexture, RoundedBox } from '@react-three/drei';
 import type { TileKind } from '../types/game';
 
 // 牌のサイズ
@@ -14,63 +12,14 @@ const TILE_SMOOTHNESS = 4;
 const IVORY = '#f5f0e8';
 const BROWN = '#5c3a1e';
 
-// 牌の表示名
-const tileLabel: Record<TileKind, string> = {
-  '1s': '一索',
-  '2s': '二索',
-  '3s': '三索',
-  '4s': '四索',
-  '5s': '五索',
-  '6s': '六索',
-  '7s': '七索',
-  '8s': '八索',
-  '9s': '九索',
-  hatsu: '發',
-  chun: '中',
-};
-
-// Canvas API でプレースホルダーテクスチャを生成
-const createTileTexture = (kind: TileKind, isRed: boolean): CanvasTexture => {
-  const size = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-
-  // 背景: アイボリー
-  ctx.fillStyle = IVORY;
-  ctx.fillRect(0, 0, size, size);
-
-  // テキスト色の決定
-  if (kind === 'hatsu') {
-    ctx.fillStyle = '#228B22';
-  } else if (kind === 'chun') {
-    ctx.fillStyle = '#cc0000';
-  } else if (isRed) {
-    ctx.fillStyle = '#cc0000';
-  } else {
-    ctx.fillStyle = '#1a1a2e';
-  }
-
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  if (kind === 'hatsu' || kind === 'chun') {
-    // 字牌: 大きく1文字
-    ctx.font = 'bold 120px serif';
-    ctx.fillText(kind === 'hatsu' ? '發' : '中', size / 2, size / 2);
-  } else {
-    // 索子: 数字 + 「索」
-    const num = kind.charAt(0);
-    ctx.font = 'bold 100px serif';
-    ctx.fillText(num, size / 2, size / 2 - 30);
-    ctx.font = 'bold 60px serif';
-    ctx.fillText('索', size / 2, size / 2 + 60);
-  }
-
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  return texture;
+// テクスチャパスの生成
+const getTexturePath = (kind: TileKind, isRed: boolean): string => {
+  const base = '/hive/images/soku-jong';
+  if (kind === 'hatsu') return `${base}/soku_hatsu.png`;
+  if (kind === 'chun') return `${base}/soku_chun.png`;
+  // 索子: 1s〜9s
+  const num = kind.charAt(0);
+  return isRed ? `${base}/soku_r_s${num}.png` : `${base}/soku_s${num}.png`;
 };
 
 interface TileModelProps {
@@ -86,7 +35,7 @@ export const TileModel = ({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
 }: TileModelProps) => {
-  const faceTexture = useMemo(() => createTileTexture(kind, isRed), [kind, isRed]);
+  const faceTexture = useTexture(getTexturePath(kind, isRed));
 
   return (
     <RoundedBox
