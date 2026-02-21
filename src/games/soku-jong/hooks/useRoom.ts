@@ -345,8 +345,14 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
   const updateGameState = useCallback(async (newState: Partial<GameState>) => {
     if (!roomCode) return;
 
+    // Firebase Realtime Database は undefined を受け付けないため除去（null は削除として有効）
+    const cleaned = Object.fromEntries(
+      Object.entries(newState).filter(([, v]) => v !== undefined),
+    );
+    if (Object.keys(cleaned).length === 0) return;
+
     try {
-      await update(ref(db, `${ROOM_PATH}/${roomCode}/gameState`), newState);
+      await update(ref(db, `${ROOM_PATH}/${roomCode}/gameState`), cleaned);
     } catch (err) {
       console.error('Update game state error:', err);
       setError('状態の更新に失敗しました');
