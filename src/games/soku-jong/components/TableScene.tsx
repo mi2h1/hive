@@ -279,7 +279,7 @@ const windPanelGeom = new ExtrudeGeometry(windPanelShape, { depth: 0.003, bevelE
 const WIND_BORDER = 0.015; // ボーダー幅
 const windBorderShape = new Shape();
 const _wbi = _wps - WIND_BORDER; // 内側の半サイズ
-const _wbr = _wpr * 0.7; // 内側の角凹み
+const _wbr = _wpr - WIND_BORDER; // 内側の角凹み（外側と平行）
 // 外側（パネルと同じ形状）
 windBorderShape.moveTo(-_wps + _wpr, -_wps);
 windBorderShape.lineTo(_wps - _wpr, -_wps);
