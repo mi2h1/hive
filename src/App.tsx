@@ -498,7 +498,7 @@ function App() {
           </div>
 
           {/* 速雀 */}
-          <div className="bg-slate-800/80 rounded-xl overflow-hidden hover:ring-2 hover:ring-emerald-500 transition-all">
+          <div className="bg-slate-800/80 rounded-xl overflow-hidden opacity-75">
             <div className="h-40 bg-gradient-to-br from-emerald-600 to-green-600 flex items-center justify-center">
               <span className="text-4xl font-bold text-white">速雀</span>
             </div>
@@ -510,11 +510,10 @@ function App() {
               </p>
               <div className="flex gap-2">
                 <button
-                  onClick={() => selectGame('soku-jong')}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500
-                    hover:from-emerald-600 hover:to-green-600 rounded-lg text-white font-bold transition-all"
+                  disabled
+                  className="flex-1 px-4 py-2 bg-slate-600 rounded-lg text-slate-400 font-bold cursor-not-allowed"
                 >
-                  遊ぶ
+                  制作中
                 </button>
               </div>
             </div>
