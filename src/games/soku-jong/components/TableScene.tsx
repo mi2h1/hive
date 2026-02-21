@@ -394,6 +394,7 @@ interface TableSceneProps {
   onSkipRon?: () => void;
   isMyTurn?: boolean;
   turnPhase?: TurnPhase;
+  waitingTiles?: TileKind[];
 }
 
 // 自家を基準にした相対座席順を取得（自家=0, 右=1, 対面=2, 左=3）
@@ -421,6 +422,7 @@ export const TableScene = ({
   onSkipRon,
   isMyTurn,
   turnPhase,
+  waitingTiles,
 }: TableSceneProps = {}) => {
   const feltTexture = useMemo(() => createFeltTexture(), []);
   const woodTexture = useMemo(() => createWoodTexture(), []);
@@ -531,6 +533,39 @@ export const TableScene = ({
                     />
                   );
                 })}
+
+                {/* 待ち牌（テンパイ時、手牌の右に小さく表示） */}
+                {isSelf && waitingTiles && waitingTiles.length > 0 && player.hand.length === 5 && (() => {
+                  const handRight = ((player.hand.length - 1) / 2) * TILE_SPACING;
+                  const gapX = 0.18;
+                  const waitScale = 0.65;
+                  const waitSpacing = TILE_SPACING * waitScale;
+                  const startX = handRight + gapX;
+                  return (
+                    <group>
+                      <Text
+                        font={FONT_YUJI}
+                        position={[startX - 0.02, 0.22, HAND_Z + 0.05]}
+                        rotation={[-0.3, 0, 0]}
+                        fontSize={0.07}
+                        color="#ffcc00"
+                        anchorX="center"
+                        anchorY="middle"
+                      >
+                        待
+                      </Text>
+                      {waitingTiles.map((kind, i) => (
+                        <group key={`wait-${kind}`} scale={[waitScale, waitScale, waitScale]}>
+                          <TileModel
+                            kind={kind}
+                            position={[(startX + i * waitSpacing) / waitScale, TILE_D / 2 / waitScale, HAND_Z / waitScale]}
+                            rotation={[-Math.PI / 2 + 0.3, 0, 0]}
+                          />
+                        </group>
+                      ))}
+                    </group>
+                  );
+                })()}
 
                 {/* 河 */}
                 {player.discards.map((tile, i) => {

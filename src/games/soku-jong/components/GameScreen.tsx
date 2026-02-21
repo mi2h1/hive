@@ -1,11 +1,12 @@
-import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
+import { Suspense, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useProgress } from '@react-three/drei';
 import { EffectComposer, SSAO, Bloom } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import { TableScene } from './TableScene';
-import type { GameState } from '../types/game';
+import type { GameState, TileKind } from '../types/game';
 import type { ScoreResult } from '../lib/scoring';
+import { findWaitingTiles } from '../lib/furiten';
 import {
   processDraw,
   processDiscard,
@@ -72,6 +73,13 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
   const isMyTurn = currentTurnId === playerId;
   const isBotTurn = currentTurnId ? isBot(currentTurnId) : false;
   const turnPhase = gameState.turnPhase;
+
+  // 待ち牌（テンパイ時に手牌の右に表示）
+  const waitingTiles: TileKind[] = useMemo(() => {
+    const me = gameState.players.find((p) => p.id === playerId);
+    if (!me || me.hand.length !== 5) return [];
+    return findWaitingTiles(me.hand, gameState.doraTile, me.isDealer);
+  }, [gameState.players, gameState.doraTile, playerId]);
 
   // ローカル状態
   const [canTsumo, setCanTsumo] = useState(false);
@@ -357,6 +365,7 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
               onSkipRon={handleSkipRon}
               isMyTurn={isMyTurn}
               turnPhase={turnPhase}
+              waitingTiles={waitingTiles}
             />
           </Suspense>
           <EffectComposer>

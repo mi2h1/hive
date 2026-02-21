@@ -145,6 +145,15 @@ interface TileModelProps {
   onPointerOut?: () => void;
 }
 
+// 全テクスチャをプリロード（ゲーム中のSuspense再発動 → 画面消失を防止）
+const ALL_KINDS: TileKind[] = ['1s','2s','3s','4s','5s','6s','7s','8s','9s','hatsu','chun'];
+for (const kind of ALL_KINDS) {
+  useTexture.preload(getTexturePath(kind, false));
+}
+for (let n = 1; n <= 9; n++) {
+  useTexture.preload(getTexturePath(`${n}s` as TileKind, true));
+}
+
 export const TileModel = ({
   kind,
   isRed = false,
