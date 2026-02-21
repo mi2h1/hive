@@ -147,6 +147,7 @@ fixUVs(sharedGeometry, TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH);
 interface TileModelProps {
   kind: TileKind;
   isRed?: boolean;
+  highQuality?: boolean;
   position?: [number, number, number];
   rotation?: [number, number, number];
   onClick?: () => void;
@@ -166,6 +167,7 @@ for (let n = 1; n <= 9; n++) {
 export const TileModel = ({
   kind,
   isRed = false,
+  highQuality = false,
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   onClick,
@@ -218,12 +220,25 @@ export const TileModel = ({
       onPointerOver={onPointerOver ? (e) => { e.stopPropagation(); onPointerOver(); } : undefined}
       onPointerOut={onPointerOut ? (e) => { e.stopPropagation(); onPointerOut(); } : undefined}
     >
-      <meshStandardMaterial attach="material-0" map={sharedSidePX} roughness={0.15} metalness={0.05} />
-      <meshStandardMaterial attach="material-1" map={sharedSideNX} roughness={0.15} metalness={0.05} />
-      <meshStandardMaterial attach="material-2" map={sharedSidePY} roughness={0.15} metalness={0.05} />
-      <meshStandardMaterial attach="material-3" map={sharedSideNY} roughness={0.15} metalness={0.05} />
-      <meshStandardMaterial attach="material-4" map={faceTexture} bumpMap={bumpTexture} bumpScale={-0.025} roughness={0.8} />
-      <meshStandardMaterial attach="material-5" color={BROWN} roughness={0.25} metalness={0.05} />
+      {highQuality ? (
+        <>
+          <meshPhysicalMaterial attach="material-0" map={sharedSidePX} roughness={0.15} metalness={0.05} clearcoat={0.6} clearcoatRoughness={0.2} ior={1.5} reflectivity={0.5} />
+          <meshPhysicalMaterial attach="material-1" map={sharedSideNX} roughness={0.15} metalness={0.05} clearcoat={0.6} clearcoatRoughness={0.2} ior={1.5} reflectivity={0.5} />
+          <meshPhysicalMaterial attach="material-2" map={sharedSidePY} roughness={0.15} metalness={0.05} clearcoat={0.6} clearcoatRoughness={0.2} ior={1.5} reflectivity={0.5} />
+          <meshPhysicalMaterial attach="material-3" map={sharedSideNY} roughness={0.15} metalness={0.05} clearcoat={0.6} clearcoatRoughness={0.2} ior={1.5} reflectivity={0.5} />
+          <meshPhysicalMaterial attach="material-4" map={faceTexture} bumpMap={bumpTexture} bumpScale={-0.025} roughness={0.8} clearcoat={0.3} clearcoatRoughness={0.4} />
+          <meshPhysicalMaterial attach="material-5" color={BROWN} roughness={0.25} metalness={0.05} clearcoat={0.6} clearcoatRoughness={0.2} ior={1.5} reflectivity={0.5} />
+        </>
+      ) : (
+        <>
+          <meshStandardMaterial attach="material-0" map={sharedSidePX} roughness={0.15} metalness={0.05} />
+          <meshStandardMaterial attach="material-1" map={sharedSideNX} roughness={0.15} metalness={0.05} />
+          <meshStandardMaterial attach="material-2" map={sharedSidePY} roughness={0.15} metalness={0.05} />
+          <meshStandardMaterial attach="material-3" map={sharedSideNY} roughness={0.15} metalness={0.05} />
+          <meshStandardMaterial attach="material-4" map={faceTexture} bumpMap={bumpTexture} bumpScale={-0.025} roughness={0.8} />
+          <meshStandardMaterial attach="material-5" color={BROWN} roughness={0.25} metalness={0.05} />
+        </>
+      )}
     </mesh>
   );
 };

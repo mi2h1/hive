@@ -67,7 +67,22 @@ const formatTime = (seconds: number): string => {
   return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
+const GFX_STORAGE_KEY = 'soku-jong-graphics';
+type GraphicsQuality = 'high' | 'standard';
+
 export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameState }: GameScreenProps) => {
+  const [gfxQuality, setGfxQuality] = useState<GraphicsQuality>(() => {
+    const stored = localStorage.getItem(GFX_STORAGE_KEY);
+    return stored === 'standard' ? 'standard' : 'high';
+  });
+  const highQuality = gfxQuality === 'high';
+  const toggleGfxQuality = useCallback(() => {
+    setGfxQuality((prev) => {
+      const next = prev === 'high' ? 'standard' : 'high';
+      localStorage.setItem(GFX_STORAGE_KEY, next);
+      return next;
+    });
+  }, []);
   const currentPlayer = gameState.players.find((p) => p.id === gameState.currentTurn);
   const currentTurnId = gameState.currentTurn;
   const isMyTurn = currentTurnId === playerId;
@@ -333,6 +348,14 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
           ← ロビーに戻る
         </button>
         <h1><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-7" /></h1>
+        <button
+          onClick={toggleGfxQuality}
+          className="px-2 py-1 rounded text-xs transition-colors border border-slate-600 hover:bg-slate-600"
+          style={{ color: highQuality ? '#fbbf24' : '#94a3b8' }}
+          title={highQuality ? '高品質モード（クリックで標準に切替）' : '標準モード（クリックで高品質に切替）'}
+        >
+          {highQuality ? '✦ 高品質' : '標準'}
+        </button>
         <div className="ml-auto flex items-center gap-3 text-sm text-slate-400">
           <span>東{gameState.round}局</span>
           <span>手番: {currentPlayer?.name ?? '-'}</span>
@@ -366,14 +389,15 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
               isMyTurn={isMyTurn}
               turnPhase={turnPhase}
               waitingTiles={waitingTiles}
+              highQuality={highQuality}
             />
           </Suspense>
           <EffectComposer>
             <SSAO
               blendFunction={BlendFunction.MULTIPLY}
-              samples={8}
-              radius={0.08}
-              intensity={8}
+              samples={highQuality ? 16 : 8}
+              radius={highQuality ? 0.1 : 0.08}
+              intensity={highQuality ? 15 : 8}
             />
             <Bloom
               intensity={0.15}

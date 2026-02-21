@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { EffectComposer, SSAO, Bloom } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
@@ -94,11 +94,26 @@ const SliderControl = ({
   </label>
 );
 
+const GFX_STORAGE_KEY = 'soku-jong-graphics';
+type GraphicsQuality = 'high' | 'standard';
+
 export const TileTestPage = ({ onBack }: TileTestPageProps) => {
   const [x, setX] = useState(DEFAULT.x);
   const [y, setY] = useState(DEFAULT.y);
   const [z, setZ] = useState(DEFAULT.z);
   const [fov, setFov] = useState(DEFAULT.fov);
+  const [gfxQuality, setGfxQuality] = useState<GraphicsQuality>(() => {
+    const stored = localStorage.getItem(GFX_STORAGE_KEY);
+    return stored === 'standard' ? 'standard' : 'high';
+  });
+  const highQuality = gfxQuality === 'high';
+  const toggleGfxQuality = useCallback(() => {
+    setGfxQuality((prev) => {
+      const next = prev === 'high' ? 'standard' : 'high';
+      localStorage.setItem(GFX_STORAGE_KEY, next);
+      return next;
+    });
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-slate-900 flex flex-col">
@@ -111,6 +126,13 @@ export const TileTestPage = ({ onBack }: TileTestPageProps) => {
           ← 戻る
         </button>
         <h1 className="flex items-center gap-2"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-7" /><span className="text-white font-bold text-lg">卓テスト</span></h1>
+        <button
+          onClick={toggleGfxQuality}
+          className="px-2 py-1 rounded text-xs transition-colors border border-slate-600 hover:bg-slate-600"
+          style={{ color: highQuality ? '#fbbf24' : '#94a3b8' }}
+        >
+          {highQuality ? '✦ 高品質' : '標準'}
+        </button>
         <div className="flex items-center gap-3 ml-auto">
           <SliderControl label="X" value={x} min={-5} max={5} step={0.5} onChange={setX} />
           <SliderControl label="Y" value={y} min={1} max={12} step={0.5} onChange={setY} />
@@ -128,13 +150,13 @@ export const TileTestPage = ({ onBack }: TileTestPageProps) => {
         >
           <color attach="background" args={['#1a1a2e']} />
           <CameraUpdater x={x} y={y} z={z} fov={fov} />
-          <TableScene gameState={MOCK_GAME_STATE} playerId="self" />
+          <TableScene gameState={MOCK_GAME_STATE} playerId="self" highQuality={highQuality} />
           <EffectComposer>
             <SSAO
               blendFunction={BlendFunction.MULTIPLY}
-              samples={16}
-              radius={0.1}
-              intensity={15}
+              samples={highQuality ? 16 : 8}
+              radius={highQuality ? 0.1 : 0.08}
+              intensity={highQuality ? 15 : 8}
             />
             <Bloom
               intensity={0.15}

@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
-import { OrbitControls, Text } from '@react-three/drei';
+import { OrbitControls, Text, Environment } from '@react-three/drei';
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace, Shape, Path, ExtrudeGeometry } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { TileModel } from './TileModel';
@@ -395,6 +395,7 @@ interface TableSceneProps {
   isMyTurn?: boolean;
   turnPhase?: TurnPhase;
   waitingTiles?: TileKind[];
+  highQuality?: boolean;
 }
 
 // 自家を基準にした相対座席順を取得（自家=0, 右=1, 対面=2, 左=3）
@@ -423,6 +424,7 @@ export const TableScene = ({
   isMyTurn,
   turnPhase,
   waitingTiles,
+  highQuality = false,
 }: TableSceneProps = {}) => {
   const feltTexture = useMemo(() => createFeltTexture(), []);
   const woodTexture = useMemo(() => createWoodTexture(), []);
@@ -442,13 +444,14 @@ export const TableScene = ({
   return (
     <>
       {/* ライティング */}
-      <ambientLight intensity={0.5} />
+      {highQuality && <Environment preset="studio" environmentIntensity={0.1} />}
+      <ambientLight intensity={highQuality ? 0.4 : 0.5} />
       <directionalLight
         position={[0, 8, 0]}
         intensity={0.5}
         castShadow
-        shadow-mapSize-width={512}
-        shadow-mapSize-height={512}
+        shadow-mapSize-width={highQuality ? 1024 : 512}
+        shadow-mapSize-height={highQuality ? 1024 : 512}
         shadow-camera-left={-4}
         shadow-camera-right={4}
         shadow-camera-top={4}
@@ -519,6 +522,7 @@ export const TableScene = ({
                       key={`hand-${tile.id}`}
                       kind={isSelf ? tile.kind : '1s'}
                       isRed={isSelf ? tile.isRed : false}
+                      highQuality={highQuality}
                       position={isSelf
                         ? [lx, TILE_D / 2 + hoverLift, HAND_Z]
                         : [lx, TILE_H / 2, HAND_Z]
@@ -558,6 +562,7 @@ export const TableScene = ({
                         <group key={`wait-${kind}`} scale={[waitScale, waitScale, waitScale]}>
                           <TileModel
                             kind={kind}
+                            highQuality={highQuality}
                             position={[(startX + i * waitSpacing) / waitScale, TILE_D / 2 / waitScale, HAND_Z / waitScale]}
                             rotation={[-Math.PI / 2 + 0.3, 0, 0]}
                           />
@@ -574,6 +579,7 @@ export const TableScene = ({
                       key={`river-${tile.id}`}
                       kind={tile.kind}
                       isRed={tile.isRed}
+                      highQuality={highQuality}
                       position={getRiverPosition(i)}
                       rotation={[-Math.PI / 2, 0, 0]}
                     />
@@ -596,6 +602,7 @@ export const TableScene = ({
                   <TileModel
                     key={`${player.name}-hand-${i}`}
                     kind={isSelf ? kind : '1s'}
+                    highQuality={highQuality}
                     position={isSelf
                       ? [lx, TILE_D / 2, HAND_Z]
                       : [lx, TILE_H / 2, HAND_Z]
@@ -614,6 +621,7 @@ export const TableScene = ({
                   <TileModel
                     key={`${player.name}-river-${i}`}
                     kind={kind}
+                    highQuality={highQuality}
                     position={getRiverPosition(i)}
                     rotation={[-Math.PI / 2, 0, 0]}
                   />
@@ -626,7 +634,11 @@ export const TableScene = ({
 
       {/* 中央情報パネル（外枠・中抜きフレーム） */}
       <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelFrameGeom} castShadow>
-        <meshStandardMaterial color="#0a0a0a" roughness={0.8} metalness={0.05} bumpMap={panelBumpTexture} bumpScale={0.003} />
+        {highQuality ? (
+          <meshPhysicalMaterial color="#0a0a0a" roughness={0.8} metalness={0.05} bumpMap={panelBumpTexture} bumpScale={0.003} clearcoat={0.4} clearcoatRoughness={0.3} />
+        ) : (
+          <meshStandardMaterial color="#0a0a0a" roughness={0.8} metalness={0.05} bumpMap={panelBumpTexture} bumpScale={0.003} />
+        )}
       </mesh>
       {/* 中央情報パネル（溝底） */}
       <mesh position={[0, -0.008, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelBaseGeom}>
@@ -634,7 +646,11 @@ export const TableScene = ({
       </mesh>
       {/* 中央情報パネル（内枠・漆塗り風） */}
       <mesh position={[0, -0.003, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelInnerGeom} castShadow>
-        <meshStandardMaterial color="#2a0a0a" roughness={0.7} metalness={0.03} bumpMap={panelBumpTexture} bumpScale={0.002} />
+        {highQuality ? (
+          <meshPhysicalMaterial color="#2a0a0a" roughness={0.7} metalness={0.03} bumpMap={panelBumpTexture} bumpScale={0.002} clearcoat={0.5} clearcoatRoughness={0.2} reflectivity={0.6} />
+        ) : (
+          <meshStandardMaterial color="#2a0a0a" roughness={0.7} metalness={0.03} bumpMap={panelBumpTexture} bumpScale={0.002} />
+        )}
       </mesh>
 
       {/* ターン表示ランプ（4辺） */}
@@ -748,6 +764,7 @@ export const TableScene = ({
               <TileModel
                 kind={gameState.doraTile.kind}
                 isRed={gameState.doraTile.isRed}
+                highQuality={highQuality}
                 position={[0, TILE_D / 2, 0]}
                 rotation={[-Math.PI / 2, 0, 0]}
               />
