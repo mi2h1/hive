@@ -186,6 +186,21 @@ drawRoundedRectWithNotches(panelInnerShape, 0.85, 0.85, 0.055, 0.18, 0.14, 0.025
 const panelInnerGeom = new ExtrudeGeometry(panelInnerShape, { depth: 0.02, bevelEnabled: false });
 panelInnerGeom.translate(0, 0, -0.01);
 
+// ターン表示ランプ（台形、内パネルのノッチに嵌る）
+const LAMP_OUTER = 0.17;
+const LAMP_INNER = 0.13;
+const LAMP_NOTCH = 0.022;
+const PANEL_HH = 0.425; // 0.85 / 2
+
+const lampShape = new Shape();
+lampShape.moveTo(-LAMP_OUTER, -PANEL_HH);
+lampShape.lineTo(-LAMP_INNER, -PANEL_HH + LAMP_NOTCH);
+lampShape.lineTo(LAMP_INNER, -PANEL_HH + LAMP_NOTCH);
+lampShape.lineTo(LAMP_OUTER, -PANEL_HH);
+lampShape.closePath();
+const lampGeom = new ExtrudeGeometry(lampShape, { depth: 0.02, bevelEnabled: false });
+lampGeom.translate(0, 0, -0.01);
+
 interface TableSceneProps {
   gameState?: GameState;
   playerId?: string;
@@ -355,6 +370,25 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelInnerGeom} castShadow>
         <meshStandardMaterial color="#181818" roughness={0.7} metalness={0.15} />
       </mesh>
+
+      {/* ターン表示ランプ（4辺） */}
+      {PLAYERS.map((player, seatIdx) => {
+        const isActive = gameState && playerId
+          ? getRelativeSeatOrder(gameState.players, playerId)[seatIdx]?.id === gameState.currentTurn
+          : false;
+        return (
+          <group key={`lamp-${seatIdx}`} rotation={[0, player.rotY, 0]}>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={lampGeom}>
+              <meshStandardMaterial
+                color={isActive ? '#ff4444' : '#e0e0e0'}
+                emissive={isActive ? '#ff0000' : '#000000'}
+                emissiveIntensity={isActive ? 0.8 : 0}
+                roughness={0.4}
+              />
+            </mesh>
+          </group>
+        );
+      })}
 
       {/* 中央パネル情報表示 */}
       {gameState && (
