@@ -3,6 +3,8 @@ import { usePlayer } from '../../shared/hooks/usePlayer';
 import { useRoom } from './hooks/useRoom';
 import { Lobby } from './components/Lobby';
 import { TileTestPage } from './components/TileTestPage';
+import { GameScreen } from './components/GameScreen';
+import { initializeRound } from './lib/game-flow';
 
 interface SokuJongGameProps {
   onBack: () => void;
@@ -77,10 +79,10 @@ export const SokuJongGame = ({ onBack }: SokuJongGameProps) => {
   const handleStartGame = () => {
     if (!gameState || players.length < 2) return;
 
-    // TODO: ゲームロジック実装時に配牌・山札シャッフル等を追加
+    const roundState = initializeRound(players, 1);
     updateGameState({
-      phase: 'playing',
-      round: 1,
+      ...roundState,
+      settings: gameState.settings,
     });
   };
 
@@ -111,14 +113,29 @@ export const SokuJongGame = ({ onBack }: SokuJongGameProps) => {
     );
   }
 
-  // playing / round_result / finished フェーズ（プレースホルダー）
+  // ロビーに戻る
+  const handleBackToLobby = () => {
+    updateGameState({ phase: 'waiting', round: 0 });
+  };
+
+  // playing フェーズ — ゲーム画面
+  if (phase === 'playing' && gameState) {
+    return (
+      <GameScreen
+        gameState={gameState}
+        playerId={playerId ?? ''}
+        onBackToLobby={handleBackToLobby}
+      />
+    );
+  }
+
+  // round_result / finished フェーズ（プレースホルダー）
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 to-green-900">
       <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
         <div className="bg-slate-800/95 rounded-xl p-8 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold text-white mb-4">速雀</h1>
           <p className="text-slate-400 mb-2">
-            {phase === 'playing' && 'ゲーム中...（実装予定）'}
             {phase === 'round_result' && '局結果（実装予定）'}
             {phase === 'finished' && 'ゲーム終了（実装予定）'}
           </p>
@@ -126,9 +143,7 @@ export const SokuJongGame = ({ onBack }: SokuJongGameProps) => {
             ラウンド: {gameState?.round ?? 0} / プレイヤー: {players.length}人
           </p>
           <button
-            onClick={() => {
-              updateGameState({ phase: 'waiting', round: 0 });
-            }}
+            onClick={handleBackToLobby}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600
               rounded-lg text-slate-300 font-bold transition-all"
           >

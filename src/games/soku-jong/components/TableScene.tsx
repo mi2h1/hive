@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { OrbitControls, Environment } from '@react-three/drei';
+import { OrbitControls, Environment, Html } from '@react-three/drei';
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { TileModel } from './TileModel';
-import type { TileKind } from '../types/game';
+import type { TileKind, GameState } from '../types/game';
 
 const TABLE_SIZE = 6;
 const FRAME_THICKNESS = 0.15;
@@ -106,7 +106,26 @@ const frameGeomV = new RoundedBoxGeometry(
   FRAME_SEGMENTS, FRAME_RADIUS,
 );
 
-export const TableScene = () => {
+interface TableSceneProps {
+  gameState?: GameState;
+  playerId?: string;
+}
+
+// 自家を基準にした相対座席順を取得（自家=0, 右=1, 対面=2, 左=3）
+const getRelativeSeatOrder = (
+  players: GameState['players'],
+  myId: string,
+): GameState['players'][number][] => {
+  const myIndex = players.findIndex((p) => p.id === myId);
+  if (myIndex === -1) return players;
+  const ordered: GameState['players'][number][] = [];
+  for (let i = 0; i < players.length; i++) {
+    ordered.push(players[(myIndex + i) % players.length]);
+  }
+  return ordered;
+};
+
+export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
   const feltTexture = useMemo(() => createFeltTexture(), []);
   const woodTexture = useMemo(() => createWoodTexture(), []);
 
@@ -143,50 +162,139 @@ export const TableScene = () => {
       </mesh>
 
       {/* 4家の牌配置 — groupでY回転し、牌自体はX回転のみ */}
-      {PLAYERS.map((player) => {
-        const isSelf = player.name === 'self';
-        return (
-          <group key={player.name} rotation={[0, player.rotY, 0]}>
-            {/* 手牌 */}
-            {HAND_TILES.map((kind, i) => {
-              const lx = (i - (HAND_TILES.length - 1) / 2) * TILE_SPACING;
-              return (
-                <TileModel
-                  key={`${player.name}-hand-${i}`}
-                  kind={isSelf ? kind : '1s'}
-                  position={isSelf
-                    ? [lx, TILE_D / 2, HAND_Z]
-                    : [lx, TILE_H / 2, HAND_Z]
-                  }
-                  rotation={isSelf
-                    ? [-Math.PI / 2 + 0.3, 0, 0]
-                    : [0, 0, 0]
-                  }
-                />
-              );
-            })}
+      {gameState && playerId ? (
+        // 実データモード
+        (() => {
+          const seatedPlayers = getRelativeSeatOrder(gameState.players, playerId);
+          return seatedPlayers.map((player, seatIdx) => {
+            const isSelf = seatIdx === 0;
+            const rotY = PLAYERS[seatIdx]?.rotY ?? 0;
+            return (
+              <group key={player.id} rotation={[0, rotY, 0]}>
+                {/* 手牌 */}
+                {player.hand.map((tile, i) => {
+                  const lx = (i - (player.hand.length - 1) / 2) * TILE_SPACING;
+                  return (
+                    <TileModel
+                      key={`hand-${tile.id}`}
+                      kind={isSelf ? tile.kind : '1s'}
+                      isRed={isSelf ? tile.isRed : false}
+                      position={isSelf
+                        ? [lx, TILE_D / 2, HAND_Z]
+                        : [lx, TILE_H / 2, HAND_Z]
+                      }
+                      rotation={isSelf
+                        ? [-Math.PI / 2 + 0.3, 0, 0]
+                        : [0, 0, 0]
+                      }
+                    />
+                  );
+                })}
 
-            {/* 河 */}
-            {RIVER_TILES.map((kind, i) => {
-              const lx = (i - (RIVER_TILES.length - 1) / 2) * TILE_SPACING;
-              return (
-                <TileModel
-                  key={`${player.name}-river-${i}`}
-                  kind={kind}
-                  position={[lx, TILE_D / 2, RIVER_Z]}
-                  rotation={[-Math.PI / 2, 0, 0]}
-                />
-              );
-            })}
-          </group>
-        );
-      })}
+                {/* 河 */}
+                {player.discards.map((tile, i) => {
+                  const lx = (i - (player.discards.length - 1) / 2) * TILE_SPACING;
+                  return (
+                    <TileModel
+                      key={`river-${tile.id}`}
+                      kind={tile.kind}
+                      isRed={tile.isRed}
+                      position={[lx, TILE_D / 2, RIVER_Z]}
+                      rotation={[-Math.PI / 2, 0, 0]}
+                    />
+                  );
+                })}
+              </group>
+            );
+          });
+        })()
+      ) : (
+        // サンプルモード（テストページ互換）
+        PLAYERS.map((player) => {
+          const isSelf = player.name === 'self';
+          return (
+            <group key={player.name} rotation={[0, player.rotY, 0]}>
+              {/* 手牌 */}
+              {HAND_TILES.map((kind, i) => {
+                const lx = (i - (HAND_TILES.length - 1) / 2) * TILE_SPACING;
+                return (
+                  <TileModel
+                    key={`${player.name}-hand-${i}`}
+                    kind={isSelf ? kind : '1s'}
+                    position={isSelf
+                      ? [lx, TILE_D / 2, HAND_Z]
+                      : [lx, TILE_H / 2, HAND_Z]
+                    }
+                    rotation={isSelf
+                      ? [-Math.PI / 2 + 0.3, 0, 0]
+                      : [0, 0, 0]
+                    }
+                  />
+                );
+              })}
+
+              {/* 河 */}
+              {RIVER_TILES.map((kind, i) => {
+                const lx = (i - (RIVER_TILES.length - 1) / 2) * TILE_SPACING;
+                return (
+                  <TileModel
+                    key={`${player.name}-river-${i}`}
+                    kind={kind}
+                    position={[lx, TILE_D / 2, RIVER_Z]}
+                    rotation={[-Math.PI / 2, 0, 0]}
+                  />
+                );
+              })}
+            </group>
+          );
+        })
+      )}
 
       {/* 中央情報パネル */}
       <mesh position={[0, 0.02, 0]}>
         <boxGeometry args={[1.2, 0.04, 1.2]} />
         <meshStandardMaterial color="#111111" roughness={0.8} metalness={0.1} />
       </mesh>
+
+      {/* 中央パネル情報表示 */}
+      {gameState && (
+        <>
+          <Html
+            position={[0, 0.06, 0]}
+            center
+            transform
+            rotation={[-Math.PI / 2, 0, 0]}
+            scale={0.15}
+            style={{ pointerEvents: 'none' }}
+          >
+            <div style={{
+              color: '#e0e0e0',
+              fontFamily: 'sans-serif',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              userSelect: 'none',
+            }}>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
+                東{gameState.round}局
+              </div>
+              <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '2px' }}>
+                残り {gameState.deck.length} 枚
+              </div>
+            </div>
+          </Html>
+          {/* ドラ牌をパネル上に小さく表示 */}
+          {gameState.doraTile && (
+            <group position={[0, 0.05, 0.25]} scale={[0.6, 0.6, 0.6]}>
+              <TileModel
+                kind={gameState.doraTile.kind}
+                isRed={gameState.doraTile.isRed}
+                position={[0, TILE_D / 2, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+              />
+            </group>
+          )}
+        </>
+      )}
 
       <OrbitControls makeDefault target={[0, 0, 0.4]} />
     </>
