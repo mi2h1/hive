@@ -126,7 +126,7 @@ const drawRoundedRect = (target: Shape | Path, w: number, h: number, r: number) 
 const panelFrameShape = new Shape();
 drawRoundedRect(panelFrameShape, 1.2, 1.2, 0.06);
 const panelHole = new Path();
-drawRoundedRect(panelHole, 0.9, 0.9, 0.05);
+drawRoundedRect(panelHole, 0.9, 0.9, 0.06);
 panelFrameShape.holes.push(panelHole);
 const panelFrameGeom = new ExtrudeGeometry(panelFrameShape, { depth: 0.04, bevelEnabled: false });
 panelFrameGeom.translate(0, 0, -0.02);
