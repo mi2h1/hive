@@ -19,7 +19,7 @@ const TILE_SPACING = TILE_W + 0.02;
 
 // 各家の手牌・河の配置距離
 const HAND_Z = 2.3;
-const RIVER_Z = 0.9;
+const RIVER_Z = 1.05;
 const RIVER_COLS = 6; // 河の1行あたりの枚数
 const RIVER_ROW_SPACING = TILE_W + 0.02; // 行間（奥方向）
 
