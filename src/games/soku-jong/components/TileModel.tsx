@@ -159,12 +159,12 @@ export const TileModel = ({
   // material index: 0=+X, 1=-X, 2=+Y, 3=-Y, 4=+Z(表), 5=-Z(裏)
   return (
     <mesh position={position} rotation={rotation} geometry={sharedGeometry}>
-      <meshPhysicalMaterial attach="material-0" map={sidePX} clearcoat={0.8} clearcoatRoughness={0.2} roughness={0.3} />
-      <meshPhysicalMaterial attach="material-1" map={sideNX} clearcoat={0.8} clearcoatRoughness={0.2} roughness={0.3} />
-      <meshPhysicalMaterial attach="material-2" map={sidePY} clearcoat={0.8} clearcoatRoughness={0.2} roughness={0.3} />
-      <meshPhysicalMaterial attach="material-3" map={sideNY} clearcoat={0.8} clearcoatRoughness={0.2} roughness={0.3} />
-      <meshPhysicalMaterial attach="material-4" map={faceTexture} clearcoat={0.8} clearcoatRoughness={0.2} roughness={0.3} />
-      <meshPhysicalMaterial attach="material-5" color={BROWN} clearcoat={0.6} clearcoatRoughness={0.3} roughness={0.4} />
+      <meshPhysicalMaterial attach="material-0" map={sidePX} clearcoat={0.3} clearcoatRoughness={0.4} roughness={0.5} />
+      <meshPhysicalMaterial attach="material-1" map={sideNX} clearcoat={0.3} clearcoatRoughness={0.4} roughness={0.5} />
+      <meshPhysicalMaterial attach="material-2" map={sidePY} clearcoat={0.3} clearcoatRoughness={0.4} roughness={0.5} />
+      <meshPhysicalMaterial attach="material-3" map={sideNY} clearcoat={0.3} clearcoatRoughness={0.4} roughness={0.5} />
+      <meshPhysicalMaterial attach="material-4" map={faceTexture} clearcoat={0.3} clearcoatRoughness={0.4} roughness={0.5} />
+      <meshPhysicalMaterial attach="material-5" color={BROWN} clearcoat={0.2} clearcoatRoughness={0.5} roughness={0.6} />
     </mesh>
   );
 };
