@@ -275,6 +275,37 @@ windPanelShape.quadraticCurveTo(-_wps + _wpr, -_wps + _wpr, -_wps + _wpr, -_wps)
 windPanelShape.closePath();
 const windPanelGeom = new ExtrudeGeometry(windPanelShape, { depth: 0.003, bevelEnabled: false });
 
+// 風パネル内側ボーダー（中抜きフレーム）
+const WIND_BORDER = 0.02; // ボーダー幅
+const windBorderShape = new Shape();
+const _wbi = _wps - WIND_BORDER; // 内側の半サイズ
+const _wbr = _wpr * 0.7; // 内側の角凹み
+// 外側（パネルと同じ形状）
+windBorderShape.moveTo(-_wps + _wpr, -_wps);
+windBorderShape.lineTo(_wps - _wpr, -_wps);
+windBorderShape.quadraticCurveTo(_wps - _wpr, -_wps + _wpr, _wps, -_wps + _wpr);
+windBorderShape.lineTo(_wps, _wps - _wpr);
+windBorderShape.quadraticCurveTo(_wps - _wpr, _wps - _wpr, _wps - _wpr, _wps);
+windBorderShape.lineTo(-_wps + _wpr, _wps);
+windBorderShape.quadraticCurveTo(-_wps + _wpr, _wps - _wpr, -_wps, _wps - _wpr);
+windBorderShape.lineTo(-_wps, -_wps + _wpr);
+windBorderShape.quadraticCurveTo(-_wps + _wpr, -_wps + _wpr, -_wps + _wpr, -_wps);
+windBorderShape.closePath();
+// 内側（少し小さい同形状）をくり抜き
+const windBorderHole = new Path();
+windBorderHole.moveTo(-_wbi + _wbr, -_wbi);
+windBorderHole.lineTo(_wbi - _wbr, -_wbi);
+windBorderHole.quadraticCurveTo(_wbi - _wbr, -_wbi + _wbr, _wbi, -_wbi + _wbr);
+windBorderHole.lineTo(_wbi, _wbi - _wbr);
+windBorderHole.quadraticCurveTo(_wbi - _wbr, _wbi - _wbr, _wbi - _wbr, _wbi);
+windBorderHole.lineTo(-_wbi + _wbr, _wbi);
+windBorderHole.quadraticCurveTo(-_wbi + _wbr, _wbi - _wbr, -_wbi, _wbi - _wbr);
+windBorderHole.lineTo(-_wbi, -_wbi + _wbr);
+windBorderHole.quadraticCurveTo(-_wbi + _wbr, -_wbi + _wbr, -_wbi + _wbr, -_wbi);
+windBorderHole.closePath();
+windBorderShape.holes.push(windBorderHole);
+const windBorderGeom = new ExtrudeGeometry(windBorderShape, { depth: 0.001, bevelEnabled: false });
+
 // 漢数字変換
 const KANJI_NUM = ['〇', '一', '二', '三', '四'] as const;
 const toKanji = (n: number): string => KANJI_NUM[n] ?? String(n);
@@ -503,12 +534,16 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           return (
             <group key={`wind-${seatIdx}`} rotation={[0, p.rotY, 0]}>
               {/* 風パネル（左角・角丸） */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.55, 0.025, 0.55]} geometry={windPanelGeom}>
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.52, 0.025, 0.52]} geometry={windPanelGeom}>
                 <meshStandardMaterial color={seatIdx === 0 ? '#b8342a' : '#e8e8e8'} roughness={0.7} metalness={0.05} />
+              </mesh>
+              {/* 風パネル内側ボーダー */}
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.52, 0.029, 0.52]} geometry={windBorderGeom}>
+                <meshStandardMaterial color={seatIdx === 0 ? '#e0c060' : '#999999'} roughness={0.5} metalness={0.1} />
               </mesh>
               <Text
                 font={FONT_YUJI}
-                position={[-0.55, 0.03, 0.55]}
+                position={[-0.52, 0.03, 0.52]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.13}
                 color={seatIdx === 0 ? '#e0c060' : '#1a1a1a'}
