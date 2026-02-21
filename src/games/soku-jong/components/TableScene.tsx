@@ -222,7 +222,7 @@ drawChamferedRect(panelHole, 0.86, 0.86, 0.06);
 panelFrameShape.holes.push(panelHole);
 // スコアパネル分のくり抜き（4家分）
 // ローカル[-0.1, y, 0.6] → shape座標(x, -z)に各家rotYで回転
-const _scx = -0.1, _scz = 0.6; // スコアパネル中心（ローカル）
+const _scx = -0.1, _scz = 0.62; // スコアパネル中心（ローカル）
 const _spw = 0.5, _sph = 0.11; // スコアパネルサイズ
 const _schw = _spw / 2, _schh = _sph / 2; // 半幅・半高
 const scoreRotations = [0, -Math.PI / 2, Math.PI, Math.PI / 2];
@@ -622,13 +622,13 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
                 {player.name}
               </Text>
               {/* 持ち点パネル（凹み） */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.1, 0.005, 0.6]} geometry={scorePanelGeom}>
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.1, 0.005, 0.62]} geometry={scorePanelGeom}>
                 <meshStandardMaterial color="#030303" roughness={0.95} metalness={0} />
               </mesh>
               {/* 持ち点 */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.33, 0.009, 0.59]}
+                position={[-0.33, 0.009, 0.61]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.095}
                 color="#ff3333"
