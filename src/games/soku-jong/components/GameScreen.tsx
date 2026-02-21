@@ -450,7 +450,6 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
               onSkipRon={handleSkipRon}
               isMyTurn={isMyTurn}
               turnPhase={turnPhase}
-              waitingTiles={waitingTiles}
               highQuality={highQuality}
             />
           </Suspense>
@@ -468,6 +467,26 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
             />
           </EffectComposer>
         </Canvas>
+
+        {/* 待ち牌パネル（2D、手牌の上に表示） */}
+        {waitingTiles.length > 0 && !roundResult && (
+          <div className="absolute bottom-[28%] left-1/2 -translate-x-1/2 z-10">
+            <div className="bg-black/80 rounded-lg px-3 py-2 flex items-center gap-2 border border-slate-600/50">
+              <span className="text-amber-400 text-xs font-bold shrink-0">待ち</span>
+              <div className="flex gap-1">
+                {waitingTiles.map((kind) => (
+                  <div key={kind} className="w-7 h-9 bg-[#f5f0e1] rounded border border-slate-500 flex items-center justify-center overflow-hidden shadow-md">
+                    <img
+                      src={getTileImagePath(kind, false)}
+                      alt={kind}
+                      className="w-[85%] h-[85%] object-contain"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 結果モーダルオーバーレイ */}
         {roundResult && (() => {
