@@ -15,7 +15,7 @@ const FRAME_HEIGHT = 0.1;
 const TILE_W = 0.24;
 const TILE_H = 0.30;
 const TILE_D = 0.17;
-const TILE_SPACING = TILE_W + 0.02;
+const TILE_SPACING = TILE_W + 0.008;
 
 // 各家の手牌・河の配置距離
 const HAND_Z = 2.3;
