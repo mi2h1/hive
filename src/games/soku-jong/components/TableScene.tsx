@@ -275,21 +275,15 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       />
       <directionalLight position={[-3, 5, -2]} intensity={0.2} />
 
-      {/* テーブル面 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[TABLE_SIZE, TABLE_SIZE]} />
+      {/* テーブル面（中抜き板） */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow geometry={hollowBoardGeom}>
         <meshStandardMaterial map={feltTexture} roughness={0.95} metalness={0} />
-      </mesh>
-
-      {/* 中抜き板（確認用・上空に浮かせ） */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 3, 0]} geometry={hollowBoardGeom}>
-        <meshStandardMaterial color="#1a5c2a" roughness={0.9} metalness={0} />
       </mesh>
       {/* 台形タイル（4家分） */}
       {PLAYERS.map((player) => (
-        <group key={`trap-${player.name}`} position={[0, 3, 0]} rotation={[0, player.rotY, 0]}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 1.595]} geometry={trapTileGeom} scale={[0.99, 0.99, 1]}>
-            <meshStandardMaterial color="#cc8800" roughness={0.5} metalness={0.1} />
+        <group key={`trap-${player.name}`} position={[0, 0, 0]} rotation={[0, player.rotY, 0]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 1.595]} geometry={trapTileGeom} scale={[0.99, 0.99, 1]} receiveShadow>
+            <meshStandardMaterial map={feltTexture} roughness={0.95} metalness={0} />
           </mesh>
         </group>
       ))}
