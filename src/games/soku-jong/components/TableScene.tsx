@@ -107,7 +107,7 @@ export const TableScene = () => {
         );
       })}
 
-      <OrbitControls makeDefault />
+      <OrbitControls makeDefault target={[0, 0, 0.8]} />
     </>
   );
 };

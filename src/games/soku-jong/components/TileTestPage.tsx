@@ -18,7 +18,7 @@ interface TileTestPageProps {
   onBack: () => void;
 }
 
-const DEFAULT = { x: 0, y: 6, z: 5, fov: 30 };
+const DEFAULT = { x: 0, y: 6, z: 5, fov: 33 };
 
 const SliderControl = ({
   label,
