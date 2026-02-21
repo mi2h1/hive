@@ -155,7 +155,7 @@ hollowBoardShape.holes.push(hollowBoardHole);
 const hollowBoardGeom = new ExtrudeGeometry(hollowBoardShape, { depth: 0.02, bevelEnabled: false });
 hollowBoardGeom.translate(0, 0, -0.01);
 
-// 台形タイル（穴の自家側に配置）
+// 台形タイル（穴の各家側に配置）
 const trapTileShape = new Shape();
 trapTileShape.moveTo(-1.6, 0);
 trapTileShape.lineTo(1.6, 0);
@@ -164,6 +164,19 @@ trapTileShape.lineTo(-0.6, 1.0);
 trapTileShape.closePath();
 const trapTileGeom = new ExtrudeGeometry(trapTileShape, { depth: 0.02, bevelEnabled: false });
 trapTileGeom.translate(0, 0, -0.01);
+
+// 台形+長方形タイル（自家用・十字の腕分を延長）
+const trapExtShape = new Shape();
+const _ext = 1.72 - 1.595; // 十字の腕の伸び分
+trapExtShape.moveTo(-1.6, -_ext);
+trapExtShape.lineTo(1.6, -_ext);
+trapExtShape.lineTo(1.6, 0);
+trapExtShape.lineTo(0.6, 1.0);
+trapExtShape.lineTo(-0.6, 1.0);
+trapExtShape.lineTo(-1.6, 0);
+trapExtShape.closePath();
+const trapExtGeom = new ExtrudeGeometry(trapExtShape, { depth: 0.02, bevelEnabled: false });
+trapExtGeom.translate(0, 0, -0.01);
 
 // 中央パネル外枠（中抜きフレーム）
 const panelFrameShape = new Shape();
@@ -302,10 +315,10 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow geometry={hollowBoardGeom}>
         <meshStandardMaterial map={feltTexture} roughness={0.95} metalness={0} />
       </mesh>
-      {/* 台形タイル（4家分） */}
-      {PLAYERS.map((player) => (
+      {/* 台形タイル（4家分・自家は延長版） */}
+      {PLAYERS.map((player, idx) => (
         <group key={`trap-${player.name}`} position={[0, 0, 0]} rotation={[0, player.rotY, 0]}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 1.595]} geometry={trapTileGeom} scale={[0.99, 0.99, 1]} receiveShadow>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 1.595]} geometry={idx === 0 ? trapExtGeom : trapTileGeom} scale={[0.99, 0.99, 1]} receiveShadow>
             <meshStandardMaterial map={feltTexture} roughness={0.95} metalness={0} />
           </mesh>
         </group>
