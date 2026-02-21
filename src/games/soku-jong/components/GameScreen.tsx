@@ -68,7 +68,7 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby }: GameScreenPro
       <div className="flex-1 min-h-0 relative">
         <LoadingOverlay />
         <Canvas
-          camera={{ position: [0, 6, 5], fov: 33 }}
+          camera={{ position: [0, 6, 5], fov: 35 }}
           gl={{ antialias: true }}
           shadows
         >
