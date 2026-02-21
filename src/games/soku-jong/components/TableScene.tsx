@@ -238,7 +238,7 @@ const drawChamferedRectWithNotches = (
 
 // 中央パネル内側（台形切り欠き付き）
 const panelInnerShape = new Shape();
-drawChamferedRectWithNotches(panelInnerShape, 0.85, 0.85, 0.055, 0.18, 0.14, 0.025);
+drawChamferedRectWithNotches(panelInnerShape, 0.85, 0.85, 0.055, 0.24, 0.18, 0.04);
 const panelInnerGeom = new ExtrudeGeometry(panelInnerShape, { depth: 0.02, bevelEnabled: false });
 panelInnerGeom.translate(0, 0, -0.01);
 
@@ -247,9 +247,9 @@ const KANJI_NUM = ['〇', '一', '二', '三', '四'] as const;
 const toKanji = (n: number): string => KANJI_NUM[n] ?? String(n);
 
 // ターン表示ランプ（台形、内パネルのノッチに嵌る）
-const LAMP_OUTER = 0.17;
-const LAMP_INNER = 0.13;
-const LAMP_NOTCH = 0.022;
+const LAMP_OUTER = 0.23;
+const LAMP_INNER = 0.17;
+const LAMP_NOTCH = 0.037;
 const PANEL_HH = 0.425; // 0.85 / 2
 
 const lampShape = new Shape();
