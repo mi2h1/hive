@@ -560,10 +560,10 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       {/* 中央パネル情報表示 */}
       {gameState && (
         <>
-          {/* 左側: 局数（上）+ 残牌数（下） */}
+          {/* 上段: 局数（中央揃え） */}
           <Text
             font={FONT_YUJI}
-            position={[-0.15, 0.03, -0.08]}
+            position={[0, 0.03, -0.1]}
             rotation={[-Math.PI / 2, 0, 0]}
             fontSize={0.14}
             color="#e0e0e0"
@@ -572,21 +572,21 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           >
             {`東${toKanji(gameState.round)}局`}
           </Text>
+
+          {/* 下段: 残牌数 + ドラ */}
           <Text
             font={FONT_YUJI}
-            position={[-0.15, 0.03, 0.12]}
+            position={[-0.1, 0.03, 0.1]}
             rotation={[-Math.PI / 2, 0, 0]}
-            fontSize={0.1}
+            fontSize={0.09}
             color="#aaaaaa"
             anchorX="center"
             anchorY="middle"
           >
             {`残 ${gameState.deck.length}`}
           </Text>
-
-          {/* 右側: ドラ牌 */}
           {gameState.doraTile && (
-            <group position={[0.22, 0.03, 0.02]} scale={[0.55, 0.55, 0.55]}>
+            <group position={[0.12, 0.01, 0.1]} scale={[0.45, 0.1, 0.45]}>
               <TileModel
                 kind={gameState.doraTile.kind}
                 isRed={gameState.doraTile.isRed}
