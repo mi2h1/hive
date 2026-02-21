@@ -105,7 +105,7 @@ const getTexturePath = (kind: TileKind, isRed: boolean): string => {
 
 // 側面テクスチャ生成（5/6アイボリー + 1/6ブラウン）
 const createSideTexture = (brownEdge: 'left' | 'right' | 'top' | 'bottom'): CanvasTexture => {
-  const size = 6;
+  const size = 5;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
