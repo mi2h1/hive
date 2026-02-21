@@ -476,27 +476,33 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
         );
       })}
 
-      {/* 外枠パネル: 自風 + 所持点（自家） */}
+      {/* 外枠パネル: 自風パネル（4家分） */}
       {gameState && playerId && (() => {
         const seatedPlayers = getRelativeSeatOrder(gameState.players, playerId);
-        const selfPlayer = seatedPlayers[0];
-        if (!selfPlayer) return null;
-        const panelMid = (0.43 + 0.7) / 2; // 外枠の自家側中央z
-        return (
-          <group rotation={[0, 0, 0]}>
-            <Text
-              font={FONT_YUJI}
-              position={[0, 0.03, panelMid]}
-              rotation={[-Math.PI / 2, 0, 0]}
-              fontSize={0.09}
-              color="#e0e0e0"
-              anchorX="center"
-              anchorY="middle"
-            >
-              {`${WIND_NAMES[0]}  ${selfPlayer.score}`}
-            </Text>
-          </group>
-        );
+        return PLAYERS.map((p, seatIdx) => {
+          const player = seatedPlayers[seatIdx];
+          if (!player) return null;
+          return (
+            <group key={`wind-${seatIdx}`} rotation={[0, p.rotY, 0]}>
+              {/* 風パネル（左角） */}
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.55, 0.025, 0.57]}>
+                <planeGeometry args={[0.18, 0.18]} />
+                <meshStandardMaterial color="#1a1a1a" roughness={0.8} metalness={0.1} />
+              </mesh>
+              <Text
+                font={FONT_YUJI}
+                position={[-0.55, 0.03, 0.57]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                fontSize={0.1}
+                color="#e0c060"
+                anchorX="center"
+                anchorY="middle"
+              >
+                {WIND_NAMES[seatIdx]}
+              </Text>
+            </group>
+          );
+        });
       })()}
 
       {/* 中央パネル情報表示 */}
