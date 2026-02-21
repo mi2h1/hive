@@ -312,7 +312,7 @@ const toKanji = (n: number): string => KANJI_NUM[n] ?? String(n);
 
 // ターン表示ランプ（台形、内パネルのノッチに嵌る）
 const LAMP_OUTER = 0.23;
-const LAMP_INNER = 0.17;
+const LAMP_INNER = 0.19;
 const LAMP_NOTCH = 0.037;
 const PANEL_HH = 0.425; // 0.85 / 2
 
