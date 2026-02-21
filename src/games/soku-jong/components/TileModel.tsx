@@ -68,9 +68,13 @@ const fixUVs = (geom: RoundedBoxGeometry, w: number, h: number, d: number) => {
 };
 
 // テクスチャの透明背景を白背景に合成 + 縮小して中央配置
-const FACE_TEXTURE_SCALE = 0.75;
+const getFaceTextureScale = (kind: TileKind): number => {
+  if (kind === '1s') return 1.0;
+  if (kind === 'chun') return 0.65;
+  return 0.8;
+};
 
-const flattenAlpha = (texture: Texture): void => {
+const flattenAlpha = (texture: Texture, scale: number): void => {
   const img = texture.image as HTMLImageElement;
   if (!img) return;
   const w = img.naturalWidth || img.width;
@@ -82,8 +86,8 @@ const flattenAlpha = (texture: Texture): void => {
   const ctx = canvas.getContext('2d')!;
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, w, h);
-  const sw = w * FACE_TEXTURE_SCALE;
-  const sh = h * FACE_TEXTURE_SCALE;
+  const sw = w * scale;
+  const sh = h * scale;
   ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
   texture.image = canvas;
   texture.needsUpdate = true;
@@ -141,7 +145,8 @@ export const TileModel = ({
   rotation = [0, 0, 0],
 }: TileModelProps) => {
   const faceTexture = useTexture(getTexturePath(kind, isRed));
-  useMemo(() => flattenAlpha(faceTexture), [faceTexture]);
+  const scale = getFaceTextureScale(kind);
+  useMemo(() => flattenAlpha(faceTexture, scale), [faceTexture, scale]);
 
   // 側面テクスチャ
   const sidePX = useMemo(() => createSideTexture('right'), []);
