@@ -6,6 +6,7 @@ import { TileModel } from './TileModel';
 import type { TileKind, GameState } from '../types/game';
 
 const FONT_YUJI = '/hive/fonts/YujiSyuku-Regular.ttf';
+const FONT_DIGI = '/hive/fonts/DS-DIGI.TTF';
 
 const TABLE_SIZE = 6;
 const FRAME_THICKNESS = 0.15;
@@ -551,6 +552,18 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
                 anchorY="middle"
               >
                 {WIND_NAMES[seatIdx]}
+              </Text>
+              {/* 持ち点 */}
+              <Text
+                font={FONT_DIGI}
+                position={[-0.3, 0.03, 0.55]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                fontSize={0.1}
+                color="#e0e0e0"
+                anchorX="left"
+                anchorY="middle"
+              >
+                {String(player.score)}
               </Text>
             </group>
           );
