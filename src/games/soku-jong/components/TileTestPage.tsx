@@ -122,6 +122,7 @@ export const TileTestPage = ({ onBack }: TileTestPageProps) => {
         <Canvas
           camera={{ position: [x, y, z], fov }}
           gl={{ antialias: true }}
+          shadows
         >
           <color attach="background" args={['#1a1a2e']} />
           <CameraUpdater x={x} y={y} z={z} fov={fov} />

@@ -187,7 +187,7 @@ export const TileModel = ({
 
   // material index: 0=+X, 1=-X, 2=+Y, 3=-Y, 4=+Z(表), 5=-Z(裏)
   return (
-    <mesh position={position} rotation={rotation} geometry={sharedGeometry}>
+    <mesh position={position} rotation={rotation} geometry={sharedGeometry} castShadow>
       <meshPhysicalMaterial attach="material-0" map={sidePX} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
       <meshPhysicalMaterial attach="material-1" map={sideNX} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
       <meshPhysicalMaterial attach="material-2" map={sidePY} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />

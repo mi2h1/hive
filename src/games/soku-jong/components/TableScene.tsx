@@ -171,11 +171,24 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       {/* ライティング */}
       <Environment preset="studio" environmentIntensity={0.1} />
       <ambientLight intensity={0.4} />
-      <directionalLight position={[2, 8, 4]} intensity={0.5} />
+      <directionalLight
+        position={[2, 8, 4]}
+        intensity={0.5}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-left={-4}
+        shadow-camera-right={4}
+        shadow-camera-top={4}
+        shadow-camera-bottom={-4}
+        shadow-camera-near={1}
+        shadow-camera-far={20}
+        shadow-bias={-0.002}
+      />
       <directionalLight position={[-3, 5, -2]} intensity={0.2} />
 
       {/* テーブル面 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[TABLE_SIZE, TABLE_SIZE]} />
         <meshStandardMaterial map={feltTexture} roughness={0.95} metalness={0} />
       </mesh>
@@ -288,7 +301,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       )}
 
       {/* 中央情報パネル（外枠・中抜きフレーム） */}
-      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelFrameGeom}>
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelFrameGeom} castShadow>
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} metalness={0.1} />
       </mesh>
       {/* 中央情報パネル（溝底） */}
@@ -296,7 +309,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} metalness={0.1} />
       </mesh>
       {/* 中央情報パネル（内枠・角丸・溝表現） */}
-      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelInnerGeom}>
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelInnerGeom} castShadow>
         <meshStandardMaterial color="#181818" roughness={0.7} metalness={0.15} />
       </mesh>
 

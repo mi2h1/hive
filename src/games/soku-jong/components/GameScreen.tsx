@@ -68,6 +68,7 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby }: GameScreenPro
         <Canvas
           camera={{ position: [0, 6, 5], fov: 33 }}
           gl={{ antialias: true }}
+          shadows
         >
           <color attach="background" args={['#1a1a2e']} />
           <Suspense fallback={null}>
