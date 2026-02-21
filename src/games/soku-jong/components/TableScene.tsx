@@ -34,10 +34,10 @@ export const TableScene = () => {
   return (
     <>
       {/* ライティング */}
-      <Environment preset="studio" environmentIntensity={0.3} />
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[2, 8, 4]} intensity={0.8} />
-      <directionalLight position={[-3, 5, -2]} intensity={0.3} />
+      <Environment preset="studio" environmentIntensity={0.1} />
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[2, 8, 4]} intensity={0.5} />
+      <directionalLight position={[-3, 5, -2]} intensity={0.2} />
 
       {/* テーブル面 */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
