@@ -67,7 +67,9 @@ const fixUVs = (geom: RoundedBoxGeometry, w: number, h: number, d: number) => {
   }
 };
 
-// テクスチャの透明背景を白背景に合成（PNGのアルファチャンネル対策）
+// テクスチャの透明背景を白背景に合成 + 縮小して中央配置
+const FACE_TEXTURE_SCALE = 0.75;
+
 const flattenAlpha = (texture: Texture): void => {
   const img = texture.image as HTMLImageElement;
   if (!img) return;
@@ -80,7 +82,9 @@ const flattenAlpha = (texture: Texture): void => {
   const ctx = canvas.getContext('2d')!;
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, w, h);
-  ctx.drawImage(img, 0, 0);
+  const sw = w * FACE_TEXTURE_SCALE;
+  const sh = h * FACE_TEXTURE_SCALE;
+  ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
   texture.image = canvas;
   texture.needsUpdate = true;
 };
