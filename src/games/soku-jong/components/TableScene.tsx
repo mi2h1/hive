@@ -553,14 +553,26 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               >
                 {WIND_NAMES[seatIdx]}
               </Text>
+              {/* プレイヤー名 */}
+              <Text
+                font={FONT_YUJI}
+                position={[-0.3, 0.03, 0.5]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                fontSize={0.06}
+                color="#cccccc"
+                anchorX="left"
+                anchorY="middle"
+              >
+                {player.name}
+              </Text>
               {/* 持ち点 */}
               <Text
                 font={FONT_DIGI}
-                position={[0, 0.03, 0.55]}
+                position={[-0.3, 0.03, 0.58]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.16}
+                fontSize={0.12}
                 color="#e0e0e0"
-                anchorX="center"
+                anchorX="left"
                 anchorY="middle"
               >
                 {String(player.score)}
