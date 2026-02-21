@@ -622,13 +622,13 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
                 {player.name}
               </Text>
               {/* 持ち点パネル（凹み） */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.1, -0.003, 0.6]} geometry={scorePanelGeom}>
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.1, 0.005, 0.6]} geometry={scorePanelGeom}>
                 <meshStandardMaterial color="#030303" roughness={0.95} metalness={0} />
               </mesh>
               {/* 持ち点 */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.33, 0.001, 0.59]}
+                position={[-0.33, 0.009, 0.59]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.095}
                 color="#ff3333"
