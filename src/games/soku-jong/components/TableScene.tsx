@@ -504,7 +504,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       </mesh>
       {/* 中央情報パネル（内枠・角丸・溝表現） */}
       <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelInnerGeom} castShadow>
-        <meshStandardMaterial color="#111111" roughness={0.7} metalness={0.15} />
+        <meshStandardMaterial color="#2a0a0a" roughness={0.7} metalness={0.15} />
       </mesh>
 
       {/* ターン表示ランプ（4辺） */}
@@ -587,9 +587,9 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           {/* 上段: 局数（中央揃え） */}
           <Text
             font={FONT_YUJI}
-            position={[0, 0.03, -0.1]}
+            position={[0, 0.03, -0.12]}
             rotation={[-Math.PI / 2, 0, 0]}
-            fontSize={0.14}
+            fontSize={0.18}
             color="#e0e0e0"
             anchorX="center"
             anchorY="middle"
@@ -600,9 +600,9 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           {/* 下段: 残牌数 + ドラ */}
           <Text
             font={FONT_YUJI}
-            position={[-0.1, 0.03, 0.1]}
+            position={[-0.12, 0.03, 0.12]}
             rotation={[-Math.PI / 2, 0, 0]}
-            fontSize={0.09}
+            fontSize={0.12}
             color="#aaaaaa"
             anchorX="center"
             anchorY="middle"
@@ -610,7 +610,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
             {`残 ${gameState.deck.length}`}
           </Text>
           {gameState.doraTile && (
-            <group position={[0.12, 0.01, 0.1]} scale={[0.45, 0.1, 0.45]}>
+            <group position={[0.15, 0.01, 0.12]} scale={[0.55, 0.1, 0.55]}>
               <TileModel
                 kind={gameState.doraTile.kind}
                 isRed={gameState.doraTile.isRed}
