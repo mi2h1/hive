@@ -9,7 +9,6 @@ const TABLE_COLOR = '#1a5c2a';
 
 // 牌サイズ（TileModel基準）
 const TILE_W = 0.26;
-const TILE_H = 0.35;
 const TILE_D = 0.18;
 const TILE_SPACING = TILE_W + 0.02;
 
