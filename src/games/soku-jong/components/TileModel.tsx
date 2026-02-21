@@ -153,6 +153,32 @@ export const TileModel = ({
   const scale = getFaceTextureScale(kind);
   useMemo(() => flattenAlpha(faceTexture, scale), [faceTexture, scale]);
 
+  // bumpMap: 絵柄テクスチャから反転グレースケールを生成（白=平坦、暗=凹）
+  const bumpTexture = useMemo(() => {
+    const src = faceTexture.image as HTMLCanvasElement | HTMLImageElement;
+    if (!src) return null;
+    const w = ('naturalWidth' in src ? src.naturalWidth : src.width) || src.width;
+    const h = ('naturalHeight' in src ? src.naturalHeight : src.height) || src.height;
+    if (!w || !h) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(src, 0, 0, w, h);
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      // グレースケール化して反転（白い部分=高い、色部分=低い）
+      const gray = (data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11);
+      data[i] = data[i + 1] = data[i + 2] = gray;
+      data[i + 3] = 255;
+    }
+    ctx.putImageData(imageData, 0, 0);
+    const tex = new CanvasTexture(canvas);
+    tex.anisotropy = 16;
+    return tex;
+  }, [faceTexture]);
+
   // 側面テクスチャ
   const sidePX = useMemo(() => createSideTexture('right'), []);
   const sideNX = useMemo(() => createSideTexture('left'), []);
@@ -166,7 +192,7 @@ export const TileModel = ({
       <meshPhysicalMaterial attach="material-1" map={sideNX} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
       <meshPhysicalMaterial attach="material-2" map={sidePY} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
       <meshPhysicalMaterial attach="material-3" map={sideNY} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
-      <meshPhysicalMaterial attach="material-4" map={faceTexture} clearcoat={0} roughness={0.8} />
+      <meshPhysicalMaterial attach="material-4" map={faceTexture} bumpMap={bumpTexture} bumpScale={-0.015} clearcoat={0} roughness={0.8} />
       <meshPhysicalMaterial attach="material-5" color={BROWN} clearcoat={0.6} clearcoatRoughness={0.1} roughness={0.25} ior={1.5} reflectivity={0.4} />
     </mesh>
   );
