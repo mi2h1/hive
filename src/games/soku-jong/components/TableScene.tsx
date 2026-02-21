@@ -132,7 +132,7 @@ const panelFrameGeom = new ExtrudeGeometry(panelFrameShape, { depth: 0.04, bevel
 panelFrameGeom.translate(0, 0, -0.02);
 
 // 中央パネル内側（角丸を外枠と同じ0.06に）
-const panelInnerGeom = new RoundedBoxGeometry(0.85, 0.02, 0.85, 8, 0.1);
+const panelInnerGeom = new RoundedBoxGeometry(0.85, 0.02, 0.85, 8, 0.15);
 
 interface TableSceneProps {
   gameState?: GameState;
