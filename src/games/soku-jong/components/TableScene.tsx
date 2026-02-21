@@ -172,7 +172,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       <Environment preset="studio" environmentIntensity={0.1} />
       <ambientLight intensity={0.4} />
       <directionalLight
-        position={[2, 8, 4]}
+        position={[0, 8, 0]}
         intensity={0.5}
         castShadow
         shadow-mapSize-width={1024}
