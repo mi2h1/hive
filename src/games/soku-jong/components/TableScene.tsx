@@ -137,9 +137,52 @@ drawRoundedRect(panelBaseShape, 0.86, 0.86, 0.06);
 const panelBaseGeom = new ExtrudeGeometry(panelBaseShape, { depth: 0.02, bevelEnabled: false });
 panelBaseGeom.translate(0, 0, -0.01);
 
-// 中央パネル内側
+// 角丸矩形 + 4辺に台形切り欠きパスを描画
+const drawRoundedRectWithNotches = (
+  shape: Shape,
+  w: number, h: number, r: number,
+  notchOuterHalf: number, notchInnerHalf: number, notchDepth: number,
+) => {
+  const hw = w / 2, hh = h / 2;
+
+  // 底辺 (y=-hh) 左→右
+  shape.moveTo(-hw + r, -hh);
+  shape.lineTo(-notchOuterHalf, -hh);
+  shape.lineTo(-notchInnerHalf, -hh + notchDepth);
+  shape.lineTo(notchInnerHalf, -hh + notchDepth);
+  shape.lineTo(notchOuterHalf, -hh);
+  shape.lineTo(hw - r, -hh);
+  // 右下角丸
+  shape.absarc(hw - r, -hh + r, r, -Math.PI / 2, 0, false);
+  // 右辺 (x=hw) 下→上
+  shape.lineTo(hw, -notchOuterHalf);
+  shape.lineTo(hw - notchDepth, -notchInnerHalf);
+  shape.lineTo(hw - notchDepth, notchInnerHalf);
+  shape.lineTo(hw, notchOuterHalf);
+  shape.lineTo(hw, hh - r);
+  // 右上角丸
+  shape.absarc(hw - r, hh - r, r, 0, Math.PI / 2, false);
+  // 上辺 (y=hh) 右→左
+  shape.lineTo(notchOuterHalf, hh);
+  shape.lineTo(notchInnerHalf, hh - notchDepth);
+  shape.lineTo(-notchInnerHalf, hh - notchDepth);
+  shape.lineTo(-notchOuterHalf, hh);
+  shape.lineTo(-hw + r, hh);
+  // 左上角丸
+  shape.absarc(-hw + r, hh - r, r, Math.PI / 2, Math.PI, false);
+  // 左辺 (x=-hw) 上→下
+  shape.lineTo(-hw, notchOuterHalf);
+  shape.lineTo(-hw + notchDepth, notchInnerHalf);
+  shape.lineTo(-hw + notchDepth, -notchInnerHalf);
+  shape.lineTo(-hw, -notchOuterHalf);
+  shape.lineTo(-hw, -hh + r);
+  // 左下角丸
+  shape.absarc(-hw + r, -hh + r, r, Math.PI, Math.PI * 1.5, false);
+};
+
+// 中央パネル内側（台形切り欠き付き）
 const panelInnerShape = new Shape();
-drawRoundedRect(panelInnerShape, 0.85, 0.85, 0.055);
+drawRoundedRectWithNotches(panelInnerShape, 0.85, 0.85, 0.055, 0.13, 0.09, 0.025);
 const panelInnerGeom = new ExtrudeGeometry(panelInnerShape, { depth: 0.02, bevelEnabled: false });
 panelInnerGeom.translate(0, 0, -0.01);
 
