@@ -128,8 +128,8 @@ drawChamferedRect(grooveShape, 1.5, 1.5, 0.08);
 const grooveHole = new Path();
 drawChamferedRect(grooveHole, 1.22, 1.22, 0.06);
 grooveShape.holes.push(grooveHole);
-const grooveGeom = new ExtrudeGeometry(grooveShape, { depth: 0.01, bevelEnabled: false });
-grooveGeom.translate(0, 0, -0.005);
+const grooveGeom = new ExtrudeGeometry(grooveShape, { depth: 0.003, bevelEnabled: false });
+grooveGeom.translate(0, 0, -0.0015);
 
 // 中央パネル外枠（中抜きフレーム）
 const panelFrameShape = new Shape();
@@ -371,9 +371,9 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
         })
       )}
 
-      {/* 全自動卓風の溝 */}
-      <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={grooveGeom}>
-        <meshStandardMaterial color="#1a1a1a" roughness={0.95} metalness={0} />
+      {/* 全自動卓風の溝（テーブル面に薄く乗せて凹み表現） */}
+      <mesh position={[0, 0.001, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={grooveGeom}>
+        <meshStandardMaterial color="#0d3318" roughness={1} metalness={0} />
       </mesh>
 
       {/* 中央情報パネル（外枠・中抜きフレーム） */}
