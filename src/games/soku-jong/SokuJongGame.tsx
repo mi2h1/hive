@@ -93,14 +93,19 @@ export const SokuJongGame = ({ onBack }: SokuJongGameProps) => {
   const phase = gameState?.phase ?? 'waiting';
   const players = gameState?.players ?? [];
 
-  // ゲーム開始
+  // ゲーム開始（スコアをリセットして新規ゲーム）
   const handleStartGame = () => {
     if (!gameState || players.length < 2) return;
 
-    const roundState = initializeRound(players, 1);
+    const resetPlayers = players.map((p) => ({
+      ...p,
+      score: gameState.settings.initialScore,
+    }));
+    const roundState = initializeRound(resetPlayers, 1);
     updateGameState({
       ...roundState,
       settings: gameState.settings,
+      timeBank: undefined,
     });
   };
 
@@ -135,7 +140,7 @@ export const SokuJongGame = ({ onBack }: SokuJongGameProps) => {
 
   // ロビーに戻る
   const handleBackToLobby = () => {
-    updateGameState({ phase: 'waiting', round: 0, roundResult: undefined });
+    updateGameState({ phase: 'waiting', round: 0, roundResult: undefined, timeBank: undefined });
   };
 
   // playing フェーズ — ゲーム画面
