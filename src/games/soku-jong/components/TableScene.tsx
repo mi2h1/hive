@@ -135,10 +135,21 @@ hollowBoardShape.lineTo(_hbs, _hbs);
 hollowBoardShape.lineTo(-_hbs, _hbs);
 hollowBoardShape.closePath();
 const hollowBoardHole = new Path();
-hollowBoardHole.moveTo(-1.6, -1.6);
-hollowBoardHole.lineTo(1.6, -1.6);
-hollowBoardHole.lineTo(1.6, 1.6);
-hollowBoardHole.lineTo(-1.6, 1.6);
+const _hq = 1.6;   // 正方形部分の半サイズ
+const _he = 1.72;  // 十字の腕の伸び
+// 太い十字型の穴（反時計回り）
+hollowBoardHole.moveTo(-_hq, -_he);
+hollowBoardHole.lineTo(_hq, -_he);
+hollowBoardHole.lineTo(_hq, -_hq);
+hollowBoardHole.lineTo(_he, -_hq);
+hollowBoardHole.lineTo(_he, _hq);
+hollowBoardHole.lineTo(_hq, _hq);
+hollowBoardHole.lineTo(_hq, _he);
+hollowBoardHole.lineTo(-_hq, _he);
+hollowBoardHole.lineTo(-_hq, _hq);
+hollowBoardHole.lineTo(-_he, _hq);
+hollowBoardHole.lineTo(-_he, -_hq);
+hollowBoardHole.lineTo(-_hq, -_hq);
 hollowBoardHole.closePath();
 hollowBoardShape.holes.push(hollowBoardHole);
 const hollowBoardGeom = new ExtrudeGeometry(hollowBoardShape, { depth: 0.02, bevelEnabled: false });
