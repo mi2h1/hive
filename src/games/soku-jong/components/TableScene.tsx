@@ -135,19 +135,21 @@ hollowBoardShape.lineTo(_hbs, _hbs);
 hollowBoardShape.lineTo(-_hbs, _hbs);
 hollowBoardShape.closePath();
 const hollowBoardHole = new Path();
-drawChamferedRect(hollowBoardHole, 3.2, 3.2, 0.11);
+hollowBoardHole.moveTo(-1.6, -1.6);
+hollowBoardHole.lineTo(1.6, -1.6);
+hollowBoardHole.lineTo(1.6, 1.6);
+hollowBoardHole.lineTo(-1.6, 1.6);
+hollowBoardHole.closePath();
 hollowBoardShape.holes.push(hollowBoardHole);
 const hollowBoardGeom = new ExtrudeGeometry(hollowBoardShape, { depth: 0.02, bevelEnabled: false });
 hollowBoardGeom.translate(0, 0, -0.01);
 
 // 台形タイル（穴の自家側に配置）
 const trapTileShape = new Shape();
-trapTileShape.moveTo(-1.49, 0);
-trapTileShape.lineTo(1.49, 0);
-trapTileShape.lineTo(1.545, 0.055);
+trapTileShape.moveTo(-1.6, 0);
+trapTileShape.lineTo(1.6, 0);
 trapTileShape.lineTo(0.6, 1.0);
 trapTileShape.lineTo(-0.6, 1.0);
-trapTileShape.lineTo(-1.545, 0.055);
 trapTileShape.closePath();
 const trapTileGeom = new ExtrudeGeometry(trapTileShape, { depth: 0.02, bevelEnabled: false });
 trapTileGeom.translate(0, 0, -0.01);
