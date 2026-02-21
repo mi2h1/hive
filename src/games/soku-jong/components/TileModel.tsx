@@ -13,7 +13,7 @@ const TILE_SEGMENTS = 4;
 
 // マテリアルカラー
 const IVORY = '#f5f0e8';
-const BROWN = '#5c3a1e';
+const BROWN = '#cc9900';
 
 // RoundedBoxGeometry のUVを標準BoxGeometry互換のリニアマッピングに上書き
 const fixUVs = (geom: RoundedBoxGeometry, w: number, h: number, d: number) => {
