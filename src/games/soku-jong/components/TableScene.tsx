@@ -138,8 +138,8 @@ hollowBoardGeom.translate(0, 0, -0.01);
 
 // 台形タイル（穴の自家側に配置）
 const trapTileShape = new Shape();
-trapTileShape.moveTo(-1.6, 0);
-trapTileShape.lineTo(1.6, 0);
+trapTileShape.moveTo(-1.49, 0);
+trapTileShape.lineTo(1.49, 0);
 trapTileShape.lineTo(0.6, 1.0);
 trapTileShape.lineTo(-0.6, 1.0);
 trapTileShape.closePath();
