@@ -123,13 +123,36 @@ const drawChamferedRect = (target: Shape | Path, w: number, h: number, c: number
 };
 
 // 全自動卓風の溝（パネル周囲を囲む凹み）
-const grooveShape = new Shape();
-drawChamferedRect(grooveShape, 1.5, 1.5, 0.08);
-const grooveHole = new Path();
-drawChamferedRect(grooveHole, 1.22, 1.22, 0.06);
-grooveShape.holes.push(grooveHole);
-const grooveGeom = new ExtrudeGeometry(grooveShape, { depth: 0.003, bevelEnabled: false });
-grooveGeom.translate(0, 0, -0.0015);
+const GROOVE_OUTER = 1.5;
+const GROOVE_INNER = 1.22;
+const GROOVE_OUTER_C = 0.08;
+const GROOVE_INNER_C = 0.06;
+const GROOVE_LIP_H = 0.008; // 溝縁の高さ
+const GROOVE_LIP_W = 0.02;  // 溝縁の幅
+
+// 溝底（暗いリング）
+const grooveFloorShape = new Shape();
+drawChamferedRect(grooveFloorShape, GROOVE_OUTER, GROOVE_OUTER, GROOVE_OUTER_C);
+const grooveFloorHole = new Path();
+drawChamferedRect(grooveFloorHole, GROOVE_INNER, GROOVE_INNER, GROOVE_INNER_C);
+grooveFloorShape.holes.push(grooveFloorHole);
+const grooveFloorGeom = new ExtrudeGeometry(grooveFloorShape, { depth: 0.002, bevelEnabled: false });
+
+// 溝の外縁（薄い壁）
+const grooveOuterLipShape = new Shape();
+drawChamferedRect(grooveOuterLipShape, GROOVE_OUTER + GROOVE_LIP_W / 2, GROOVE_OUTER + GROOVE_LIP_W / 2, GROOVE_OUTER_C);
+const grooveOuterLipHole = new Path();
+drawChamferedRect(grooveOuterLipHole, GROOVE_OUTER - GROOVE_LIP_W / 2, GROOVE_OUTER - GROOVE_LIP_W / 2, GROOVE_OUTER_C);
+grooveOuterLipShape.holes.push(grooveOuterLipHole);
+const grooveOuterLipGeom = new ExtrudeGeometry(grooveOuterLipShape, { depth: GROOVE_LIP_H, bevelEnabled: false });
+
+// 溝の内縁（薄い壁）
+const grooveInnerLipShape = new Shape();
+drawChamferedRect(grooveInnerLipShape, GROOVE_INNER + GROOVE_LIP_W / 2, GROOVE_INNER + GROOVE_LIP_W / 2, GROOVE_INNER_C);
+const grooveInnerLipHole = new Path();
+drawChamferedRect(grooveInnerLipHole, GROOVE_INNER - GROOVE_LIP_W / 2, GROOVE_INNER - GROOVE_LIP_W / 2, GROOVE_INNER_C);
+grooveInnerLipShape.holes.push(grooveInnerLipHole);
+const grooveInnerLipGeom = new ExtrudeGeometry(grooveInnerLipShape, { depth: GROOVE_LIP_H, bevelEnabled: false });
 
 // 中央パネル外枠（中抜きフレーム）
 const panelFrameShape = new Shape();
@@ -371,9 +394,17 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
         })
       )}
 
-      {/* 全自動卓風の溝（テーブル面に薄く乗せて凹み表現） */}
-      <mesh position={[0, 0.001, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={grooveGeom}>
-        <meshStandardMaterial color="#0d3318" roughness={1} metalness={0} />
+      {/* 全自動卓風の溝 — 底面（暗いリング） */}
+      <mesh position={[0, 0.0005, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={grooveFloorGeom}>
+        <meshStandardMaterial color="#0a1a10" roughness={1} metalness={0} />
+      </mesh>
+      {/* 溝の外縁（薄い壁） */}
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={grooveOuterLipGeom} castShadow>
+        <meshStandardMaterial color="#0c0c0c" roughness={0.6} metalness={0.15} />
+      </mesh>
+      {/* 溝の内縁（薄い壁） */}
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={grooveInnerLipGeom} castShadow>
+        <meshStandardMaterial color="#0c0c0c" roughness={0.6} metalness={0.15} />
       </mesh>
 
       {/* 中央情報パネル（外枠・中抜きフレーム） */}
