@@ -103,20 +103,6 @@ export const TableScene = () => {
         );
       })}
 
-      {/* 山札風（中央付近、裏向き積み重ね） */}
-      {[0, 1, 2].map((layer) => (
-        <TileModel
-          key={`wall-${layer}`}
-          kind="hatsu"
-          position={[
-            -0.3 + layer * 0.02,
-            TILE_D / 2 + layer * TILE_D,
-            -0.3 + layer * 0.02,
-          ]}
-          rotation={[Math.PI / 2, 0, 0]}
-        />
-      ))}
-
       <OrbitControls makeDefault />
     </>
   );
