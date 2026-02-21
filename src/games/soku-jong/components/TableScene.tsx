@@ -555,7 +555,6 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               </Text>
               {/* プレイヤー名 */}
               <Text
-                font={FONT_YUJI}
                 position={[-0.3, 0.03, 0.5]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.06}
