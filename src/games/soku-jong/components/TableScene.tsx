@@ -40,9 +40,9 @@ export const TableScene = () => {
   return (
     <>
       {/* ライティング */}
-      <Environment preset="studio" />
+      <Environment preset="studio" environmentIntensity={0.3} />
       <ambientLight intensity={0.3} />
-      <directionalLight position={[2, 8, 4]} intensity={0.6} />
+      <directionalLight position={[2, 8, 4]} intensity={0.8} />
       <directionalLight position={[-3, 5, -2]} intensity={0.3} />
 
       {/* テーブル面 */}
@@ -73,24 +73,40 @@ export const TableScene = () => {
         <meshStandardMaterial color={FRAME_COLOR} roughness={0.7} />
       </mesh>
 
-      {/* 4家の牌配置 */}
-      {PLAYERS.map((player) => (
+      {/* 自家の手牌（少し立てる、表向き） */}
+      {HAND_TILES.map((kind, i) => {
+        const lx = (i - (HAND_TILES.length - 1) / 2) * TILE_SPACING;
+        return (
+          <TileModel
+            key={`self-hand-${i}`}
+            kind={kind}
+            position={[lx, TILE_D / 2, HAND_Z]}
+            rotation={[-Math.PI / 2 + 0.3, 0, 0]}
+          />
+        );
+      })}
+
+      {/* 他家の手牌（伏せて卓に置く、裏向き） */}
+      {PLAYERS.filter((p) => p.name !== 'self').map((player) => (
         <group key={player.name}>
-          {/* 手牌（少し立てる） */}
-          {HAND_TILES.map((kind, i) => {
+          {HAND_TILES.map((_, i) => {
             const lx = (i - (HAND_TILES.length - 1) / 2) * TILE_SPACING;
             const [wx, wz] = rotateY(lx, HAND_Z, player.rotY);
             return (
               <TileModel
                 key={`${player.name}-hand-${i}`}
-                kind={kind}
+                kind="1s"
                 position={[wx, TILE_D / 2, wz]}
-                rotation={[-Math.PI / 2 + 0.3, player.rotY, 0]}
+                rotation={[Math.PI / 2, player.rotY, 0]}
               />
             );
           })}
+        </group>
+      ))}
 
-          {/* 河（寝かせて配置） */}
+      {/* 4家の河（寝かせて配置、表向き） */}
+      {PLAYERS.map((player) => (
+        <group key={`${player.name}-river`}>
           {RIVER_TILES.map((kind, i) => {
             const lx = (i - (RIVER_TILES.length - 1) / 2) * TILE_SPACING;
             const [wx, wz] = rotateY(lx, RIVER_Z, player.rotY);
