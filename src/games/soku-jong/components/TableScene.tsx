@@ -590,7 +590,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               </Text>
               {/* プレイヤー名 */}
               <Text
-                position={[-0.3, 0.03, 0.5]}
+                position={[-0.35, 0.03, 0.5]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.06}
                 color="#cccccc"
@@ -600,25 +600,13 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
                 {player.name}
               </Text>
               {/* 持ち点パネル（凹み） */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0.6]} geometry={scorePanelGeom}>
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.1, 0.02, 0.6]} geometry={scorePanelGeom}>
                 <meshStandardMaterial color="#030303" roughness={0.95} metalness={0} />
               </mesh>
-              {/* LEDゴースト（消灯セグメント） */}
+              {/* 持ち点 */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.23, 0.022, 0.59]}
-                rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.095}
-                color="#1a0505"
-                anchorX="left"
-                anchorY="middle"
-              >
-                {'88888'}
-              </Text>
-              {/* 持ち点（点灯セグメント） */}
-              <Text
-                font={FONT_DIGI}
-                position={[-0.23, 0.023, 0.59]}
+                position={[-0.33, 0.023, 0.59]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.095}
                 color="#ff3333"
