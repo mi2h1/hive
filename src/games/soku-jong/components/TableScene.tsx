@@ -10,6 +10,7 @@ const TABLE_COLOR = '#1a5c2a';
 
 // 牌サイズ（TileModel基準）
 const TILE_W = 0.26;
+const TILE_H = 0.35;
 const TILE_D = 0.18;
 const TILE_SPACING = TILE_W + 0.02;
 
@@ -78,10 +79,13 @@ export const TableScene = () => {
                 <TileModel
                   key={`${player.name}-hand-${i}`}
                   kind={isSelf ? kind : '1s'}
-                  position={[lx, TILE_D / 2, HAND_Z]}
+                  position={isSelf
+                    ? [lx, TILE_D / 2, HAND_Z]
+                    : [lx, TILE_H / 2, HAND_Z]
+                  }
                   rotation={isSelf
                     ? [-Math.PI / 2 + 0.3, 0, 0]
-                    : [Math.PI / 2, 0, 0]
+                    : [0, 0, 0]
                   }
                 />
               );
