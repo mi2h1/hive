@@ -67,7 +67,7 @@ export const Lobby = ({
           <div className="bg-slate-800/95 rounded-xl p-6 max-w-2xl w-full">
             {/* タイトル */}
             <div className="text-center mb-4">
-              <h1 className="mb-1"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-10" /></h1>
+              <h1 className="mb-1"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-14" /></h1>
               <p className="text-emerald-400 text-sm">簡易麻雀ゲーム</p>
             </div>
 
@@ -198,7 +198,7 @@ export const Lobby = ({
         <div className="bg-slate-800/95 rounded-xl p-6 max-w-md w-full">
           {/* タイトル */}
           <div className="text-center mb-2">
-            <h1 className="mb-1"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-10" /></h1>
+            <h1 className="mb-1"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-14" /></h1>
             <p className="text-emerald-400 text-sm">簡易麻雀ゲーム</p>
           </div>
           <div className="text-slate-400 text-center mb-6">

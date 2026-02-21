@@ -108,7 +108,7 @@ export const TileTestPage = ({ onBack }: TileTestPageProps) => {
         >
           ← 戻る
         </button>
-        <h1 className="flex items-center gap-2"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-5" /><span className="text-white font-bold text-lg">卓テスト</span></h1>
+        <h1 className="flex items-center gap-2"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-7" /><span className="text-white font-bold text-lg">卓テスト</span></h1>
         <div className="flex items-center gap-3 ml-auto">
           <SliderControl label="X" value={x} min={-5} max={5} step={0.5} onChange={setX} />
           <SliderControl label="Y" value={y} min={1} max={12} step={0.5} onChange={setY} />

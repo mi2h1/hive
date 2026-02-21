@@ -55,7 +55,7 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby }: GameScreenPro
         >
           ← ロビーに戻る
         </button>
-        <h1><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-5" /></h1>
+        <h1><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-7" /></h1>
         <div className="ml-auto flex items-center gap-3 text-sm text-slate-400">
           <span>東{gameState.round}局</span>
           <span>手番: {currentPlayer?.name ?? '-'}</span>

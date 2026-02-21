@@ -134,7 +134,7 @@ export const SokuJongGame = ({ onBack }: SokuJongGameProps) => {
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 to-green-900">
       <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
         <div className="bg-slate-800/95 rounded-xl p-8 max-w-md w-full text-center">
-          <h1 className="mb-4"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-8" /></h1>
+          <h1 className="mb-4"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-12" /></h1>
           <p className="text-slate-400 mb-2">
             {phase === 'round_result' && '局結果（実装予定）'}
             {phase === 'finished' && 'ゲーム終了（実装予定）'}
