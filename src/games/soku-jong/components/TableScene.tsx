@@ -257,6 +257,24 @@ panelInnerGeom.translate(0, 0, -0.01);
 // 自風名（席順: 自=東, 右=南, 対=西, 左=北）
 const WIND_NAMES = ['東', '南', '西', '北'] as const;
 
+// 風パネル（角丸正方形）
+const WIND_PANEL_SIZE = 0.24;
+const WIND_PANEL_R = 0.05; // 角丸半径
+const windPanelShape = new Shape();
+const _wps = WIND_PANEL_SIZE / 2;
+const _wpr = WIND_PANEL_R;
+windPanelShape.moveTo(-_wps + _wpr, -_wps);
+windPanelShape.lineTo(_wps - _wpr, -_wps);
+windPanelShape.quadraticCurveTo(_wps, -_wps, _wps, -_wps + _wpr);
+windPanelShape.lineTo(_wps, _wps - _wpr);
+windPanelShape.quadraticCurveTo(_wps, _wps, _wps - _wpr, _wps);
+windPanelShape.lineTo(-_wps + _wpr, _wps);
+windPanelShape.quadraticCurveTo(-_wps, _wps, -_wps, _wps - _wpr);
+windPanelShape.lineTo(-_wps, -_wps + _wpr);
+windPanelShape.quadraticCurveTo(-_wps, -_wps, -_wps + _wpr, -_wps);
+windPanelShape.closePath();
+const windPanelGeom = new ExtrudeGeometry(windPanelShape, { depth: 0.003, bevelEnabled: false });
+
 // 漢数字変換
 const KANJI_NUM = ['〇', '一', '二', '三', '四'] as const;
 const toKanji = (n: number): string => KANJI_NUM[n] ?? String(n);
@@ -484,17 +502,16 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           if (!player) return null;
           return (
             <group key={`wind-${seatIdx}`} rotation={[0, p.rotY, 0]}>
-              {/* 風パネル（左角） */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.55, 0.025, 0.57]}>
-                <planeGeometry args={[0.18, 0.18]} />
-                <meshStandardMaterial color="#1a1a1a" roughness={0.8} metalness={0.1} />
+              {/* 風パネル（左角・角丸） */}
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.55, 0.025, 0.57]} geometry={windPanelGeom}>
+                <meshStandardMaterial color={seatIdx === 0 ? '#b8342a' : '#e8e8e8'} roughness={0.7} metalness={0.05} />
               </mesh>
               <Text
                 font={FONT_YUJI}
                 position={[-0.55, 0.03, 0.57]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.1}
-                color="#e0c060"
+                fontSize={0.13}
+                color={seatIdx === 0 ? '#e0c060' : '#1a1a1a'}
                 anchorX="center"
                 anchorY="middle"
               >
