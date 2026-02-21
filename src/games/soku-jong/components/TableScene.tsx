@@ -293,7 +293,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       <directionalLight position={[-3, 5, -2]} intensity={0.2} />
 
       {/* 黒マット（隙間から見える下地） */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.005, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.015, 0]}>
         <planeGeometry args={[TABLE_SIZE, TABLE_SIZE]} />
         <meshStandardMaterial color="#0a0a0a" roughness={0.95} metalness={0} />
       </mesh>
