@@ -332,7 +332,7 @@ const windBorderGeom = new ExtrudeGeometry(windBorderShape, { depth: 0.001, beve
 
 // スコア表示パネル（凹み矩形）
 const scorePanelShape = new Shape();
-const _spw = 0.5, _sph = 0.09;
+const _spw = 0.5, _sph = 0.11;
 scorePanelShape.moveTo(-_spw / 2, -_sph / 2);
 scorePanelShape.lineTo(_spw / 2, -_sph / 2);
 scorePanelShape.lineTo(_spw / 2, _sph / 2);
@@ -606,9 +606,9 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               {/* LEDゴースト（消灯セグメント） */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.23, 0.022, 0.6]}
+                position={[-0.23, 0.022, 0.61]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.07}
+                fontSize={0.08}
                 color="#1a0505"
                 anchorX="left"
                 anchorY="middle"
@@ -618,9 +618,9 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               {/* 持ち点（点灯セグメント） */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.23, 0.023, 0.6]}
+                position={[-0.23, 0.023, 0.61]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.07}
+                fontSize={0.08}
                 color="#ff3333"
                 anchorX="left"
                 anchorY="middle"
