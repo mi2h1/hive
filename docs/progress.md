@@ -1,6 +1,6 @@
 # 進捗・作業ログ
 
-最終更新: 2026-02-21
+最終更新: 2026-02-22
 
 ## リポジトリ情報
 
@@ -17,7 +17,98 @@
 
 ---
 
-## 完了したタスク
+## 速雀 開発フェーズ
+
+### Phase 1: 卓3Dビジュアル — 完了 (2026-02-21〜22)
+- 3D卓の構築（フェルト面・木枠・中抜き板・台形タイル）
+- 牌モデル（RoundedBoxGeometry + MeshPhysicalMaterial + bumpMap彫り込み）
+- 中央情報パネル（外枠・溝底・内パネル・ターンランプ・局数/残牌/ドラ表示）
+- 風パネル + プレイヤー情報（風名・名前・得点LED表示）
+- フォトリアル質感（フェルトsheen・木枠clearcoat・漆塗りパネル）
+- ポストプロセッシング（SSAO + Bloom）
+- 4家の牌配置（自家=表向き傾斜、他家=直立裏面、河=寝かせ表向き）
+- GameScreen / ローディングオーバーレイ / テストページ
+
+### Phase 2: ゲームループUI接続 — 完了 (2026-02-22)
+- **ゲームロジック（lib/、全て実装済み）:**
+  - `tile-deck.ts` — デッキ生成、シャッフル、配牌、ツモ
+  - `win-detector.ts` — 2面子判定（バックトラッキング）
+  - `furiten.ts` — 待ち牌計算、フリテン判定、ロン可否
+  - `scoring.ts` — 点数計算（役満含む）、ScoreResult型
+  - `game-flow.ts` — 局初期化、ツモ/打牌/ロン精算、流局、次手番、勝敗判定
+- **UI接続:**
+  - GameState に `roundResult` / `timeBank` / `timeLimitSeconds` を追加
+  - TileModel にクリック・ホバーイベント対応
+  - TableScene に手牌クリック打牌・ツモ/ロンボタン(3Dメッシュ)・ホバー浮き上がり
+  - GameScreen にゲームループ処理（自動ツモ・打牌・ロンチェック・持ち時間管理）
+  - SokuJongGame に round_result 画面（手牌・点数内訳・持ち点一覧）、finished 画面（ランキング）
+  - Lobby に持ち時間モード選択（5分 / 無制限）
+- **Bot自動プレイ:**
+  - テストプレイヤー（`test-` prefix）の手番を自動処理（ツモ・ツモ切り・ロン判定）
+  - 800ms ディレイで視覚的にわかりやすく
+  - 1人＋botでテスト対戦可能
+- **テンパイ待ち牌表示:**
+  - 手牌5枚時に `findWaitingTiles()` で和了可能な牌種を計算
+  - 手牌の右に「待」ラベル + 0.65倍スケールの3D牌で表示
+- **手牌・ツモ牌のギャップ:**
+  - 手牌6枚時、最後の1枚（ツモ牌）を少し右にずらして表示
+- **画面チラつき修正:**
+  - 全牌テクスチャ(20種)をモジュールレベルでプリロード
+- **その他修正:**
+  - 流局時に `roundResult.type='draw'` をセット
+  - ゲーム開始時にスコアをリセット（再戦対応）
+  - ロビー帰還時に timeBank をクリア
+
+### Phase 3: マルチプレイヤー — 実質完了
+- Firebase Realtime Database によるリアルタイム同期（useRoom）
+- ルーム作成・参加・退出・プレゼンス管理
+- ロン判定・フリテン判定
+- 頭ハネ（打牌者の次の席順から優先）
+
+### Phase 4: 切断・再接続対応 — 未着手
+- 切断プレイヤーの自動ツモ切り（3秒タイムアウト）
+- ロン見逃し自動処理
+- ホスト引き継ぎ（ホスト切断時）
+
+### Phase 5: 仕上げ — 未着手
+- 打牌アニメーション（手牌→河へスライド＆倒れ）
+- ツモアニメーション（山札→手牌へスライドイン）
+- 和了演出（スポットライト）
+- モバイル対応（タッチ操作・レスポンシブ）
+
+---
+
+## 速雀 ゲームフロー
+
+```
+turnPhase='draw' → processDraw() → turnPhase='discard'（canTsumoならツモボタン表示）
+  → 手牌クリック → processDiscard() → turnPhase='ron_check'
+  → checkRonCandidates() → ロン可能者にロンボタン / なければ次手番
+  → getNextTurnPlayerId() → turnPhase='draw' に戻る
+```
+
+---
+
+## 速雀 主要ファイル
+
+| ファイル | 役割 |
+|----------|------|
+| `types/game.ts` | 型定義（Tile, Player, GameState, RoundResult, GameSettings） |
+| `lib/tile-deck.ts` | デッキ生成・シャッフル・配牌・ツモ |
+| `lib/win-detector.ts` | 2面子判定（バックトラッキング） |
+| `lib/furiten.ts` | 待ち牌計算・フリテン判定・ロン可否 |
+| `lib/scoring.ts` | 点数計算（基本点+ボーナス+役満） |
+| `lib/game-flow.ts` | 局初期化・ツモ/打牌/ロン精算・流局・次手番・勝敗判定 |
+| `hooks/useRoom.ts` | Firebase連携（ルーム管理・プレゼンス・状態同期） |
+| `components/Lobby.tsx` | ロビー画面（ルーム作成/参加・設定） |
+| `components/GameScreen.tsx` | ゲーム操作ハブ（ゲームループ・持ち時間・bot自動プレイ） |
+| `components/TableScene.tsx` | 3Dシーン（卓・牌配置・ボタン・待ち牌表示） |
+| `components/TileModel.tsx` | 牌3Dモデル（テクスチャ・マテリアル・クリック/ホバー） |
+| `SokuJongGame.tsx` | ゲーム全体管理（フェーズ分岐・結果画面） |
+
+---
+
+## 完了したタスク（速雀以外）
 
 ### Phase 1: 基盤構築・ゲーム実装
 - ポータル画面（名前入力・ゲーム選択）
@@ -42,39 +133,3 @@
   - お題チェンジ投票は選択式モード時に topic_selection フェーズへ戻す
 - ロビーUIの改善（参加者+お題モードの2カラム配置）
 - 開発規約・進捗ログドキュメントの新規作成
-
-### 2026-02-21
-- 速雀（SOKU-JONG）の初期構築
-  - 仕様書を `docs/soku-jong-spec.md` に配置
-  - `src/games/soku-jong/` ディレクトリ作成（types, hooks, components, lib）
-  - 型定義（Tile, Player, GameState, RoomData等）
-  - Firebase連携フック（useRoom）
-  - ロビー画面（Lobby）
-  - メインコンポーネント（SokuJongGame）
-  - App.tsx にゲーム登録（ルーティング・選択画面）
-  - ゲームロジックは未実装（骨組みのみ）
-- 速雀: 卓（テーブル）3D表現の実装
-  - `TableScene.tsx` 新規作成（後でゲーム画面に流用可能）
-  - テーブル面: フェルト風テクスチャ（放射グラデーション + 微細ノイズ, roughness=0.95）
-  - テーブル枠: RoundedBoxGeometry で角丸 + Canvas 生成の木目テクスチャ
-  - 中央に情報パネル用の黒い正方形（局数・ドラ・残牌数表示用）
-  - 4家の牌配置（自家=表向き少し立て、他家=直立裏面、河=寝かせ表向き）
-  - group でY回転分離し Euler 軸干渉を解消
-  - 牌マテリアル調整
-    - 側面: ガラス風光沢（clearcoat=0.8, ior=1.5）
-    - 絵柄面: マット + bumpMap で彫り込み表現（bumpScale=-0.025）
-    - 背面・側面ブラウンを `#cc9900` に変更
-    - anisotropy=16 で斜め視点のテクスチャぼやけ対策
-  - flattenAlpha 多重適用バグ修正（userData._flattened フラグ）
-  - カメラ: `[0,6,5]` FOV=30, target=`[0,0,0.4]`
-  - ライト: environmentIntensity=0.1 + ambient=0.4 + key=0.5 + fill=0.2
-  - ヘッダーに X/Y/Z/FOV スライダー追加（カメラ位置リアルタイム調整用）
-  - TileTestPage を卓テストに変更（`/hive/soku-jong/test`）
-
----
-
-## 次のタスク
-
-- 速雀: ゲーム画面UI（中央パネルに局数・ドラ・残牌数表示）
-- 速雀: ゲームロジック結合（配牌・ツモ・打牌・和了判定・点数計算）
-- 速雀: アニメーション（ツモ牌の手牌右側配置、打牌演出など）
