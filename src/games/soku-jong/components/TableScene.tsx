@@ -133,7 +133,7 @@ panelFrameGeom.translate(0, 0, -0.02);
 
 // 中央パネル内側（ExtrudeGeometryで高さに依存しない角丸）
 const panelInnerShape = new Shape();
-drawRoundedRect(panelInnerShape, 0.85, 0.85, 0.06);
+drawRoundedRect(panelInnerShape, 0.85, 0.85, 0.055);
 const panelInnerGeom = new ExtrudeGeometry(panelInnerShape, { depth: 0.02, bevelEnabled: false });
 panelInnerGeom.translate(0, 0, -0.01);
 
