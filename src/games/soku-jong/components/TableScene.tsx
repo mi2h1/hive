@@ -108,81 +108,81 @@ const frameGeomV = new RoundedBoxGeometry(
   FRAME_SEGMENTS, FRAME_RADIUS,
 );
 
-// 角丸矩形パスを描画
-const drawRoundedRect = (target: Shape | Path, w: number, h: number, r: number) => {
+// 面取り矩形パスを描画（角を斜めカット）
+const drawChamferedRect = (target: Shape | Path, w: number, h: number, c: number) => {
   const hw = w / 2, hh = h / 2;
-  target.moveTo(-hw + r, -hh);
-  target.lineTo(hw - r, -hh);
-  target.absarc(hw - r, -hh + r, r, -Math.PI / 2, 0, false);
-  target.lineTo(hw, hh - r);
-  target.absarc(hw - r, hh - r, r, 0, Math.PI / 2, false);
-  target.lineTo(-hw + r, hh);
-  target.absarc(-hw + r, hh - r, r, Math.PI / 2, Math.PI, false);
-  target.lineTo(-hw, -hh + r);
-  target.absarc(-hw + r, -hh + r, r, Math.PI, Math.PI * 1.5, false);
+  target.moveTo(-hw + c, -hh);
+  target.lineTo(hw - c, -hh);
+  target.lineTo(hw, -hh + c);
+  target.lineTo(hw, hh - c);
+  target.lineTo(hw - c, hh);
+  target.lineTo(-hw + c, hh);
+  target.lineTo(-hw, hh - c);
+  target.lineTo(-hw, -hh + c);
+  target.closePath();
 };
 
 // 中央パネル外枠（中抜きフレーム）
 const panelFrameShape = new Shape();
-drawRoundedRect(panelFrameShape, 1.2, 1.2, 0.06);
+drawChamferedRect(panelFrameShape, 1.2, 1.2, 0.06);
 const panelHole = new Path();
-drawRoundedRect(panelHole, 0.86, 0.86, 0.06);
+drawChamferedRect(panelHole, 0.86, 0.86, 0.06);
 panelFrameShape.holes.push(panelHole);
 const panelFrameGeom = new ExtrudeGeometry(panelFrameShape, { depth: 0.04, bevelEnabled: false });
 panelFrameGeom.translate(0, 0, -0.02);
 
 // 中央パネル溝底（穴の奥に敷く黒い四角）
 const panelBaseShape = new Shape();
-drawRoundedRect(panelBaseShape, 0.86, 0.86, 0.06);
+drawChamferedRect(panelBaseShape, 0.86, 0.86, 0.06);
 const panelBaseGeom = new ExtrudeGeometry(panelBaseShape, { depth: 0.02, bevelEnabled: false });
 panelBaseGeom.translate(0, 0, -0.01);
 
-// 角丸矩形 + 4辺に台形切り欠きパスを描画
-const drawRoundedRectWithNotches = (
+// 面取り矩形 + 4辺に台形切り欠きパスを描画
+const drawChamferedRectWithNotches = (
   shape: Shape,
-  w: number, h: number, r: number,
+  w: number, h: number, c: number,
   notchOuterHalf: number, notchInnerHalf: number, notchDepth: number,
 ) => {
   const hw = w / 2, hh = h / 2;
 
   // 底辺 (y=-hh) 左→右
-  shape.moveTo(-hw + r, -hh);
+  shape.moveTo(-hw + c, -hh);
   shape.lineTo(-notchOuterHalf, -hh);
   shape.lineTo(-notchInnerHalf, -hh + notchDepth);
   shape.lineTo(notchInnerHalf, -hh + notchDepth);
   shape.lineTo(notchOuterHalf, -hh);
-  shape.lineTo(hw - r, -hh);
-  // 右下角丸
-  shape.absarc(hw - r, -hh + r, r, -Math.PI / 2, 0, false);
+  shape.lineTo(hw - c, -hh);
+  // 右下面取り
+  shape.lineTo(hw, -hh + c);
   // 右辺 (x=hw) 下→上
   shape.lineTo(hw, -notchOuterHalf);
   shape.lineTo(hw - notchDepth, -notchInnerHalf);
   shape.lineTo(hw - notchDepth, notchInnerHalf);
   shape.lineTo(hw, notchOuterHalf);
-  shape.lineTo(hw, hh - r);
-  // 右上角丸
-  shape.absarc(hw - r, hh - r, r, 0, Math.PI / 2, false);
+  shape.lineTo(hw, hh - c);
+  // 右上面取り
+  shape.lineTo(hw - c, hh);
   // 上辺 (y=hh) 右→左
   shape.lineTo(notchOuterHalf, hh);
   shape.lineTo(notchInnerHalf, hh - notchDepth);
   shape.lineTo(-notchInnerHalf, hh - notchDepth);
   shape.lineTo(-notchOuterHalf, hh);
-  shape.lineTo(-hw + r, hh);
-  // 左上角丸
-  shape.absarc(-hw + r, hh - r, r, Math.PI / 2, Math.PI, false);
+  shape.lineTo(-hw + c, hh);
+  // 左上面取り
+  shape.lineTo(-hw, hh - c);
   // 左辺 (x=-hw) 上→下
   shape.lineTo(-hw, notchOuterHalf);
   shape.lineTo(-hw + notchDepth, notchInnerHalf);
   shape.lineTo(-hw + notchDepth, -notchInnerHalf);
   shape.lineTo(-hw, -notchOuterHalf);
-  shape.lineTo(-hw, -hh + r);
-  // 左下角丸
-  shape.absarc(-hw + r, -hh + r, r, Math.PI, Math.PI * 1.5, false);
+  shape.lineTo(-hw, -hh + c);
+  // 左下面取り
+  shape.closePath();
 };
 
 // 中央パネル内側（台形切り欠き付き）
 const panelInnerShape = new Shape();
-drawRoundedRectWithNotches(panelInnerShape, 0.85, 0.85, 0.055, 0.18, 0.14, 0.025);
+drawChamferedRectWithNotches(panelInnerShape, 0.85, 0.85, 0.055, 0.18, 0.14, 0.025);
 const panelInnerGeom = new ExtrudeGeometry(panelInnerShape, { depth: 0.02, bevelEnabled: false });
 panelInnerGeom.translate(0, 0, -0.01);
 
