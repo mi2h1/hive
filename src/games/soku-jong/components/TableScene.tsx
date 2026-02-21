@@ -122,6 +122,20 @@ const drawChamferedRect = (target: Shape | Path, w: number, h: number, c: number
   target.closePath();
 };
 
+// 中抜き板（卓サイズ、確認用）
+const hollowBoardShape = new Shape();
+const _hbs = TABLE_SIZE / 2;
+hollowBoardShape.moveTo(-_hbs, -_hbs);
+hollowBoardShape.lineTo(_hbs, -_hbs);
+hollowBoardShape.lineTo(_hbs, _hbs);
+hollowBoardShape.lineTo(-_hbs, _hbs);
+hollowBoardShape.closePath();
+const hollowBoardHole = new Path();
+drawChamferedRect(hollowBoardHole, 1.2, 1.2, 0.06);
+hollowBoardShape.holes.push(hollowBoardHole);
+const hollowBoardGeom = new ExtrudeGeometry(hollowBoardShape, { depth: 0.02, bevelEnabled: false });
+hollowBoardGeom.translate(0, 0, -0.01);
+
 // 中央パネル外枠（中抜きフレーム）
 const panelFrameShape = new Shape();
 drawChamferedRect(panelFrameShape, 1.2, 1.2, 0.06);
@@ -253,6 +267,11 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[TABLE_SIZE, TABLE_SIZE]} />
         <meshStandardMaterial map={feltTexture} roughness={0.95} metalness={0} />
+      </mesh>
+
+      {/* 中抜き板（確認用・上空に浮かせ） */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 3, 0]} geometry={hollowBoardGeom}>
+        <meshStandardMaterial color="#1a5c2a" roughness={0.9} metalness={0} />
       </mesh>
 
       {/* テーブル枠（4辺・角丸 + 木目） */}
