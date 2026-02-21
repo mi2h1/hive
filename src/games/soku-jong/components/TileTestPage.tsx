@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
+import { EffectComposer, SSAO, Bloom } from '@react-three/postprocessing';
+import { BlendFunction } from 'postprocessing';
 import { TableScene } from './TableScene';
 import type { Tile, TileKind, GameState } from '../types/game';
 import { DEFAULT_SETTINGS } from '../types/game';
@@ -127,6 +129,19 @@ export const TileTestPage = ({ onBack }: TileTestPageProps) => {
           <color attach="background" args={['#1a1a2e']} />
           <CameraUpdater x={x} y={y} z={z} fov={fov} />
           <TableScene gameState={MOCK_GAME_STATE} playerId="self" />
+          <EffectComposer>
+            <SSAO
+              blendFunction={BlendFunction.MULTIPLY}
+              samples={16}
+              radius={0.1}
+              intensity={15}
+            />
+            <Bloom
+              intensity={0.15}
+              luminanceThreshold={0.9}
+              luminanceSmoothing={0.5}
+            />
+          </EffectComposer>
         </Canvas>
       </div>
     </div>

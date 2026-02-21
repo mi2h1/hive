@@ -1,6 +1,8 @@
 import { Suspense, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useProgress } from '@react-three/drei';
+import { EffectComposer, SSAO, Bloom } from '@react-three/postprocessing';
+import { BlendFunction } from 'postprocessing';
 import { TableScene } from './TableScene';
 import type { GameState } from '../types/game';
 
@@ -74,6 +76,19 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby }: GameScreenPro
           <Suspense fallback={null}>
             <TableScene gameState={gameState} playerId={playerId} />
           </Suspense>
+          <EffectComposer>
+            <SSAO
+              blendFunction={BlendFunction.MULTIPLY}
+              samples={16}
+              radius={0.1}
+              intensity={15}
+            />
+            <Bloom
+              intensity={0.15}
+              luminanceThreshold={0.9}
+              luminanceSmoothing={0.5}
+            />
+          </EffectComposer>
         </Canvas>
       </div>
     </div>

@@ -313,13 +313,13 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
 
       {/* テーブル面（中抜き板） */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow geometry={hollowBoardGeom}>
-        <meshStandardMaterial map={feltTexture} roughness={0.95} metalness={0} />
+        <meshPhysicalMaterial map={feltTexture} roughness={0.95} metalness={0} sheen={0.8} sheenRoughness={0.8} sheenColor="#2a8a45" />
       </mesh>
       {/* 台形タイル（4家分・自家は延長版） */}
       {PLAYERS.map((player) => (
         <group key={`trap-${player.name}`} position={[0, 0, 0]} rotation={[0, player.rotY, 0]}>
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 1.595]} geometry={trapExtGeom} scale={[0.99, 0.99, 1]} receiveShadow>
-            <meshStandardMaterial map={feltTexture} roughness={0.95} metalness={0} />
+            <meshPhysicalMaterial map={feltTexture} roughness={0.95} metalness={0} sheen={0.8} sheenRoughness={0.8} sheenColor="#2a8a45" />
           </mesh>
         </group>
       ))}
@@ -327,19 +327,19 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       {/* テーブル枠（4辺・角丸 + 木目） */}
       {/* 手前 (+Z) */}
       <mesh position={[0, FRAME_HEIGHT / 2, TABLE_SIZE / 2 + FRAME_THICKNESS / 2]} geometry={frameGeomH}>
-        <meshStandardMaterial map={woodTexture} roughness={0.7} />
+        <meshPhysicalMaterial map={woodTexture} roughness={0.5} clearcoat={0.4} clearcoatRoughness={0.3} />
       </mesh>
       {/* 奥 (-Z) */}
       <mesh position={[0, FRAME_HEIGHT / 2, -(TABLE_SIZE / 2 + FRAME_THICKNESS / 2)]} geometry={frameGeomH}>
-        <meshStandardMaterial map={woodTexture} roughness={0.7} />
+        <meshPhysicalMaterial map={woodTexture} roughness={0.5} clearcoat={0.4} clearcoatRoughness={0.3} />
       </mesh>
       {/* 左 (-X) */}
       <mesh position={[-(TABLE_SIZE / 2 + FRAME_THICKNESS / 2), FRAME_HEIGHT / 2, 0]} geometry={frameGeomV}>
-        <meshStandardMaterial map={woodTexture} roughness={0.7} />
+        <meshPhysicalMaterial map={woodTexture} roughness={0.5} clearcoat={0.4} clearcoatRoughness={0.3} />
       </mesh>
       {/* 右 (+X) */}
       <mesh position={[TABLE_SIZE / 2 + FRAME_THICKNESS / 2, FRAME_HEIGHT / 2, 0]} geometry={frameGeomV}>
-        <meshStandardMaterial map={woodTexture} roughness={0.7} />
+        <meshPhysicalMaterial map={woodTexture} roughness={0.5} clearcoat={0.4} clearcoatRoughness={0.3} />
       </mesh>
 
       {/* 4家の牌配置 — groupでY回転し、牌自体はX回転のみ */}
