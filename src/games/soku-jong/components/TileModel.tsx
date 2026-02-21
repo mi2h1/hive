@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CanvasTexture, SRGBColorSpace, NearestFilter } from 'three';
+import { CanvasTexture, SRGBColorSpace, NearestFilter, type Texture } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { useTexture } from '@react-three/drei';
 import type { TileKind } from '../types/game';
@@ -67,6 +67,24 @@ const fixUVs = (geom: RoundedBoxGeometry, w: number, h: number, d: number) => {
   }
 };
 
+// テクスチャの透明背景を白背景に合成（PNGのアルファチャンネル対策）
+const flattenAlpha = (texture: Texture): void => {
+  const img = texture.image as HTMLImageElement;
+  if (!img) return;
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+  if (!w || !h) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(img, 0, 0);
+  texture.image = canvas;
+  texture.needsUpdate = true;
+};
+
 // テクスチャパスの生成
 const getTexturePath = (kind: TileKind, isRed: boolean): string => {
   const base = '/hive/images/soku-jong';
@@ -119,6 +137,7 @@ export const TileModel = ({
   rotation = [0, 0, 0],
 }: TileModelProps) => {
   const faceTexture = useTexture(getTexturePath(kind, isRed));
+  useMemo(() => flattenAlpha(faceTexture), [faceTexture]);
 
   // 側面テクスチャ
   const sidePX = useMemo(() => createSideTexture('right'), []);
