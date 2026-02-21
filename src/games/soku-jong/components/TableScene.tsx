@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { OrbitControls, Environment, Text } from '@react-three/drei';
-import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three';
+import { CanvasTexture, RepeatWrapping, SRGBColorSpace, Shape, Path, ExtrudeGeometry } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { TileModel } from './TileModel';
 import type { TileKind, GameState } from '../types/game';
@@ -108,8 +108,30 @@ const frameGeomV = new RoundedBoxGeometry(
   FRAME_SEGMENTS, FRAME_RADIUS,
 );
 
-// 中央パネルのジオメトリ（角丸）
-const panelOuterGeom = new RoundedBoxGeometry(1.2, 0.04, 1.2, 3, 0.06);
+// 角丸矩形パスを描画
+const drawRoundedRect = (target: Shape | Path, w: number, h: number, r: number) => {
+  const hw = w / 2, hh = h / 2;
+  target.moveTo(-hw + r, -hh);
+  target.lineTo(hw - r, -hh);
+  target.absarc(hw - r, -hh + r, r, -Math.PI / 2, 0, false);
+  target.lineTo(hw, hh - r);
+  target.absarc(hw - r, hh - r, r, 0, Math.PI / 2, false);
+  target.lineTo(-hw + r, hh);
+  target.absarc(-hw + r, hh - r, r, Math.PI / 2, Math.PI, false);
+  target.lineTo(-hw, -hh + r);
+  target.absarc(-hw + r, -hh + r, r, Math.PI, Math.PI * 1.5, false);
+};
+
+// 中央パネル外枠（中抜きフレーム）
+const panelFrameShape = new Shape();
+drawRoundedRect(panelFrameShape, 1.2, 1.2, 0.06);
+const panelHole = new Path();
+drawRoundedRect(panelHole, 0.9, 0.9, 0.05);
+panelFrameShape.holes.push(panelHole);
+const panelFrameGeom = new ExtrudeGeometry(panelFrameShape, { depth: 0.04, bevelEnabled: false });
+panelFrameGeom.translate(0, 0, -0.02);
+
+// 中央パネル内側
 const panelInnerGeom = new RoundedBoxGeometry(0.85, 0.02, 0.85, 3, 0.05);
 
 interface TableSceneProps {
@@ -256,8 +278,8 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
         })
       )}
 
-      {/* 中央情報パネル（外枠・角丸） */}
-      <mesh position={[0, 0.02, 0]} geometry={panelOuterGeom}>
+      {/* 中央情報パネル（外枠・中抜きフレーム） */}
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelFrameGeom}>
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} metalness={0.1} />
       </mesh>
       {/* 中央情報パネル（内枠・角丸・溝表現） */}

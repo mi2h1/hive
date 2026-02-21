@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { TableScene } from './TableScene';
+import type { Tile, TileKind, GameState } from '../types/game';
+import { DEFAULT_SETTINGS } from '../types/game';
 
 // Canvas内でカメラをリアルタイム更新するコンポーネント
 const CameraUpdater = ({ x, y, z, fov }: { x: number; y: number; z: number; fov: number }) => {
@@ -19,6 +21,46 @@ interface TileTestPageProps {
 }
 
 const DEFAULT = { x: 0, y: 6, z: 5, fov: 33 };
+
+// テスト用モックデータ
+const t = (id: string, kind: TileKind, isRed = false): Tile => ({ id, kind, isRed });
+
+const MOCK_GAME_STATE: GameState = {
+  phase: 'playing',
+  round: 1,
+  currentTurn: 'self',
+  deck: Array.from({ length: 23 }, (_, i) => t(`deck_${i}`, '1s')),
+  doraTile: t('5s_r', '5s', true),
+  lastDiscard: null,
+  lastDiscardPlayerId: null,
+  settings: DEFAULT_SETTINGS,
+  players: [
+    {
+      id: 'self', name: 'プレイヤー1',
+      hand: [t('1s_1', '1s'), t('3s_1', '3s'), t('5s_r', '5s', true), t('7s_1', '7s'), t('9s_1', '9s')],
+      discards: [t('2s_1', '2s'), t('4s_1', '4s'), t('6s_1', '6s')],
+      score: 40, isDealer: true, seatOrder: 0,
+    },
+    {
+      id: 'p2', name: 'プレイヤー2',
+      hand: [t('2s_2', '2s'), t('4s_2', '4s'), t('6s_2', '6s'), t('8s_1', '8s'), t('hatsu_1', 'hatsu')],
+      discards: [t('chun_1', 'chun')],
+      score: 40, isDealer: false, seatOrder: 1,
+    },
+    {
+      id: 'p3', name: 'プレイヤー3',
+      hand: [t('1s_2', '1s'), t('2s_3', '2s'), t('3s_2', '3s'), t('5s_1', '5s'), t('7s_2', '7s')],
+      discards: [],
+      score: 40, isDealer: false, seatOrder: 2,
+    },
+    {
+      id: 'p4', name: 'プレイヤー4',
+      hand: [t('6s_3', '6s'), t('8s_2', '8s'), t('9s_2', '9s'), t('hatsu_2', 'hatsu'), t('chun_2', 'chun')],
+      discards: [t('1s_3', '1s'), t('3s_3', '3s')],
+      score: 40, isDealer: false, seatOrder: 3,
+    },
+  ],
+};
 
 const SliderControl = ({
   label,
@@ -83,7 +125,7 @@ export const TileTestPage = ({ onBack }: TileTestPageProps) => {
         >
           <color attach="background" args={['#1a1a2e']} />
           <CameraUpdater x={x} y={y} z={z} fov={fov} />
-          <TableScene />
+          <TableScene gameState={MOCK_GAME_STATE} playerId="self" />
         </Canvas>
       </div>
     </div>
