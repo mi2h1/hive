@@ -331,25 +331,14 @@ windBorderShape.holes.push(windBorderHole);
 const windBorderGeom = new ExtrudeGeometry(windBorderShape, { depth: 0.001, bevelEnabled: false });
 
 // スコア表示パネル（凹み矩形）
-const scorePanelGeom = new ExtrudeGeometry(
-  (() => {
-    const s = new Shape();
-    const sw = 0.38, sh = 0.13, r = 0.015;
-    const hw = sw / 2, hh = sh / 2;
-    s.moveTo(-hw + r, -hh);
-    s.lineTo(hw - r, -hh);
-    s.quadraticCurveTo(hw, -hh, hw, -hh + r);
-    s.lineTo(hw, hh - r);
-    s.quadraticCurveTo(hw, hh, hw - r, hh);
-    s.lineTo(-hw + r, hh);
-    s.quadraticCurveTo(-hw, hh, -hw, hh - r);
-    s.lineTo(-hw, -hh + r);
-    s.quadraticCurveTo(-hw, -hh, -hw + r, -hh);
-    s.closePath();
-    return s;
-  })(),
-  { depth: 0.006, bevelEnabled: false },
-);
+const scorePanelShape = new Shape();
+const _spw = 0.34, _sph = 0.11;
+scorePanelShape.moveTo(-_spw / 2, -_sph / 2);
+scorePanelShape.lineTo(_spw / 2, -_sph / 2);
+scorePanelShape.lineTo(_spw / 2, _sph / 2);
+scorePanelShape.lineTo(-_spw / 2, _sph / 2);
+scorePanelShape.closePath();
+const scorePanelGeom = new ExtrudeGeometry(scorePanelShape, { depth: 0.006, bevelEnabled: false });
 scorePanelGeom.translate(0, 0, -0.006);
 
 // 漢数字変換
@@ -611,15 +600,15 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
                 {player.name}
               </Text>
               {/* 持ち点パネル（凹み） */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.11, 0.02, 0.58]} geometry={scorePanelGeom}>
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.11, 0.02, 0.6]} geometry={scorePanelGeom}>
                 <meshStandardMaterial color="#030303" roughness={0.95} metalness={0} />
               </mesh>
               {/* LEDゴースト（消灯セグメント） */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.28, 0.022, 0.58]}
+                position={[-0.26, 0.022, 0.6]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.1}
+                fontSize={0.08}
                 color="#1a0505"
                 anchorX="left"
                 anchorY="middle"
@@ -629,9 +618,9 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               {/* 持ち点（点灯セグメント） */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.28, 0.023, 0.58]}
+                position={[-0.26, 0.023, 0.6]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.1}
+                fontSize={0.08}
                 color="#ff3333"
                 anchorX="left"
                 anchorY="middle"
