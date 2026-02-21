@@ -112,33 +112,72 @@ export const Lobby = ({
               )}
             </div>
 
-            {/* 持ち時間設定（ホストのみ変更可能） */}
-            {settings && (
-              <div className="bg-slate-700/50 rounded-lg px-4 py-3 mb-4">
-                <div className="text-slate-400 text-sm mb-2">持ち時間</div>
-                <div className="flex gap-2">
-                  {[
-                    { label: '5分', value: 300 },
-                    { label: '無制限', value: 0 },
-                  ].map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => isHost && onUpdateSettings?.({ timeLimitSeconds: opt.value })}
-                      disabled={!isHost}
-                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-bold transition-all ${
-                        settings.timeLimitSeconds === opt.value
-                          ? 'bg-emerald-600 text-white'
-                          : isHost
-                            ? 'bg-slate-600 text-slate-300 hover:bg-slate-500'
-                            : 'bg-slate-600 text-slate-400 cursor-default'
-                      }`}
+            {/* 2カラム: 参加者 + 設定 */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* 左: 参加者一覧 */}
+              <div className="bg-slate-700/50 rounded-lg px-4 py-3">
+                <div className="text-slate-400 text-sm mb-2">
+                  参加者 ({players.length}/4人)
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {players.map((player) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-1 bg-slate-700 px-3 py-1.5 rounded-lg text-sm"
                     >
-                      {opt.label}
-                    </button>
+                      {player.id === hostId && <Crown className="w-4 h-4 text-yellow-400" />}
+                      <span className="text-white">{player.name}</span>
+                      {player.name === playerName && (
+                        <span className="text-slate-400 text-xs">(自分)</span>
+                      )}
+                    </div>
                   ))}
                 </div>
+                {debugMode && onAddTestPlayer && (
+                  <button
+                    onClick={onAddTestPlayer}
+                    disabled={players.length >= 4}
+                    className="w-full mt-2 px-3 py-1.5 bg-orange-600 hover:bg-orange-700
+                      disabled:bg-gray-600 rounded-lg text-white text-xs font-bold transition-all"
+                  >
+                    + テスト追加
+                  </button>
+                )}
               </div>
-            )}
+
+              {/* 右: 持ち時間設定 */}
+              {settings && (
+                <div className="bg-slate-700/50 rounded-lg px-4 py-3">
+                  <div className="text-slate-400 text-sm mb-2">持ち時間</div>
+                  <div className="flex flex-col gap-1.5">
+                    {[
+                      { label: '5分', value: 300 },
+                      { label: '無制限', value: 0 },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => isHost && onUpdateSettings?.({ timeLimitSeconds: opt.value })}
+                        disabled={!isHost}
+                        className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+                          settings.timeLimitSeconds === opt.value
+                            ? 'bg-emerald-600 text-white'
+                            : isHost
+                              ? 'bg-slate-600 text-slate-300 hover:bg-slate-500'
+                              : 'bg-slate-600 text-slate-400 cursor-default'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 説明テキスト */}
+            <p className="text-slate-500 text-xs mb-4 text-center">
+              索子＋發・中の簡易麻雀。2面子で和了！
+            </p>
 
             {/* デバッグ用: ゲーム開始ボタン */}
             {debugMode && isHost && (
@@ -174,40 +213,6 @@ export const Lobby = ({
                 )}
               </div>
             )}
-
-            {/* 参加者一覧 */}
-            <div className="mb-4">
-              {debugMode && onAddTestPlayer && (
-                <button
-                  onClick={onAddTestPlayer}
-                  disabled={players.length >= 4}
-                  className="w-full mb-2 px-3 py-2 bg-orange-600 hover:bg-orange-700
-                    disabled:bg-gray-600 rounded-lg text-white text-sm font-bold transition-all"
-                >
-                  + テストプレイヤーを追加
-                </button>
-              )}
-              <div className="text-slate-400 text-sm mb-2">
-                参加者 ({players.length}/4人)
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {players.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center gap-1 bg-slate-700 px-3 py-1.5 rounded-lg text-sm"
-                  >
-                    {player.id === hostId && <Crown className="w-4 h-4 text-yellow-400" />}
-                    <span className="text-white">{player.name}</span>
-                    {player.name === playerName && (
-                      <span className="text-slate-400 text-xs">(自分)</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <p className="text-slate-500 text-xs mt-3 text-center">
-                索子＋發・中の簡易麻雀。2面子で和了！
-              </p>
-            </div>
 
             {/* 退出ボタン */}
             <button
