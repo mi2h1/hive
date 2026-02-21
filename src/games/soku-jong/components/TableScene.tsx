@@ -534,16 +534,16 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           return (
             <group key={`wind-${seatIdx}`} rotation={[0, p.rotY, 0]}>
               {/* 風パネル（左角・角丸） */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.535, 0.025, 0.535]} geometry={windPanelGeom}>
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.55, 0.025, 0.55]} geometry={windPanelGeom}>
                 <meshStandardMaterial color={seatIdx === 0 ? '#b8342a' : '#e8e8e8'} roughness={0.7} metalness={0.05} />
               </mesh>
               {/* 風パネル内側ボーダー */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.535, 0.029, 0.535]} geometry={windBorderGeom}>
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.55, 0.029, 0.55]} geometry={windBorderGeom}>
                 <meshStandardMaterial color={seatIdx === 0 ? '#e0c060' : '#999999'} roughness={0.5} metalness={0.1} />
               </mesh>
               <Text
                 font={FONT_YUJI}
-                position={[-0.535, 0.03, 0.535]}
+                position={[-0.55, 0.03, 0.55]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.13}
                 color={seatIdx === 0 ? '#e0c060' : '#1a1a1a'}
