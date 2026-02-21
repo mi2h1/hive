@@ -131,8 +131,8 @@ panelFrameShape.holes.push(panelHole);
 const panelFrameGeom = new ExtrudeGeometry(panelFrameShape, { depth: 0.04, bevelEnabled: false });
 panelFrameGeom.translate(0, 0, -0.02);
 
-// 中央パネル内側
-const panelInnerGeom = new RoundedBoxGeometry(0.85, 0.02, 0.85, 3, 0.05);
+// 中央パネル内側（角丸を外枠と同じ0.06に）
+const panelInnerGeom = new RoundedBoxGeometry(0.85, 0.02, 0.85, 3, 0.06);
 
 interface TableSceneProps {
   gameState?: GameState;
@@ -283,7 +283,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} metalness={0.1} />
       </mesh>
       {/* 中央情報パネル（内枠・角丸・溝表現） */}
-      <mesh position={[0, 0.045, 0]} geometry={panelInnerGeom}>
+      <mesh position={[0, 0.01, 0]} geometry={panelInnerGeom}>
         <meshStandardMaterial color="#181818" roughness={0.7} metalness={0.15} />
       </mesh>
 
@@ -293,7 +293,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           {/* 左側: 局数（上）+ 残牌数（下） */}
           <Text
             font={FONT_YUJI}
-            position={[-0.15, 0.06, -0.08]}
+            position={[-0.15, 0.03, -0.08]}
             rotation={[-Math.PI / 2, 0, 0]}
             fontSize={0.14}
             color="#e0e0e0"
@@ -304,7 +304,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           </Text>
           <Text
             font={FONT_YUJI}
-            position={[-0.15, 0.06, 0.12]}
+            position={[-0.15, 0.03, 0.12]}
             rotation={[-Math.PI / 2, 0, 0]}
             fontSize={0.1}
             color="#aaaaaa"
@@ -319,7 +319,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
             <>
               <Text
                 font={FONT_YUJI}
-                position={[0.18, 0.06, -0.13]}
+                position={[0.18, 0.03, -0.13]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.08}
                 color="#aaaaaa"
@@ -328,7 +328,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               >
                 ドラ
               </Text>
-              <group position={[0.18, 0.06, 0.06]} scale={[0.55, 0.55, 0.55]}>
+              <group position={[0.18, 0.03, 0.06]} scale={[0.55, 0.55, 0.55]}>
                 <TileModel
                   kind={gameState.doraTile.kind}
                   isRed={gameState.doraTile.isRed}
