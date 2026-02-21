@@ -5,6 +5,8 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { TileModel } from './TileModel';
 import type { TileKind, GameState } from '../types/game';
 
+const FONT_YUJI = '/hive/fonts/YujiSyuku-Regular.ttf';
+
 const TABLE_SIZE = 6;
 const FRAME_THICKNESS = 0.15;
 const FRAME_HEIGHT = 0.1;
@@ -260,17 +262,18 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       {gameState && (
         <>
           <Text
+            font={FONT_YUJI}
             position={[0, 0.06, -0.2]}
             rotation={[-Math.PI / 2, 0, 0]}
             fontSize={0.14}
             color="#e0e0e0"
             anchorX="center"
             anchorY="middle"
-            fontWeight="bold"
           >
             {`東${gameState.round}局`}
           </Text>
           <Text
+            font={FONT_YUJI}
             position={[0, 0.06, 0.35]}
             rotation={[-Math.PI / 2, 0, 0]}
             fontSize={0.1}
