@@ -6,9 +6,9 @@ import type { TileKind } from '../types/game';
 
 // 牌のサイズ
 const TILE_WIDTH = 0.24;
-const TILE_HEIGHT = 0.32;
+const TILE_HEIGHT = 0.30;
 const TILE_DEPTH = 0.17;
-const TILE_RADIUS = 0.014;
+const TILE_RADIUS = 0.02;
 const TILE_SEGMENTS = 4;
 
 // マテリアルカラー
@@ -105,10 +105,10 @@ const getTexturePath = (kind: TileKind, isRed: boolean): string => {
   return isRed ? `${base}/soku_r_s${num}.png` : `${base}/soku_s${num}.png`;
 };
 
-// 側面テクスチャ生成（5/6アイボリー + 1/6ブラウン）
+// 側面テクスチャ生成（アイボリー + ブラウン）
 const createSideTexture = (brownEdge: 'left' | 'right' | 'top' | 'bottom'): CanvasTexture => {
   const size = 9;
-  const brown = 2;
+  const brown = 3;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
