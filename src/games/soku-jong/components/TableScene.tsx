@@ -29,13 +29,6 @@ const PLAYERS = [
   { name: 'left', rotY: Math.PI / 2 },
 ] as const;
 
-// 座標をY軸回りに回転
-const rotateY = (x: number, z: number, angle: number): [number, number] => {
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return [x * cos + z * sin, -x * sin + z * cos];
-};
-
 export const TableScene = () => {
   return (
     <>
@@ -73,54 +66,42 @@ export const TableScene = () => {
         <meshStandardMaterial color={FRAME_COLOR} roughness={0.7} />
       </mesh>
 
-      {/* 自家の手牌（少し立てる、表向き） */}
-      {HAND_TILES.map((kind, i) => {
-        const lx = (i - (HAND_TILES.length - 1) / 2) * TILE_SPACING;
+      {/* 4家の牌配置 — groupでY回転し、牌自体はX回転のみ */}
+      {PLAYERS.map((player) => {
+        const isSelf = player.name === 'self';
         return (
-          <TileModel
-            key={`self-hand-${i}`}
-            kind={kind}
-            position={[lx, TILE_D / 2, HAND_Z]}
-            rotation={[-Math.PI / 2 + 0.3, 0, 0]}
-          />
+          <group key={player.name} rotation={[0, player.rotY, 0]}>
+            {/* 手牌 */}
+            {HAND_TILES.map((kind, i) => {
+              const lx = (i - (HAND_TILES.length - 1) / 2) * TILE_SPACING;
+              return (
+                <TileModel
+                  key={`${player.name}-hand-${i}`}
+                  kind={isSelf ? kind : '1s'}
+                  position={[lx, TILE_D / 2, HAND_Z]}
+                  rotation={isSelf
+                    ? [-Math.PI / 2 + 0.3, 0, 0]
+                    : [Math.PI / 2, 0, 0]
+                  }
+                />
+              );
+            })}
+
+            {/* 河 */}
+            {RIVER_TILES.map((kind, i) => {
+              const lx = (i - (RIVER_TILES.length - 1) / 2) * TILE_SPACING;
+              return (
+                <TileModel
+                  key={`${player.name}-river-${i}`}
+                  kind={kind}
+                  position={[lx, TILE_D / 2, RIVER_Z]}
+                  rotation={[-Math.PI / 2, 0, 0]}
+                />
+              );
+            })}
+          </group>
         );
       })}
-
-      {/* 他家の手牌（伏せて卓に置く、裏向き） */}
-      {PLAYERS.filter((p) => p.name !== 'self').map((player) => (
-        <group key={player.name}>
-          {HAND_TILES.map((_, i) => {
-            const lx = (i - (HAND_TILES.length - 1) / 2) * TILE_SPACING;
-            const [wx, wz] = rotateY(lx, HAND_Z, player.rotY);
-            return (
-              <TileModel
-                key={`${player.name}-hand-${i}`}
-                kind="1s"
-                position={[wx, TILE_D / 2, wz]}
-                rotation={[Math.PI / 2, player.rotY, 0]}
-              />
-            );
-          })}
-        </group>
-      ))}
-
-      {/* 4家の河（寝かせて配置、表向き） */}
-      {PLAYERS.map((player) => (
-        <group key={`${player.name}-river`}>
-          {RIVER_TILES.map((kind, i) => {
-            const lx = (i - (RIVER_TILES.length - 1) / 2) * TILE_SPACING;
-            const [wx, wz] = rotateY(lx, RIVER_Z, player.rotY);
-            return (
-              <TileModel
-                key={`${player.name}-river-${i}`}
-                kind={kind}
-                position={[wx, TILE_D / 2, wz]}
-                rotation={[-Math.PI / 2, player.rotY, 0]}
-              />
-            );
-          })}
-        </group>
-      ))}
 
       {/* 山札風（中央付近、裏向き積み重ね） */}
       {[0, 1, 2].map((layer) => (
