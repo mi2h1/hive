@@ -283,8 +283,6 @@ export const SokuJongGame = ({ onBack }: SokuJongGameProps) => {
   // finished フェーズ — 最終結果画面
   if (phase === 'finished' && gameState) {
     const rankedPlayers = [...players].sort((a, b) => b.score - a.score);
-    const topPlayer = rankedPlayers[0];
-
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-900 to-green-900">
         <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
