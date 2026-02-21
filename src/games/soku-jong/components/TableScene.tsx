@@ -330,6 +330,28 @@ windBorderHole.closePath();
 windBorderShape.holes.push(windBorderHole);
 const windBorderGeom = new ExtrudeGeometry(windBorderShape, { depth: 0.001, bevelEnabled: false });
 
+// スコア表示パネル（凹み矩形）
+const scorePanelGeom = new ExtrudeGeometry(
+  (() => {
+    const s = new Shape();
+    const sw = 0.38, sh = 0.13, r = 0.015;
+    const hw = sw / 2, hh = sh / 2;
+    s.moveTo(-hw + r, -hh);
+    s.lineTo(hw - r, -hh);
+    s.quadraticCurveTo(hw, -hh, hw, -hh + r);
+    s.lineTo(hw, hh - r);
+    s.quadraticCurveTo(hw, hh, hw - r, hh);
+    s.lineTo(-hw + r, hh);
+    s.quadraticCurveTo(-hw, hh, -hw, hh - r);
+    s.lineTo(-hw, -hh + r);
+    s.quadraticCurveTo(-hw, -hh, -hw + r, -hh);
+    s.closePath();
+    return s;
+  })(),
+  { depth: 0.006, bevelEnabled: false },
+);
+scorePanelGeom.translate(0, 0, -0.006);
+
 // 漢数字変換
 const KANJI_NUM = ['〇', '一', '二', '三', '四'] as const;
 const toKanji = (n: number): string => KANJI_NUM[n] ?? String(n);
@@ -588,13 +610,29 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               >
                 {player.name}
               </Text>
-              {/* 持ち点 */}
+              {/* 持ち点パネル（凹み） */}
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.11, 0.02, 0.58]} geometry={scorePanelGeom}>
+                <meshStandardMaterial color="#030303" roughness={0.95} metalness={0} />
+              </mesh>
+              {/* LEDゴースト（消灯セグメント） */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.3, 0.03, 0.58]}
+                position={[-0.28, 0.022, 0.58]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.12}
-                color="#e0e0e0"
+                fontSize={0.1}
+                color="#1a0505"
+                anchorX="left"
+                anchorY="middle"
+              >
+                {'88888'}
+              </Text>
+              {/* 持ち点（点灯セグメント） */}
+              <Text
+                font={FONT_DIGI}
+                position={[-0.28, 0.023, 0.58]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                fontSize={0.1}
+                color="#ff3333"
                 anchorX="left"
                 anchorY="middle"
               >
