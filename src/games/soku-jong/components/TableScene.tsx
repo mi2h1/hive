@@ -265,13 +265,13 @@ const _wps = WIND_PANEL_SIZE / 2;
 const _wpr = WIND_PANEL_R;
 windPanelShape.moveTo(-_wps + _wpr, -_wps);
 windPanelShape.lineTo(_wps - _wpr, -_wps);
-windPanelShape.quadraticCurveTo(_wps, -_wps, _wps, -_wps + _wpr);
+windPanelShape.quadraticCurveTo(_wps - _wpr, -_wps + _wpr, _wps, -_wps + _wpr);
 windPanelShape.lineTo(_wps, _wps - _wpr);
-windPanelShape.quadraticCurveTo(_wps, _wps, _wps - _wpr, _wps);
+windPanelShape.quadraticCurveTo(_wps - _wpr, _wps - _wpr, _wps - _wpr, _wps);
 windPanelShape.lineTo(-_wps + _wpr, _wps);
-windPanelShape.quadraticCurveTo(-_wps, _wps, -_wps, _wps - _wpr);
+windPanelShape.quadraticCurveTo(-_wps + _wpr, _wps - _wpr, -_wps, _wps - _wpr);
 windPanelShape.lineTo(-_wps, -_wps + _wpr);
-windPanelShape.quadraticCurveTo(-_wps, -_wps, -_wps + _wpr, -_wps);
+windPanelShape.quadraticCurveTo(-_wps + _wpr, -_wps + _wpr, -_wps + _wpr, -_wps);
 windPanelShape.closePath();
 const windPanelGeom = new ExtrudeGeometry(windPanelShape, { depth: 0.003, bevelEnabled: false });
 
