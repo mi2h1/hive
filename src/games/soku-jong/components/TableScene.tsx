@@ -131,7 +131,7 @@ hollowBoardShape.lineTo(_hbs, _hbs);
 hollowBoardShape.lineTo(-_hbs, _hbs);
 hollowBoardShape.closePath();
 const hollowBoardHole = new Path();
-drawChamferedRect(hollowBoardHole, 3.6, 3.6, 0.12);
+drawChamferedRect(hollowBoardHole, 3.2, 3.2, 0.11);
 hollowBoardShape.holes.push(hollowBoardHole);
 const hollowBoardGeom = new ExtrudeGeometry(hollowBoardShape, { depth: 0.02, bevelEnabled: false });
 hollowBoardGeom.translate(0, 0, -0.01);
