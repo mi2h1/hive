@@ -154,7 +154,7 @@ trapTileGeom.translate(0, 0, -0.01);
 
 // 中央パネル外枠（中抜きフレーム）
 const panelFrameShape = new Shape();
-drawChamferedRect(panelFrameShape, 1.2, 1.2, 0.06);
+drawChamferedRect(panelFrameShape, 1.4, 1.4, 0.03);
 const panelHole = new Path();
 drawChamferedRect(panelHole, 0.86, 0.86, 0.06);
 panelFrameShape.holes.push(panelHole);
