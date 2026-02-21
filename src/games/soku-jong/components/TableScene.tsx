@@ -285,10 +285,14 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 3, 0]} geometry={hollowBoardGeom}>
         <meshStandardMaterial color="#1a5c2a" roughness={0.9} metalness={0} />
       </mesh>
-      {/* 台形タイル（穴の自家側） */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 3, 1.6]} geometry={trapTileGeom}>
-        <meshStandardMaterial color="#cc8800" roughness={0.5} metalness={0.1} />
-      </mesh>
+      {/* 台形タイル（4家分） */}
+      {PLAYERS.map((player) => (
+        <group key={`trap-${player.name}`} position={[0, 3, 0]} rotation={[0, player.rotY, 0]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 1.6]} geometry={trapTileGeom}>
+            <meshStandardMaterial color="#cc8800" roughness={0.5} metalness={0.1} />
+          </mesh>
+        </group>
+      ))}
 
       {/* テーブル枠（4辺・角丸 + 木目） */}
       {/* 手前 (+Z) */}
