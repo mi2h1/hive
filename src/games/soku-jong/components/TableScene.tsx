@@ -20,6 +20,18 @@ const TILE_SPACING = TILE_W + 0.02;
 // 各家の手牌・河の配置距離
 const HAND_Z = 2.3;
 const RIVER_Z = 0.9;
+const RIVER_COLS = 6; // 河の1行あたりの枚数
+const RIVER_ROW_SPACING = TILE_W + 0.02; // 行間（奥方向）
+
+// 河の牌位置を計算（左詰め、6枚で折り返し）
+const getRiverPosition = (index: number): [number, number, number] => {
+  const col = index % RIVER_COLS;
+  const row = Math.floor(index / RIVER_COLS);
+  const startX = -((RIVER_COLS - 1) / 2) * TILE_SPACING;
+  const lx = startX + col * TILE_SPACING;
+  const lz = RIVER_Z - row * RIVER_ROW_SPACING;
+  return [lx, TILE_D / 2, lz];
+};
 
 // 各家のサンプル牌
 const HAND_TILES: TileKind[] = ['1s', '3s', '5s', '7s', '9s'];
@@ -374,13 +386,12 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
 
                 {/* 河 */}
                 {player.discards.map((tile, i) => {
-                  const lx = (i - (player.discards.length - 1) / 2) * TILE_SPACING;
                   return (
                     <TileModel
                       key={`river-${tile.id}`}
                       kind={tile.kind}
                       isRed={tile.isRed}
-                      position={[lx, TILE_D / 2, RIVER_Z]}
+                      position={getRiverPosition(i)}
                       rotation={[-Math.PI / 2, 0, 0]}
                     />
                   );
@@ -416,12 +427,11 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
 
               {/* 河 */}
               {RIVER_TILES.map((kind, i) => {
-                const lx = (i - (RIVER_TILES.length - 1) / 2) * TILE_SPACING;
                 return (
                   <TileModel
                     key={`${player.name}-river-${i}`}
                     kind={kind}
-                    position={[lx, TILE_D / 2, RIVER_Z]}
+                    position={getRiverPosition(i)}
                     rotation={[-Math.PI / 2, 0, 0]}
                   />
                 );
