@@ -259,7 +259,7 @@ const WIND_NAMES = ['東', '南', '西', '北'] as const;
 
 // 風パネル（角丸正方形）
 const WIND_PANEL_SIZE = 0.24;
-const WIND_PANEL_R = 0.05; // 角丸半径
+const WIND_PANEL_R = 0.03; // 角凹み半径
 const windPanelShape = new Shape();
 const _wps = WIND_PANEL_SIZE / 2;
 const _wpr = WIND_PANEL_R;
