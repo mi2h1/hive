@@ -69,9 +69,9 @@ const fixUVs = (geom: RoundedBoxGeometry, w: number, h: number, d: number) => {
 
 // テクスチャの透明背景を白背景に合成 + 縮小して中央配置
 const getFaceTextureScale = (kind: TileKind): number => {
-  if (kind === '1s') return 0.8;
-  if (kind === 'chun') return 0.7;
-  return 0.8;
+  if (kind === '1s') return 0.9;
+  if (kind === 'chun') return 0.8;
+  return 0.9;
 };
 
 const flattenAlpha = (texture: Texture, scale: number): void => {
