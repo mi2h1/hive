@@ -108,6 +108,10 @@ const frameGeomV = new RoundedBoxGeometry(
   FRAME_SEGMENTS, FRAME_RADIUS,
 );
 
+// 中央パネルのジオメトリ（角丸）
+const panelOuterGeom = new RoundedBoxGeometry(1.2, 0.04, 1.2, 3, 0.06);
+const panelInnerGeom = new RoundedBoxGeometry(0.85, 0.02, 0.85, 3, 0.05);
+
 interface TableSceneProps {
   gameState?: GameState;
   playerId?: string;
@@ -252,14 +256,12 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
         })
       )}
 
-      {/* 中央情報パネル（外枠） */}
-      <mesh position={[0, 0.02, 0]}>
-        <boxGeometry args={[1.2, 0.04, 1.2]} />
+      {/* 中央情報パネル（外枠・角丸） */}
+      <mesh position={[0, 0.02, 0]} geometry={panelOuterGeom}>
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} metalness={0.1} />
       </mesh>
-      {/* 中央情報パネル（内枠・溝表現） */}
-      <mesh position={[0, 0.045, 0]}>
-        <boxGeometry args={[0.85, 0.02, 0.85]} />
+      {/* 中央情報パネル（内枠・角丸・溝表現） */}
+      <mesh position={[0, 0.045, 0]} geometry={panelInnerGeom}>
         <meshStandardMaterial color="#181818" roughness={0.7} metalness={0.15} />
       </mesh>
 
