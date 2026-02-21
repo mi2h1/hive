@@ -75,6 +75,8 @@ const getFaceTextureScale = (kind: TileKind): number => {
 };
 
 const flattenAlpha = (texture: Texture, scale: number): void => {
+  if (texture.userData._flattened) return;
+  texture.userData._flattened = true;
   const img = texture.image as HTMLImageElement;
   if (!img) return;
   const w = img.naturalWidth || img.width;
