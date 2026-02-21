@@ -254,6 +254,9 @@ drawChamferedRectWithNotches(panelInnerShape, 0.85, 0.85, 0.055, 0.24, 0.18, 0.0
 const panelInnerGeom = new ExtrudeGeometry(panelInnerShape, { depth: 0.02, bevelEnabled: false });
 panelInnerGeom.translate(0, 0, -0.01);
 
+// 自風名（席順: 自=東, 右=南, 対=西, 左=北）
+const WIND_NAMES = ['東', '南', '西', '北'] as const;
+
 // 漢数字変換
 const KANJI_NUM = ['〇', '一', '二', '三', '四'] as const;
 const toKanji = (n: number): string => KANJI_NUM[n] ?? String(n);
@@ -472,6 +475,29 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           </group>
         );
       })}
+
+      {/* 外枠パネル: 自風 + 所持点（自家） */}
+      {gameState && playerId && (() => {
+        const seatedPlayers = getRelativeSeatOrder(gameState.players, playerId);
+        const selfPlayer = seatedPlayers[0];
+        if (!selfPlayer) return null;
+        const panelMid = (0.43 + 0.7) / 2; // 外枠の自家側中央z
+        return (
+          <group rotation={[0, 0, 0]}>
+            <Text
+              font={FONT_YUJI}
+              position={[0, 0.03, panelMid]}
+              rotation={[-Math.PI / 2, 0, 0]}
+              fontSize={0.09}
+              color="#e0e0e0"
+              anchorX="center"
+              anchorY="middle"
+            >
+              {`${WIND_NAMES[0]}  ${selfPlayer.score}`}
+            </Text>
+          </group>
+        );
+      })()}
 
       {/* 中央パネル情報表示 */}
       {gameState && (
