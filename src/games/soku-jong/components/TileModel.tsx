@@ -149,7 +149,7 @@ export const TileModel = ({
   rotation = [0, 0, 0],
 }: TileModelProps) => {
   const faceTexture = useTexture(getTexturePath(kind, isRed));
-  faceTexture.anisotropy = 8;
+  faceTexture.anisotropy = 16;
   const scale = getFaceTextureScale(kind);
   useMemo(() => flattenAlpha(faceTexture, scale), [faceTexture, scale]);
 
