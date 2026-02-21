@@ -129,6 +129,15 @@ const createSideTexture = (brownEdge: 'left' | 'right' | 'top' | 'bottom'): Canv
   return texture;
 };
 
+// 側面テクスチャをモジュールレベルで4個だけ生成（全牌で共有）
+const sharedSidePX = createSideTexture('right');
+const sharedSideNX = createSideTexture('left');
+const sharedSidePY = createSideTexture('top');
+const sharedSideNY = createSideTexture('bottom');
+
+// バンプテクスチャをモジュールレベルでキャッシュ（kind+isRed → CanvasTexture）
+const bumpCache = new Map<string, CanvasTexture>();
+
 // ジオメトリをモジュールレベルで1つだけ生成（全牌で共有）
 const sharedGeometry = new RoundedBoxGeometry(
   TILE_WIDTH, TILE_HEIGHT, TILE_DEPTH, TILE_SEGMENTS, TILE_RADIUS,
@@ -168,8 +177,12 @@ export const TileModel = ({
   const scale = getFaceTextureScale(kind);
   useMemo(() => flattenAlpha(faceTexture, scale), [faceTexture, scale]);
 
-  // bumpMap: 絵柄テクスチャから反転グレースケールを生成（白=平坦、暗=凹）
+  // bumpMap: キャッシュから取得、なければ生成してキャッシュ
   const bumpTexture = useMemo(() => {
+    const cacheKey = `${kind}_${isRed}`;
+    const cached = bumpCache.get(cacheKey);
+    if (cached) return cached;
+
     const src = faceTexture.image as HTMLCanvasElement | HTMLImageElement;
     if (!src) return null;
     const w = ('naturalWidth' in src ? src.naturalWidth : src.width) || src.width;
@@ -183,7 +196,6 @@ export const TileModel = ({
     const imageData = ctx.getImageData(0, 0, w, h);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
-      // グレースケール化して反転（白い部分=高い、色部分=低い）
       const gray = (data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11);
       data[i] = data[i + 1] = data[i + 2] = gray;
       data[i + 3] = 255;
@@ -191,14 +203,9 @@ export const TileModel = ({
     ctx.putImageData(imageData, 0, 0);
     const tex = new CanvasTexture(canvas);
     tex.anisotropy = 16;
+    bumpCache.set(cacheKey, tex);
     return tex;
-  }, [faceTexture]);
-
-  // 側面テクスチャ
-  const sidePX = useMemo(() => createSideTexture('right'), []);
-  const sideNX = useMemo(() => createSideTexture('left'), []);
-  const sidePY = useMemo(() => createSideTexture('top'), []);
-  const sideNY = useMemo(() => createSideTexture('bottom'), []);
+  }, [faceTexture, kind, isRed]);
 
   // material index: 0=+X, 1=-X, 2=+Y, 3=-Y, 4=+Z(表), 5=-Z(裏)
   return (
@@ -211,12 +218,12 @@ export const TileModel = ({
       onPointerOver={onPointerOver ? (e) => { e.stopPropagation(); onPointerOver(); } : undefined}
       onPointerOut={onPointerOut ? (e) => { e.stopPropagation(); onPointerOut(); } : undefined}
     >
-      <meshPhysicalMaterial attach="material-0" map={sidePX} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
-      <meshPhysicalMaterial attach="material-1" map={sideNX} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
-      <meshPhysicalMaterial attach="material-2" map={sidePY} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
-      <meshPhysicalMaterial attach="material-3" map={sideNY} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
-      <meshPhysicalMaterial attach="material-4" map={faceTexture} bumpMap={bumpTexture} bumpScale={-0.025} clearcoat={0} roughness={0.8} />
-      <meshPhysicalMaterial attach="material-5" color={BROWN} clearcoat={0.6} clearcoatRoughness={0.1} roughness={0.25} ior={1.5} reflectivity={0.4} />
+      <meshStandardMaterial attach="material-0" map={sharedSidePX} roughness={0.15} metalness={0.05} />
+      <meshStandardMaterial attach="material-1" map={sharedSideNX} roughness={0.15} metalness={0.05} />
+      <meshStandardMaterial attach="material-2" map={sharedSidePY} roughness={0.15} metalness={0.05} />
+      <meshStandardMaterial attach="material-3" map={sharedSideNY} roughness={0.15} metalness={0.05} />
+      <meshStandardMaterial attach="material-4" map={faceTexture} bumpMap={bumpTexture} bumpScale={-0.025} roughness={0.8} />
+      <meshStandardMaterial attach="material-5" color={BROWN} roughness={0.25} metalness={0.05} />
     </mesh>
   );
 };

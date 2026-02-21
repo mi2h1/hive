@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
-import { OrbitControls, Environment, Text } from '@react-three/drei';
+import { OrbitControls, Text } from '@react-three/drei';
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace, Shape, Path, ExtrudeGeometry } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { TileModel } from './TileModel';
@@ -442,14 +442,13 @@ export const TableScene = ({
   return (
     <>
       {/* ライティング */}
-      <Environment preset="studio" environmentIntensity={0.1} />
-      <ambientLight intensity={0.4} />
+      <ambientLight intensity={0.5} />
       <directionalLight
         position={[0, 8, 0]}
         intensity={0.5}
         castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        shadow-mapSize-width={512}
+        shadow-mapSize-height={512}
         shadow-camera-left={-4}
         shadow-camera-right={4}
         shadow-camera-top={4}
@@ -627,7 +626,7 @@ export const TableScene = ({
 
       {/* 中央情報パネル（外枠・中抜きフレーム） */}
       <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelFrameGeom} castShadow>
-        <meshPhysicalMaterial color="#0a0a0a" roughness={0.8} metalness={0.05} clearcoat={0.1} clearcoatRoughness={0.5} bumpMap={panelBumpTexture} bumpScale={0.003} />
+        <meshStandardMaterial color="#0a0a0a" roughness={0.8} metalness={0.05} bumpMap={panelBumpTexture} bumpScale={0.003} />
       </mesh>
       {/* 中央情報パネル（溝底） */}
       <mesh position={[0, -0.008, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelBaseGeom}>
@@ -635,7 +634,7 @@ export const TableScene = ({
       </mesh>
       {/* 中央情報パネル（内枠・漆塗り風） */}
       <mesh position={[0, -0.003, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelInnerGeom} castShadow>
-        <meshPhysicalMaterial color="#2a0a0a" roughness={0.7} metalness={0.03} clearcoat={0.15} clearcoatRoughness={0.4} bumpMap={panelBumpTexture} bumpScale={0.002} reflectivity={0.1} />
+        <meshStandardMaterial color="#2a0a0a" roughness={0.7} metalness={0.03} bumpMap={panelBumpTexture} bumpScale={0.002} />
       </mesh>
 
       {/* ターン表示ランプ（4辺） */}

@@ -371,9 +371,9 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
           <EffectComposer>
             <SSAO
               blendFunction={BlendFunction.MULTIPLY}
-              samples={16}
-              radius={0.1}
-              intensity={15}
+              samples={8}
+              radius={0.08}
+              intensity={8}
             />
             <Bloom
               intensity={0.15}
