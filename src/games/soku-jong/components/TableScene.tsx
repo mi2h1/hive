@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { OrbitControls, Environment, Html } from '@react-three/drei';
+import { OrbitControls, Environment, Text } from '@react-three/drei';
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { TileModel } from './TileModel';
@@ -259,32 +259,30 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       {/* 中央パネル情報表示 */}
       {gameState && (
         <>
-          <Html
-            position={[0, 0.06, 0]}
-            center
-            transform
+          <Text
+            position={[0, 0.06, -0.2]}
             rotation={[-Math.PI / 2, 0, 0]}
-            scale={0.15}
-            style={{ pointerEvents: 'none' }}
+            fontSize={0.14}
+            color="#e0e0e0"
+            anchorX="center"
+            anchorY="middle"
+            fontWeight="bold"
           >
-            <div style={{
-              color: '#e0e0e0',
-              fontFamily: 'sans-serif',
-              textAlign: 'center',
-              whiteSpace: 'nowrap',
-              userSelect: 'none',
-            }}>
-              <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
-                東{gameState.round}局
-              </div>
-              <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '2px' }}>
-                残り {gameState.deck.length} 枚
-              </div>
-            </div>
-          </Html>
+            {`東${gameState.round}局`}
+          </Text>
+          <Text
+            position={[0, 0.06, 0.35]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            fontSize={0.1}
+            color="#aaaaaa"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {`残り ${gameState.deck.length} 枚`}
+          </Text>
           {/* ドラ牌をパネル上に小さく表示 */}
           {gameState.doraTile && (
-            <group position={[0, 0.05, 0.25]} scale={[0.6, 0.6, 0.6]}>
+            <group position={[0, 0.05, 0.1]} scale={[0.6, 0.6, 0.6]}>
               <TileModel
                 kind={gameState.doraTile.kind}
                 isRed={gameState.doraTile.isRed}
