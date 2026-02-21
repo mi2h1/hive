@@ -503,7 +503,7 @@ function App() {
               <img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-16" />
             </div>
             <div className="p-4">
-              <h2 className="mb-2"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-8" /></h2>
+              <h2 className="text-xl font-bold text-white mb-2">速雀</h2>
               <p className="text-slate-400 text-sm mb-4">
                 索子＋發・中だけの簡易麻雀ゲーム。<br />
                 2面子を揃えて和了を目指せ！
