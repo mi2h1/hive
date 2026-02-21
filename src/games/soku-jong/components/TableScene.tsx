@@ -138,10 +138,10 @@ hollowBoardGeom.translate(0, 0, -0.01);
 
 // 台形タイル（穴の自家側に配置）
 const trapTileShape = new Shape();
-trapTileShape.moveTo(-0.5, 0);
-trapTileShape.lineTo(0.5, 0);
-trapTileShape.lineTo(0.35, 0.3);
-trapTileShape.lineTo(-0.35, 0.3);
+trapTileShape.moveTo(-1.6, 0);
+trapTileShape.lineTo(1.6, 0);
+trapTileShape.lineTo(1.2, 0.4);
+trapTileShape.lineTo(-1.2, 0.4);
 trapTileShape.closePath();
 const trapTileGeom = new ExtrudeGeometry(trapTileShape, { depth: 0.02, bevelEnabled: false });
 trapTileGeom.translate(0, 0, -0.01);
