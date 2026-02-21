@@ -167,7 +167,7 @@ trapTileGeom.translate(0, 0, -0.01);
 
 // 台形+長方形タイル（自家用・十字の腕分を延長）
 const trapExtShape = new Shape();
-const _ext = 1.72 - 1.595 - 0.04; // 十字の腕の伸び分（手前に隙間）
+const _ext = 1.72 - 1.595 - 0.015; // 十字の腕の伸び分（手前に隙間）
 trapExtShape.moveTo(-1.6, -_ext);
 trapExtShape.lineTo(1.6, -_ext);
 trapExtShape.lineTo(1.6, 0);
