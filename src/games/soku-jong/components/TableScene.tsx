@@ -136,6 +136,16 @@ hollowBoardShape.holes.push(hollowBoardHole);
 const hollowBoardGeom = new ExtrudeGeometry(hollowBoardShape, { depth: 0.02, bevelEnabled: false });
 hollowBoardGeom.translate(0, 0, -0.01);
 
+// 台形タイル（穴の自家側に配置）
+const trapTileShape = new Shape();
+trapTileShape.moveTo(-0.5, 0);
+trapTileShape.lineTo(0.5, 0);
+trapTileShape.lineTo(0.35, 0.3);
+trapTileShape.lineTo(-0.35, 0.3);
+trapTileShape.closePath();
+const trapTileGeom = new ExtrudeGeometry(trapTileShape, { depth: 0.02, bevelEnabled: false });
+trapTileGeom.translate(0, 0, -0.01);
+
 // 中央パネル外枠（中抜きフレーム）
 const panelFrameShape = new Shape();
 drawChamferedRect(panelFrameShape, 1.2, 1.2, 0.06);
@@ -272,6 +282,10 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       {/* 中抜き板（確認用・上空に浮かせ） */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 3, 0]} geometry={hollowBoardGeom}>
         <meshStandardMaterial color="#1a5c2a" roughness={0.9} metalness={0} />
+      </mesh>
+      {/* 台形タイル（穴の自家側） */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 3, 1.6]} geometry={trapTileGeom}>
+        <meshStandardMaterial color="#cc8800" roughness={0.5} metalness={0.1} />
       </mesh>
 
       {/* テーブル枠（4辺・角丸 + 木目） */}
