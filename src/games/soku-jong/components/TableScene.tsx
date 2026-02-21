@@ -556,11 +556,11 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               {/* 持ち点 */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.3, 0.03, 0.55]}
+                position={[0, 0.03, 0.55]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.1}
+                fontSize={0.16}
                 color="#e0e0e0"
-                anchorX="left"
+                anchorX="center"
                 anchorY="middle"
               >
                 {String(player.score)}
