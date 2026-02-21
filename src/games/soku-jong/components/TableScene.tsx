@@ -113,6 +113,29 @@ const createWoodTexture = (): CanvasTexture => {
   return texture;
 };
 
+// パネル用バンプテクスチャ（微細な革風凹凸）
+const createPanelBumpTexture = (): CanvasTexture => {
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#808080';
+  ctx.fillRect(0, 0, size, size);
+  const imageData = ctx.getImageData(0, 0, size, size);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const noise = (Math.random() - 0.5) * 30;
+    const v = Math.max(0, Math.min(255, 128 + noise));
+    data[i] = data[i + 1] = data[i + 2] = v;
+  }
+  ctx.putImageData(imageData, 0, 0);
+  const texture = new CanvasTexture(canvas);
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+  return texture;
+};
+
 // 枠のジオメトリ（角丸）
 const FRAME_RADIUS = 0.02;
 const FRAME_SEGMENTS = 3;
@@ -348,6 +371,7 @@ const getRelativeSeatOrder = (
 export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
   const feltTexture = useMemo(() => createFeltTexture(), []);
   const woodTexture = useMemo(() => createWoodTexture(), []);
+  const panelBumpTexture = useMemo(() => createPanelBumpTexture(), []);
 
   return (
     <>
@@ -496,15 +520,15 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
 
       {/* 中央情報パネル（外枠・中抜きフレーム） */}
       <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelFrameGeom} castShadow>
-        <meshStandardMaterial color="#0a0a0a" roughness={0.9} metalness={0.1} />
+        <meshPhysicalMaterial color="#0a0a0a" roughness={0.4} metalness={0.2} clearcoat={0.6} clearcoatRoughness={0.15} bumpMap={panelBumpTexture} bumpScale={0.003} />
       </mesh>
       {/* 中央情報パネル（溝底） */}
-      <mesh position={[0, -0.005, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelBaseGeom}>
-        <meshStandardMaterial color="#0a0a0a" roughness={0.9} metalness={0.1} />
+      <mesh position={[0, -0.008, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelBaseGeom}>
+        <meshStandardMaterial color="#050505" roughness={0.95} metalness={0} />
       </mesh>
-      {/* 中央情報パネル（内枠・角丸・溝表現） */}
-      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelInnerGeom} castShadow>
-        <meshStandardMaterial color="#2a0a0a" roughness={0.7} metalness={0.15} />
+      {/* 中央情報パネル（内枠・漆塗り風） */}
+      <mesh position={[0, -0.003, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelInnerGeom} castShadow>
+        <meshPhysicalMaterial color="#2a0a0a" roughness={0.3} metalness={0.1} clearcoat={0.8} clearcoatRoughness={0.1} bumpMap={panelBumpTexture} bumpScale={0.002} reflectivity={0.6} />
       </mesh>
 
       {/* ターン表示ランプ（4辺） */}
