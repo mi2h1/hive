@@ -22,7 +22,7 @@ export const TileTestPage = ({ onBack }: TileTestPageProps) => {
       {/* 3D Canvas */}
       <div className="flex-1 min-h-0">
         <Canvas
-          camera={{ position: [0, 6, 6], fov: 40 }}
+          camera={{ position: [0, 6, 6], fov: 35 }}
           gl={{ antialias: true }}
         >
           <color attach="background" args={['#1a1a2e']} />
