@@ -520,7 +520,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
 
       {/* 中央情報パネル（外枠・中抜きフレーム） */}
       <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelFrameGeom} castShadow>
-        <meshPhysicalMaterial color="#0a0a0a" roughness={0.4} metalness={0.2} clearcoat={0.6} clearcoatRoughness={0.15} bumpMap={panelBumpTexture} bumpScale={0.003} />
+        <meshPhysicalMaterial color="#0a0a0a" roughness={0.6} metalness={0.1} clearcoat={0.3} clearcoatRoughness={0.3} bumpMap={panelBumpTexture} bumpScale={0.003} />
       </mesh>
       {/* 中央情報パネル（溝底） */}
       <mesh position={[0, -0.008, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelBaseGeom}>
@@ -528,7 +528,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       </mesh>
       {/* 中央情報パネル（内枠・漆塗り風） */}
       <mesh position={[0, -0.003, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelInnerGeom} castShadow>
-        <meshPhysicalMaterial color="#2a0a0a" roughness={0.3} metalness={0.1} clearcoat={0.8} clearcoatRoughness={0.1} bumpMap={panelBumpTexture} bumpScale={0.002} reflectivity={0.6} />
+        <meshPhysicalMaterial color="#2a0a0a" roughness={0.5} metalness={0.05} clearcoat={0.4} clearcoatRoughness={0.25} bumpMap={panelBumpTexture} bumpScale={0.002} reflectivity={0.3} />
       </mesh>
 
       {/* ターン表示ランプ（4辺） */}
