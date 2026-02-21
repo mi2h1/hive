@@ -1,5 +1,4 @@
 import type { Tile, TileKind, Mentsu } from '../types/game';
-import { BAMBOO_NUMBER } from './tile-deck';
 
 export type YakumanType = 'all-green' | 'chinroto' | 'super-red';
 

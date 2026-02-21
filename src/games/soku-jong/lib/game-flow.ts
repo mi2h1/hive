@@ -221,7 +221,7 @@ export function executeRon(
 
 // 流局
 export function processExhaustiveDraw(
-  gameState: GameState,
+  _gameState: GameState,
 ): Partial<GameState> {
   return {
     phase: 'round_result',
