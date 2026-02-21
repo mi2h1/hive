@@ -5,10 +5,10 @@ import { useTexture } from '@react-three/drei';
 import type { TileKind } from '../types/game';
 
 // 牌のサイズ
-const TILE_WIDTH = 0.26;
-const TILE_HEIGHT = 0.35;
-const TILE_DEPTH = 0.18;
-const TILE_RADIUS = 0.015;
+const TILE_WIDTH = 0.24;
+const TILE_HEIGHT = 0.32;
+const TILE_DEPTH = 0.17;
+const TILE_RADIUS = 0.014;
 const TILE_SEGMENTS = 4;
 
 // マテリアルカラー

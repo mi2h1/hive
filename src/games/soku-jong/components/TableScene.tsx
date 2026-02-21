@@ -12,9 +12,9 @@ const FRAME_THICKNESS = 0.15;
 const FRAME_HEIGHT = 0.1;
 
 // 牌サイズ（TileModel基準）
-const TILE_W = 0.26;
-const TILE_H = 0.35;
-const TILE_D = 0.18;
+const TILE_W = 0.24;
+const TILE_H = 0.32;
+const TILE_D = 0.17;
 const TILE_SPACING = TILE_W + 0.02;
 
 // 各家の手牌・河の配置距離
