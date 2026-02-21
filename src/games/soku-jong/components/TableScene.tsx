@@ -122,6 +122,19 @@ const drawChamferedRect = (target: Shape | Path, w: number, h: number, c: number
   target.closePath();
 };
 
+// テーブル面（中抜きフレーム — 中央パネル部分をくり抜き）
+const tableShape = new Shape();
+const _ths = TABLE_SIZE / 2;
+tableShape.moveTo(-_ths, -_ths);
+tableShape.lineTo(_ths, -_ths);
+tableShape.lineTo(_ths, _ths);
+tableShape.lineTo(-_ths, _ths);
+tableShape.closePath();
+const tableHole = new Path();
+drawChamferedRect(tableHole, 1.2, 1.2, 0.06);
+tableShape.holes.push(tableHole);
+const tableGeom = new ExtrudeGeometry(tableShape, { depth: 0.002, bevelEnabled: false });
+
 // 中央パネル外枠（中抜きフレーム）
 const panelFrameShape = new Shape();
 drawChamferedRect(panelFrameShape, 1.2, 1.2, 0.06);
@@ -249,9 +262,8 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       />
       <directionalLight position={[-3, 5, -2]} intensity={0.2} />
 
-      {/* テーブル面 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[TABLE_SIZE, TABLE_SIZE]} />
+      {/* テーブル面（中抜き） */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow geometry={tableGeom}>
         <meshStandardMaterial map={feltTexture} roughness={0.95} metalness={0} />
       </mesh>
 
