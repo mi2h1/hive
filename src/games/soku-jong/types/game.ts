@@ -31,6 +31,9 @@ export interface Player {
 // ゲームフェーズ
 export type GamePhase = 'waiting' | 'playing' | 'round_result' | 'finished';
 
+// ターンフェーズ
+export type TurnPhase = 'draw' | 'discard' | 'ron_check';
+
 // ゲーム設定
 export interface GameSettings {
   initialScore: number;   // 初期持ち点（デフォルト40）
@@ -47,6 +50,7 @@ export interface GameState {
   doraTile: Tile | null;                // ドラ表示牌
   lastDiscard: Tile | null;             // 直前の打牌
   lastDiscardPlayerId: string | null;
+  turnPhase?: TurnPhase;
   settings: GameSettings;
 }
 
