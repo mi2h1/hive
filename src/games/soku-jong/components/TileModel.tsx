@@ -86,8 +86,9 @@ const flattenAlpha = (texture: Texture, scale: number): void => {
   const ctx = canvas.getContext('2d')!;
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, w, h);
+  const aspect = TILE_WIDTH / TILE_HEIGHT;
   const sw = w * scale;
-  const sh = h * scale;
+  const sh = h * scale * aspect;
   ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
   texture.image = canvas;
   texture.needsUpdate = true;
