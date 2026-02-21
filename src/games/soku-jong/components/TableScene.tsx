@@ -421,29 +421,16 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
             {`残 ${gameState.deck.length}`}
           </Text>
 
-          {/* 右側: ドラ表示 */}
+          {/* 右側: ドラ牌 */}
           {gameState.doraTile && (
-            <>
-              <group position={[0.18, 0.03, -0.06]} scale={[0.55, 0.55, 0.55]}>
-                <TileModel
-                  kind={gameState.doraTile.kind}
-                  isRed={gameState.doraTile.isRed}
-                  position={[0, TILE_D / 2, 0]}
-                  rotation={[-Math.PI / 2, 0, 0]}
-                />
-              </group>
-              <Text
-                font={FONT_YUJI}
-                position={[0.18, 0.03, 0.15]}
+            <group position={[0.22, 0.03, 0.02]} scale={[0.55, 0.55, 0.55]}>
+              <TileModel
+                kind={gameState.doraTile.kind}
+                isRed={gameState.doraTile.isRed}
+                position={[0, TILE_D / 2, 0]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.08}
-                color="#aaaaaa"
-                anchorX="center"
-                anchorY="middle"
-              >
-                ドラ
-              </Text>
-            </>
+              />
+            </group>
           )}
         </>
       )}
