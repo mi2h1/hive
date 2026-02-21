@@ -165,7 +165,7 @@ export const TileModel = ({
       <meshPhysicalMaterial attach="material-1" map={sideNX} clearcoat={0.3} clearcoatRoughness={0.4} roughness={0.5} />
       <meshPhysicalMaterial attach="material-2" map={sidePY} clearcoat={0.3} clearcoatRoughness={0.4} roughness={0.5} />
       <meshPhysicalMaterial attach="material-3" map={sideNY} clearcoat={0.3} clearcoatRoughness={0.4} roughness={0.5} />
-      <meshPhysicalMaterial attach="material-4" map={faceTexture} clearcoat={0.3} clearcoatRoughness={0.4} roughness={0.5} />
+      <meshPhysicalMaterial attach="material-4" map={faceTexture} clearcoat={0.05} clearcoatRoughness={0.6} roughness={0.7} />
       <meshPhysicalMaterial attach="material-5" color={BROWN} clearcoat={0.2} clearcoatRoughness={0.5} roughness={0.6} />
     </mesh>
   );
