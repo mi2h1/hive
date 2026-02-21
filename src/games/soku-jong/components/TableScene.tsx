@@ -606,7 +606,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               {/* LEDゴースト（消灯セグメント） */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.23, 0.022, 0.61]}
+                position={[-0.23, 0.022, 0.59]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.08}
                 color="#1a0505"
@@ -618,7 +618,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               {/* 持ち点（点灯セグメント） */}
               <Text
                 font={FONT_DIGI}
-                position={[-0.23, 0.023, 0.61]}
+                position={[-0.23, 0.023, 0.59]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 fontSize={0.08}
                 color="#ff3333"
