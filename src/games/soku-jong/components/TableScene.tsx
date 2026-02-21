@@ -182,6 +182,12 @@ export const TableScene = () => {
         );
       })}
 
+      {/* 中央情報パネル */}
+      <mesh position={[0, 0.02, 0]}>
+        <boxGeometry args={[1.2, 0.04, 1.2]} />
+        <meshStandardMaterial color="#111111" roughness={0.8} metalness={0.1} />
+      </mesh>
+
       <OrbitControls makeDefault target={[0, 0, 0.4]} />
     </>
   );
