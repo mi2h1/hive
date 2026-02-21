@@ -223,6 +223,7 @@ panelFrameShape.holes.push(panelHole);
 // スコアパネル分のくり抜き（4家分）
 // ローカル[-0.1, y, 0.6] → shape座標(x, -z)に各家rotYで回転
 const _scx = -0.1, _scz = 0.6; // スコアパネル中心（ローカル）
+const _spw = 0.5, _sph = 0.11; // スコアパネルサイズ
 const _schw = _spw / 2, _schh = _sph / 2; // 半幅・半高
 const scoreRotations = [0, -Math.PI / 2, Math.PI, Math.PI / 2];
 for (const rot of scoreRotations) {
@@ -354,7 +355,6 @@ const windBorderGeom = new ExtrudeGeometry(windBorderShape, { depth: 0.001, beve
 
 // スコア表示パネル（凹み矩形）
 const scorePanelShape = new Shape();
-const _spw = 0.5, _sph = 0.11;
 scorePanelShape.moveTo(-_spw / 2, -_sph / 2);
 scorePanelShape.lineTo(_spw / 2, -_sph / 2);
 scorePanelShape.lineTo(_spw / 2, _sph / 2);
