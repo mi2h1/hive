@@ -126,12 +126,18 @@ const drawRoundedRect = (target: Shape | Path, w: number, h: number, r: number) 
 const panelFrameShape = new Shape();
 drawRoundedRect(panelFrameShape, 1.2, 1.2, 0.06);
 const panelHole = new Path();
-drawRoundedRect(panelHole, 0.88, 0.88, 0.06);
+drawRoundedRect(panelHole, 0.86, 0.86, 0.06);
 panelFrameShape.holes.push(panelHole);
 const panelFrameGeom = new ExtrudeGeometry(panelFrameShape, { depth: 0.04, bevelEnabled: false });
 panelFrameGeom.translate(0, 0, -0.02);
 
-// 中央パネル内側（ExtrudeGeometryで高さに依存しない角丸）
+// 中央パネル溝底（穴の奥に敷く黒い四角）
+const panelBaseShape = new Shape();
+drawRoundedRect(panelBaseShape, 0.86, 0.86, 0.06);
+const panelBaseGeom = new ExtrudeGeometry(panelBaseShape, { depth: 0.02, bevelEnabled: false });
+panelBaseGeom.translate(0, 0, -0.01);
+
+// 中央パネル内側
 const panelInnerShape = new Shape();
 drawRoundedRect(panelInnerShape, 0.85, 0.85, 0.055);
 const panelInnerGeom = new ExtrudeGeometry(panelInnerShape, { depth: 0.02, bevelEnabled: false });
@@ -283,6 +289,10 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
 
       {/* 中央情報パネル（外枠・中抜きフレーム） */}
       <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelFrameGeom}>
+        <meshStandardMaterial color="#0a0a0a" roughness={0.9} metalness={0.1} />
+      </mesh>
+      {/* 中央情報パネル（溝底） */}
+      <mesh position={[0, -0.005, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelBaseGeom}>
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} metalness={0.1} />
       </mesh>
       {/* 中央情報パネル（内枠・角丸・溝表現） */}
