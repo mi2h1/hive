@@ -105,7 +105,8 @@ const getTexturePath = (kind: TileKind, isRed: boolean): string => {
 
 // 側面テクスチャ生成（5/6アイボリー + 1/6ブラウン）
 const createSideTexture = (brownEdge: 'left' | 'right' | 'top' | 'bottom'): CanvasTexture => {
-  const size = 5;
+  const size = 9;
+  const brown = 2;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -115,10 +116,10 @@ const createSideTexture = (brownEdge: 'left' | 'right' | 'top' | 'bottom'): Canv
   ctx.fillRect(0, 0, size, size);
 
   ctx.fillStyle = BROWN;
-  if (brownEdge === 'right') ctx.fillRect(size - 1, 0, 1, size);
-  if (brownEdge === 'left') ctx.fillRect(0, 0, 1, size);
-  if (brownEdge === 'bottom') ctx.fillRect(0, size - 1, size, 1);
-  if (brownEdge === 'top') ctx.fillRect(0, 0, size, 1);
+  if (brownEdge === 'right') ctx.fillRect(size - brown, 0, brown, size);
+  if (brownEdge === 'left') ctx.fillRect(0, 0, brown, size);
+  if (brownEdge === 'bottom') ctx.fillRect(0, size - brown, size, brown);
+  if (brownEdge === 'top') ctx.fillRect(0, 0, size, brown);
 
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
