@@ -288,7 +288,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       {/* 台形タイル（4家分） */}
       {PLAYERS.map((player) => (
         <group key={`trap-${player.name}`} position={[0, 3, 0]} rotation={[0, player.rotY, 0]}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 1.59]} geometry={trapTileGeom} scale={[0.99, 0.99, 1]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 1.595]} geometry={trapTileGeom} scale={[0.99, 0.99, 1]}>
             <meshStandardMaterial color="#cc8800" roughness={0.5} metalness={0.1} />
           </mesh>
         </group>
