@@ -182,7 +182,7 @@ const drawRoundedRectWithNotches = (
 
 // 中央パネル内側（台形切り欠き付き）
 const panelInnerShape = new Shape();
-drawRoundedRectWithNotches(panelInnerShape, 0.85, 0.85, 0.055, 0.13, 0.09, 0.025);
+drawRoundedRectWithNotches(panelInnerShape, 0.85, 0.85, 0.055, 0.18, 0.14, 0.025);
 const panelInnerGeom = new ExtrudeGeometry(panelInnerShape, { depth: 0.02, bevelEnabled: false });
 panelInnerGeom.translate(0, 0, -0.01);
 
