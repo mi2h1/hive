@@ -252,18 +252,24 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
         })
       )}
 
-      {/* 中央情報パネル */}
+      {/* 中央情報パネル（外枠） */}
       <mesh position={[0, 0.02, 0]}>
         <boxGeometry args={[1.2, 0.04, 1.2]} />
-        <meshStandardMaterial color="#111111" roughness={0.8} metalness={0.1} />
+        <meshStandardMaterial color="#0a0a0a" roughness={0.9} metalness={0.1} />
+      </mesh>
+      {/* 中央情報パネル（内枠・溝表現） */}
+      <mesh position={[0, 0.045, 0]}>
+        <boxGeometry args={[1.0, 0.02, 1.0]} />
+        <meshStandardMaterial color="#181818" roughness={0.7} metalness={0.15} />
       </mesh>
 
       {/* 中央パネル情報表示 */}
       {gameState && (
         <>
+          {/* 左側: 局数（上）+ 残牌数（下） */}
           <Text
             font={FONT_YUJI}
-            position={[0, 0.06, -0.2]}
+            position={[-0.22, 0.06, -0.12]}
             rotation={[-Math.PI / 2, 0, 0]}
             fontSize={0.14}
             color="#e0e0e0"
@@ -274,25 +280,39 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           </Text>
           <Text
             font={FONT_YUJI}
-            position={[0, 0.06, 0.35]}
+            position={[-0.22, 0.06, 0.15]}
             rotation={[-Math.PI / 2, 0, 0]}
             fontSize={0.1}
             color="#aaaaaa"
             anchorX="center"
             anchorY="middle"
           >
-            {`残り ${gameState.deck.length} 枚`}
+            {`残 ${gameState.deck.length}`}
           </Text>
-          {/* ドラ牌をパネル上に小さく表示 */}
+
+          {/* 右側: ドラ表示 */}
           {gameState.doraTile && (
-            <group position={[0, 0.05, 0.1]} scale={[0.6, 0.6, 0.6]}>
-              <TileModel
-                kind={gameState.doraTile.kind}
-                isRed={gameState.doraTile.isRed}
-                position={[0, TILE_D / 2, 0]}
+            <>
+              <Text
+                font={FONT_YUJI}
+                position={[0.22, 0.06, -0.18]}
                 rotation={[-Math.PI / 2, 0, 0]}
-              />
-            </group>
+                fontSize={0.08}
+                color="#aaaaaa"
+                anchorX="center"
+                anchorY="middle"
+              >
+                ドラ
+              </Text>
+              <group position={[0.22, 0.06, 0.08]} scale={[0.55, 0.55, 0.55]}>
+                <TileModel
+                  kind={gameState.doraTile.kind}
+                  isRed={gameState.doraTile.isRed}
+                  position={[0, TILE_D / 2, 0]}
+                  rotation={[-Math.PI / 2, 0, 0]}
+                />
+              </group>
+            </>
           )}
         </>
       )}
