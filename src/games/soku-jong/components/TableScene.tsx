@@ -608,7 +608,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
                 font={FONT_DIGI}
                 position={[-0.23, 0.022, 0.59]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.08}
+                fontSize={0.095}
                 color="#1a0505"
                 anchorX="left"
                 anchorY="middle"
@@ -620,7 +620,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
                 font={FONT_DIGI}
                 position={[-0.23, 0.023, 0.59]}
                 rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.08}
+                fontSize={0.095}
                 color="#ff3333"
                 anchorX="left"
                 anchorY="middle"
