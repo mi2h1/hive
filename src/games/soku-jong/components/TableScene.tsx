@@ -220,6 +220,28 @@ drawChamferedRect(panelFrameShape, 1.4, 1.4, 0.03);
 const panelHole = new Path();
 drawChamferedRect(panelHole, 0.86, 0.86, 0.06);
 panelFrameShape.holes.push(panelHole);
+// スコアパネル分のくり抜き（4家分）
+// ローカル[-0.1, y, 0.6] → shape座標(x, -z)に各家rotYで回転
+const _scx = -0.1, _scz = 0.6; // スコアパネル中心（ローカル）
+const _schw = _spw / 2, _schh = _sph / 2; // 半幅・半高
+const scoreRotations = [0, -Math.PI / 2, Math.PI, Math.PI / 2];
+for (const rot of scoreRotations) {
+  const cos = Math.cos(rot), sin = Math.sin(rot);
+  const wx = _scx * cos + _scz * sin;     // world x
+  const wz = -_scx * sin + _scz * cos;    // world z
+  const sy = -wz;                           // shape y = -world z
+  // ローカルの幅方向(x)と高さ方向(z)も回転
+  const isHorizontal = Math.abs(cos) > 0.5;
+  const hw = isHorizontal ? _schw : _schh;
+  const hh = isHorizontal ? _schh : _schw;
+  const hole = new Path();
+  hole.moveTo(wx - hw, sy - hh);
+  hole.lineTo(wx + hw, sy - hh);
+  hole.lineTo(wx + hw, sy + hh);
+  hole.lineTo(wx - hw, sy + hh);
+  hole.closePath();
+  panelFrameShape.holes.push(hole);
+}
 const panelFrameGeom = new ExtrudeGeometry(panelFrameShape, { depth: 0.04, bevelEnabled: false });
 panelFrameGeom.translate(0, 0, -0.02);
 
