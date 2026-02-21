@@ -504,7 +504,7 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
       </mesh>
       {/* 中央情報パネル（内枠・角丸・溝表現） */}
       <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} geometry={panelInnerGeom} castShadow>
-        <meshStandardMaterial color="#181818" roughness={0.7} metalness={0.15} />
+        <meshStandardMaterial color="#111111" roughness={0.7} metalness={0.15} />
       </mesh>
 
       {/* ターン表示ランプ（4辺） */}
