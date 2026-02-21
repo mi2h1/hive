@@ -511,7 +511,8 @@ export const TableScene = ({
               <group key={player.id} rotation={[0, rotY, 0]}>
                 {/* 手牌 */}
                 {player.hand.map((tile, i) => {
-                  const lx = (i - (player.hand.length - 1) / 2) * TILE_SPACING;
+                  const tsumoGap = (isSelf && player.hand.length === 6 && i === 5) ? 0.1 : 0;
+                  const lx = (i - (player.hand.length - 1) / 2) * TILE_SPACING + tsumoGap;
                   const isHovered = hoveredTileId === tile.id;
                   const hoverLift = canClick && isHovered ? 0.05 : 0;
                   return (
