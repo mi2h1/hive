@@ -4,7 +4,7 @@ import { useProgress } from '@react-three/drei';
 import { EffectComposer, SSAO, Bloom } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import { TableScene } from './TableScene';
-import type { GameState, TileKind } from '../types/game';
+import type { GameState, TileKind, RoundResult, Tile } from '../types/game';
 import type { ScoreResult } from '../lib/scoring';
 import { findWaitingTiles } from '../lib/furiten';
 import {
@@ -21,11 +21,54 @@ const BOT_DELAY = 800; // botの自動行動ディレイ（ms）
 
 const isBot = (id: string) => id.startsWith('test-');
 
+// 内訳名
+const BREAKDOWN_NAMES: Record<string, string> = {
+  mentsu: '面子点',
+  red: '赤牌',
+  dora: 'ドラ',
+  dealer: '親ボーナス',
+  tanyao: 'タンヤオ',
+  chanta: 'チャンタ',
+};
+
+// 役満名
+const YAKUMAN_NAMES: Record<string, string> = {
+  'all-green': 'オールグリーン',
+  'chinroto': 'チンヤオ',
+  'super-red': 'スーパーレッド',
+};
+
+// 牌テクスチャパス（TileModel.tsx と同じロジック）
+const getTileImagePath = (kind: TileKind, isRed: boolean): string => {
+  const base = '/hive/images/soku-jong';
+  if (kind === 'hatsu') return `${base}/soku_hatsu.png`;
+  if (kind === 'chun') return `${base}/soku_chun.png`;
+  const num = kind.charAt(0);
+  return isRed ? `${base}/soku_r_s${num}.png` : `${base}/soku_s${num}.png`;
+};
+
+// 牌カード（2D表示用）
+const TileCard = ({ tile, size = 'normal' }: { tile: Tile; size?: 'normal' | 'large' }) => {
+  const w = size === 'large' ? 'w-10 h-14' : 'w-8 h-11';
+  return (
+    <div className={`${w} bg-[#f5f0e1] rounded border border-slate-500 flex items-center justify-center overflow-hidden shadow-md`}>
+      <img
+        src={getTileImagePath(tile.kind, tile.isRed)}
+        alt={tile.kind}
+        className="w-[85%] h-[85%] object-contain"
+      />
+    </div>
+  );
+};
+
 interface GameScreenProps {
   gameState: GameState;
   playerId: string;
   onBackToLobby: () => void;
   onUpdateGameState: (newState: Partial<GameState>) => void;
+  roundResult?: RoundResult;
+  onNextRound?: () => void;
+  isGameOver?: boolean;
 }
 
 const LoadingOverlay = () => {
@@ -70,7 +113,14 @@ const formatTime = (seconds: number): string => {
 const GFX_STORAGE_KEY = 'soku-jong-graphics';
 type GraphicsQuality = 'high' | 'standard';
 
-export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameState }: GameScreenProps) => {
+export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameState, roundResult, onNextRound, isGameOver: isGameOverProp }: GameScreenProps) => {
+  const [resultStep, setResultStep] = useState<'result' | 'score'>('result');
+
+  // roundResult が変わったらステップをリセット
+  useEffect(() => {
+    if (roundResult) setResultStep('result');
+  }, [roundResult]);
+
   const [gfxQuality, setGfxQuality] = useState<GraphicsQuality>(() => {
     const stored = localStorage.getItem(GFX_STORAGE_KEY);
     return stored === 'standard' ? 'standard' : 'high';
@@ -90,11 +140,13 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
   const turnPhase = gameState.turnPhase;
 
   // 待ち牌（テンパイ時に手牌の右に表示）
+  const me = gameState.players.find((p) => p.id === playerId);
+  const myHandKey = me?.hand.map(t => t.id).join(',') ?? '';
   const waitingTiles: TileKind[] = useMemo(() => {
-    const me = gameState.players.find((p) => p.id === playerId);
     if (!me || me.hand.length !== 5) return [];
     return findWaitingTiles(me.hand, gameState.doraTile, me.isDealer);
-  }, [gameState.players, gameState.doraTile, playerId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myHandKey, gameState.doraTile, me?.isDealer]);
 
   // ローカル状態
   const [canTsumo, setCanTsumo] = useState(false);
@@ -181,11 +233,13 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
       if (ct && ts) {
         const merged: GameState = { ...gameState, ...newState as GameState };
         const bot = merged.players.find((p) => p.id === drawerId);
+        const prevScores: Record<string, number> = {};
+        for (const p of gameState.players) prevScores[p.id] = p.score;
         const resultState = executeTsumo(merged, drawerId, ts);
         onUpdateGameState({
           ...newState,
           ...resultState,
-          roundResult: { type: 'tsumo', winnerId: drawerId, winnerHand: bot?.hand, score: ts },
+          roundResult: { type: 'tsumo', winnerId: drawerId, winnerHand: bot?.hand, score: ts, prevScores },
         });
       } else {
         // Botはツモだけして discard phase へ（auto-discard は別の effect で）
@@ -257,6 +311,8 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
           const bot = gameState.players.find((p) => p.id === topCandidate.playerId);
           const lastDiscard = gameState.lastDiscard;
           const winnerHand = bot && lastDiscard ? [...bot.hand, lastDiscard] : bot?.hand;
+          const prevScores: Record<string, number> = {};
+          for (const p of gameState.players) prevScores[p.id] = p.score;
           const resultState = executeRon(gameState, topCandidate.playerId, discarderId!, topCandidate.score);
           onUpdateGameState({
             ...resultState,
@@ -266,6 +322,7 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
               loserId: discarderId!,
               winnerHand,
               score: topCandidate.score,
+              prevScores,
             },
           });
           setTimeout(() => { processingRef.current = false; }, 200);
@@ -300,10 +357,12 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
   const handleTsumo = useCallback(() => {
     if (!canTsumo || !tsumoScore) return;
     const me = gameState.players.find((p) => p.id === playerId);
+    const prevScores: Record<string, number> = {};
+    for (const p of gameState.players) prevScores[p.id] = p.score;
     const resultState = executeTsumo(gameState, playerId, tsumoScore);
     onUpdateGameState(saveTimeBank({
       ...resultState,
-      roundResult: { type: 'tsumo', winnerId: playerId, winnerHand: me?.hand, score: tsumoScore },
+      roundResult: { type: 'tsumo', winnerId: playerId, winnerHand: me?.hand, score: tsumoScore, prevScores },
     }));
     setCanTsumo(false);
     setTsumoScore(null);
@@ -314,6 +373,8 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
     const me = gameState.players.find((p) => p.id === playerId);
     const lastDiscard = gameState.lastDiscard;
     const winnerHand = me && lastDiscard ? [...me.hand, lastDiscard] : me?.hand;
+    const prevScores: Record<string, number> = {};
+    for (const p of gameState.players) prevScores[p.id] = p.score;
     const resultState = executeRon(gameState, playerId, gameState.lastDiscardPlayerId, ronInfo.score);
     onUpdateGameState(saveTimeBank({
       ...resultState,
@@ -323,6 +384,7 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
         loserId: gameState.lastDiscardPlayerId,
         winnerHand,
         score: ronInfo.score,
+        prevScores,
       },
     }));
     setRonInfo(null);
@@ -406,6 +468,161 @@ export const GameScreen = ({ gameState, playerId, onBackToLobby, onUpdateGameSta
             />
           </EffectComposer>
         </Canvas>
+
+        {/* 結果モーダルオーバーレイ */}
+        {roundResult && (() => {
+          const winner = roundResult.winnerId ? gameState.players.find((p) => p.id === roundResult.winnerId) : null;
+          const loser = roundResult.loserId ? gameState.players.find((p) => p.id === roundResult.loserId) : null;
+          const score = roundResult.score;
+
+          return (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+              <div className="bg-slate-800/95 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-slate-600/50">
+                {resultStep === 'result' ? (
+                  <>
+                    {/* 局結果ヘッダー */}
+                    <div className="text-center mb-5">
+                      <p className="text-slate-500 text-sm mb-1">東{gameState.round}局</p>
+                      {roundResult.type === 'draw' ? (
+                        <h2 className="text-2xl font-bold text-amber-400">流局</h2>
+                      ) : roundResult.type === 'tsumo' ? (
+                        <h2 className="text-2xl font-bold text-red-400">
+                          {winner?.name ?? '?'} ツモ和了
+                        </h2>
+                      ) : (
+                        <h2 className="text-2xl font-bold text-red-400">
+                          {winner?.name ?? '?'} ロン
+                          <span className="text-lg text-slate-400 ml-2">← {loser?.name ?? '?'}</span>
+                        </h2>
+                      )}
+                    </div>
+
+                    {/* 和了者の手牌（2D画像） */}
+                    {roundResult.winnerHand && roundResult.winnerHand.length > 0 && (
+                      <div className="flex justify-center gap-1 mb-4 flex-wrap">
+                        {roundResult.winnerHand.slice(0, 5).map((tile) => (
+                          <TileCard key={tile.id} tile={tile} />
+                        ))}
+                        {roundResult.winnerHand.length > 5 && (
+                          <>
+                            <div className="w-1" />
+                            <TileCard tile={roundResult.winnerHand[5]} />
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 点数内訳 */}
+                    {score && (
+                      <div className="bg-slate-900/50 rounded-lg p-4 mb-4">
+                        {score.yakuman ? (
+                          <div className="text-center">
+                            <p className="text-xl font-bold text-amber-300 mb-1">
+                              {YAKUMAN_NAMES[score.yakuman] ?? score.yakuman}
+                            </p>
+                            <p className="text-3xl font-bold text-red-400">{score.yakumanPoints}点</p>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="space-y-1 mb-3">
+                              {Object.entries(score.breakdown).map(([key, val]) => {
+                                if (val === 0) return null;
+                                return (
+                                  <div key={key} className="flex justify-between text-sm">
+                                    <span className="text-slate-400">{BREAKDOWN_NAMES[key] ?? key}</span>
+                                    <span className="text-slate-200">{val}点</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <div className="border-t border-slate-700 pt-2 flex justify-between font-bold">
+                              <span className="text-slate-300">合計</span>
+                              <span className="text-red-400 text-lg">{score.total}点</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 流局の場合は直接ボタン表示 */}
+                    {roundResult.type === 'draw' ? (
+                      <div className="flex gap-3">
+                        <button
+                          onClick={onBackToLobby}
+                          className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 font-bold transition-all"
+                        >
+                          ロビーに戻る
+                        </button>
+                        <button
+                          onClick={onNextRound}
+                          className="flex-1 px-4 py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-white font-bold transition-all"
+                        >
+                          {isGameOverProp ? '最終結果へ' : '次の局へ'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setResultStep('score')}
+                        className="w-full px-4 py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-white font-bold transition-all"
+                      >
+                        次へ →
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* 点数移動画面 */}
+                    <div className="text-center mb-5">
+                      <h2 className="text-xl font-bold text-slate-200">点数移動</h2>
+                    </div>
+
+                    <div className="space-y-2 mb-6">
+                      {[...gameState.players].sort((a, b) => b.score - a.score).map((p) => {
+                        const prev = roundResult.prevScores?.[p.id] ?? p.score;
+                        const diff = p.score - prev;
+                        const diffStr = diff > 0 ? `+${diff}` : String(diff);
+                        return (
+                          <div key={p.id} className={`flex justify-between items-center px-3 py-2 rounded ${
+                            p.id === roundResult.winnerId ? 'bg-red-900/30 border border-red-800/50' :
+                            p.id === roundResult.loserId ? 'bg-blue-900/30 border border-blue-800/50' :
+                            'bg-slate-700/30'
+                          }`}>
+                            <span className="text-slate-300">{p.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-500 text-sm">{prev}</span>
+                              <span className="text-slate-500">→</span>
+                              <span className="text-slate-200 font-mono font-bold">{p.score}</span>
+                              <span className={`text-sm font-bold ${
+                                diff > 0 ? 'text-red-400' : diff < 0 ? 'text-blue-400' : 'text-slate-500'
+                              }`}>
+                                ({diffStr})
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={onBackToLobby}
+                        className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 font-bold transition-all"
+                      >
+                        ロビーに戻る
+                      </button>
+                      <button
+                        onClick={onNextRound}
+                        className="flex-1 px-4 py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-white font-bold transition-all"
+                      >
+                        {isGameOverProp ? '最終結果へ' : '次の局へ'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

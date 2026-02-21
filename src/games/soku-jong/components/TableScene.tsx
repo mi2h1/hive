@@ -31,7 +31,7 @@ const getRiverPosition = (index: number): [number, number, number] => {
   const row = Math.floor(index / RIVER_COLS);
   const startX = -((RIVER_COLS - 1) / 2) * TILE_SPACING;
   const lx = startX + col * TILE_SPACING;
-  const lz = RIVER_Z - row * RIVER_ROW_SPACING;
+  const lz = RIVER_Z + row * RIVER_ROW_SPACING;
   return [lx, TILE_D / 2, lz];
 };
 
@@ -541,7 +541,7 @@ export const TableScene = ({
                 {/* 待ち牌（テンパイ時、手牌の右に小さく表示） */}
                 {isSelf && waitingTiles && waitingTiles.length > 0 && player.hand.length === 5 && (() => {
                   const handRight = ((player.hand.length - 1) / 2) * TILE_SPACING;
-                  const gapX = 0.18;
+                  const gapX = 0.35;
                   const waitScale = 0.65;
                   const waitSpacing = TILE_SPACING * waitScale;
                   const startX = handRight + gapX;

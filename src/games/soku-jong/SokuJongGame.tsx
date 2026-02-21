@@ -5,7 +5,7 @@ import { Lobby } from './components/Lobby';
 import { TileTestPage } from './components/TileTestPage';
 import { GameScreen } from './components/GameScreen';
 import { initializeRound, isGameOver } from './lib/game-flow';
-import type { RoundResult } from './types/game';
+
 
 interface SokuJongGameProps {
   onBack: () => void;
@@ -24,23 +24,6 @@ const clearRoomCodeFromUrl = () => {
   const newSearch = params.toString();
   const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '');
   window.history.replaceState({}, '', newUrl);
-};
-
-// 役満名
-const YAKUMAN_NAMES: Record<string, string> = {
-  'all-green': 'オールグリーン',
-  'chinroto': 'チンヤオ',
-  'super-red': 'スーパーレッド',
-};
-
-// 内訳名
-const BREAKDOWN_NAMES: Record<string, string> = {
-  mentsu: '面子点',
-  red: '赤牌',
-  dora: 'ドラ',
-  dealer: '親ボーナス',
-  tanyao: 'タンヤオ',
-  chanta: 'チャンタ',
 };
 
 export const SokuJongGame = ({ onBack }: SokuJongGameProps) => {
@@ -143,145 +126,34 @@ export const SokuJongGame = ({ onBack }: SokuJongGameProps) => {
     updateGameState({ phase: 'waiting', round: 0, roundResult: undefined, timeBank: undefined });
   };
 
-  // playing フェーズ — ゲーム画面
-  if (phase === 'playing' && gameState) {
+  // 次の局へ進む
+  const handleNextRound = () => {
+    if (!gameState) return;
+    if (isGameOver(gameState)) {
+      updateGameState({ phase: 'finished', roundResult: undefined });
+    } else {
+      const nextRound = initializeRound(gameState.players, gameState.round + 1);
+      updateGameState({
+        ...nextRound,
+        settings: gameState.settings,
+        timeBank: gameState.timeBank,
+        roundResult: undefined,
+      });
+    }
+  };
+
+  // playing / round_result フェーズ — ゲーム画面（round_result時はモーダルオーバーレイ付き）
+  if ((phase === 'playing' || phase === 'round_result') && gameState) {
     return (
       <GameScreen
         gameState={gameState}
         playerId={playerId ?? ''}
         onBackToLobby={handleBackToLobby}
         onUpdateGameState={updateGameState}
+        roundResult={phase === 'round_result' ? gameState.roundResult : undefined}
+        onNextRound={handleNextRound}
+        isGameOver={isGameOver(gameState)}
       />
-    );
-  }
-
-  // round_result フェーズ — 局結果画面
-  if (phase === 'round_result' && gameState) {
-    const result: RoundResult | undefined = gameState.roundResult;
-    const winner = result?.winnerId ? players.find((p) => p.id === result.winnerId) : null;
-    const loser = result?.loserId ? players.find((p) => p.id === result.loserId) : null;
-
-    const handleNextRound = () => {
-      if (isGameOver(gameState)) {
-        updateGameState({ phase: 'finished', roundResult: undefined });
-      } else {
-        const nextRound = initializeRound(gameState.players, gameState.round + 1);
-        updateGameState({
-          ...nextRound,
-          settings: gameState.settings,
-          timeBank: gameState.timeBank,
-          roundResult: undefined,
-        });
-      }
-    };
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-900 to-green-900">
-        <div className="min-h-screen bg-black/20 flex items-center justify-center p-4">
-          <div className="bg-slate-800/95 rounded-xl p-8 max-w-lg w-full">
-            <h1 className="mb-6 text-center">
-              <img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-10 mx-auto" />
-            </h1>
-
-            {/* 局結果ヘッダー */}
-            <div className="text-center mb-6">
-              <p className="text-slate-500 text-sm mb-1">東{gameState.round}局</p>
-              {result?.type === 'draw' ? (
-                <h2 className="text-2xl font-bold text-amber-400">流局</h2>
-              ) : result?.type === 'tsumo' ? (
-                <h2 className="text-2xl font-bold text-red-400">
-                  {winner?.name ?? '?'} ツモ和了
-                </h2>
-              ) : (
-                <h2 className="text-2xl font-bold text-red-400">
-                  {winner?.name ?? '?'} ロン
-                  <span className="text-lg text-slate-400 ml-2">← {loser?.name ?? '?'}</span>
-                </h2>
-              )}
-            </div>
-
-            {/* 和了者の手牌表示 */}
-            {result?.winnerHand && result.winnerHand.length > 0 && (
-              <div className="flex justify-center gap-1 mb-4">
-                {result.winnerHand.map((tile) => (
-                  <div key={tile.id} className="w-8 h-10 bg-slate-700 rounded border border-slate-600 flex items-center justify-center text-xs text-slate-200">
-                    {tile.kind}
-                    {tile.isRed && <span className="text-red-400 text-[8px] ml-0.5">赤</span>}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 点数内訳 */}
-            {result?.score && (
-              <div className="bg-slate-900/50 rounded-lg p-4 mb-4">
-                {result.score.yakuman ? (
-                  <div className="text-center">
-                    <p className="text-xl font-bold text-amber-300 mb-1">
-                      {YAKUMAN_NAMES[result.score.yakuman] ?? result.score.yakuman}
-                    </p>
-                    <p className="text-3xl font-bold text-red-400">{result.score.yakumanPoints}点</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-1 mb-3">
-                      {Object.entries(result.score.breakdown).map(([key, val]) => {
-                        if (val === 0) return null;
-                        return (
-                          <div key={key} className="flex justify-between text-sm">
-                            <span className="text-slate-400">{BREAKDOWN_NAMES[key] ?? key}</span>
-                            <span className="text-slate-200">{val}点</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="border-t border-slate-700 pt-2 flex justify-between font-bold">
-                      <span className="text-slate-300">合計</span>
-                      <span className="text-red-400 text-lg">{result.score.total}点</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* 各プレイヤーの持ち点 */}
-            <div className="space-y-2 mb-6">
-              {[...players].sort((a, b) => b.score - a.score).map((p) => (
-                <div key={p.id} className={`flex justify-between items-center px-3 py-2 rounded ${
-                  p.id === result?.winnerId ? 'bg-red-900/30 border border-red-800/50' :
-                  p.id === result?.loserId ? 'bg-blue-900/30 border border-blue-800/50' :
-                  'bg-slate-700/30'
-                }`}>
-                  <span className="text-slate-300">{p.name}</span>
-                  <span className={`font-mono font-bold ${
-                    p.id === result?.winnerId ? 'text-red-400' :
-                    p.id === result?.loserId ? 'text-blue-400' :
-                    'text-slate-300'
-                  }`}>
-                    {p.score}点
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* 次局ボタン */}
-            <div className="flex gap-3">
-              <button
-                onClick={handleBackToLobby}
-                className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 font-bold transition-all"
-              >
-                ロビーに戻る
-              </button>
-              <button
-                onClick={handleNextRound}
-                className="flex-1 px-4 py-3 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-white font-bold transition-all"
-              >
-                {isGameOver(gameState) ? '最終結果へ' : '次の局へ'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     );
   }
 

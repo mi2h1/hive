@@ -48,6 +48,7 @@ export interface RoundResult {
   loserId?: string;                     // ロン時の放銃者
   winnerHand?: Tile[];                  // 和了者の手牌（表示用）
   score?: import('../lib/scoring').ScoreResult;
+  prevScores?: Record<string, number>; // 和了確定前の各プレイヤースコア
 }
 
 // ゲーム状態（Firebase同期）
