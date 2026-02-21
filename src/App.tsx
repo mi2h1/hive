@@ -500,10 +500,10 @@ function App() {
           {/* 速雀 */}
           <div className="bg-slate-800/80 rounded-xl overflow-hidden opacity-75">
             <div className="h-40 bg-gradient-to-br from-emerald-600 to-green-600 flex items-center justify-center">
-              <span className="text-4xl font-bold text-white">速雀</span>
+              <img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-12" />
             </div>
             <div className="p-4">
-              <h2 className="text-lg font-bold text-white mb-2">速雀</h2>
+              <h2 className="mb-2"><img src="/hive/images/vec_logo_soku-jong.svg" alt="速雀" className="h-6" /></h2>
               <p className="text-slate-400 text-sm mb-4">
                 索子＋發・中だけの簡易麻雀ゲーム。<br />
                 2面子を揃えて和了を目指せ！
