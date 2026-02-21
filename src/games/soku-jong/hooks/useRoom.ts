@@ -169,11 +169,17 @@ export const useRoom = (playerId: string | null, playerName: string | null) => {
       if (data) {
         const gs = data.gameState;
 
+        const normalizedPlayers = normalizeArray<Player>(gs?.players).map((p) => ({
+          ...p,
+          hand: normalizeArray(p.hand),
+          discards: normalizeArray(p.discards),
+        }));
+
         const normalizedData: RoomData = {
           ...data,
           gameState: {
             ...gs,
-            players: normalizeArray<Player>(gs?.players),
+            players: normalizedPlayers,
             deck: normalizeArray(gs?.deck),
           },
         };
