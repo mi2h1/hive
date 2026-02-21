@@ -16,7 +16,7 @@ const TILE_SPACING = TILE_W + 0.02;
 
 // 各家の手牌・河の配置距離
 const HAND_Z = 2.3;
-const RIVER_Z = 0.6;
+const RIVER_Z = 0.9;
 
 // 各家のサンプル牌
 const HAND_TILES: TileKind[] = ['1s', '3s', '5s', '7s', '9s'];
