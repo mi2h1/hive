@@ -1,12 +1,13 @@
+import { useMemo } from 'react';
 import { OrbitControls, Environment } from '@react-three/drei';
+import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { TileModel } from './TileModel';
 import type { TileKind } from '../types/game';
 
 const TABLE_SIZE = 6;
 const FRAME_THICKNESS = 0.15;
 const FRAME_HEIGHT = 0.1;
-const FRAME_COLOR = '#3d2b1f';
-const TABLE_COLOR = '#1a5c2a';
 
 // 牌サイズ（TileModel基準）
 const TILE_W = 0.26;
@@ -30,7 +31,85 @@ const PLAYERS = [
   { name: 'left', rotY: Math.PI / 2 },
 ] as const;
 
+// フェルト風テクスチャ生成（放射グラデーション + 微細ノイズ）
+const createFeltTexture = (): CanvasTexture => {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+
+  // 放射グラデーション（中央が僅かに明るい）
+  const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size * 0.7);
+  grad.addColorStop(0, '#1f6b32');
+  grad.addColorStop(1, '#1a5c2a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+
+  // 微細ノイズでフェルトの繊維感
+  const imageData = ctx.getImageData(0, 0, size, size);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const noise = (Math.random() - 0.5) * 12;
+    data[i] = Math.max(0, Math.min(255, data[i] + noise));
+    data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+    data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+  }
+  ctx.putImageData(imageData, 0, 0);
+
+  const texture = new CanvasTexture(canvas);
+  texture.colorSpace = SRGBColorSpace;
+  return texture;
+};
+
+// 木目テクスチャ生成
+const createWoodTexture = (): CanvasTexture => {
+  const w = 256;
+  const h = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+
+  // ベースカラー
+  ctx.fillStyle = '#3d2b1f';
+  ctx.fillRect(0, 0, w, h);
+
+  // 木目ライン
+  for (let y = 0; y < h; y++) {
+    const brightness = Math.sin(y * 0.8 + Math.random() * 0.5) * 8
+      + Math.sin(y * 2.5) * 4
+      + (Math.random() - 0.5) * 6;
+    const r = Math.max(0, Math.min(255, 61 + brightness));
+    const g = Math.max(0, Math.min(255, 43 + brightness * 0.7));
+    const b = Math.max(0, Math.min(255, 31 + brightness * 0.5));
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(0, y, w, 1);
+  }
+
+  const texture = new CanvasTexture(canvas);
+  texture.colorSpace = SRGBColorSpace;
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+  return texture;
+};
+
+// 枠のジオメトリ（角丸）
+const FRAME_RADIUS = 0.02;
+const FRAME_SEGMENTS = 3;
+const frameGeomH = new RoundedBoxGeometry(
+  TABLE_SIZE + FRAME_THICKNESS * 2, FRAME_HEIGHT, FRAME_THICKNESS,
+  FRAME_SEGMENTS, FRAME_RADIUS,
+);
+const frameGeomV = new RoundedBoxGeometry(
+  FRAME_THICKNESS, FRAME_HEIGHT, TABLE_SIZE,
+  FRAME_SEGMENTS, FRAME_RADIUS,
+);
+
 export const TableScene = () => {
+  const feltTexture = useMemo(() => createFeltTexture(), []);
+  const woodTexture = useMemo(() => createWoodTexture(), []);
+
   return (
     <>
       {/* ライティング */}
@@ -42,29 +121,25 @@ export const TableScene = () => {
       {/* テーブル面 */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
         <planeGeometry args={[TABLE_SIZE, TABLE_SIZE]} />
-        <meshStandardMaterial color={TABLE_COLOR} roughness={0.9} metalness={0} />
+        <meshStandardMaterial map={feltTexture} roughness={0.95} metalness={0} />
       </mesh>
 
-      {/* テーブル枠（4辺） */}
+      {/* テーブル枠（4辺・角丸 + 木目） */}
       {/* 手前 (+Z) */}
-      <mesh position={[0, FRAME_HEIGHT / 2, TABLE_SIZE / 2 + FRAME_THICKNESS / 2]}>
-        <boxGeometry args={[TABLE_SIZE + FRAME_THICKNESS * 2, FRAME_HEIGHT, FRAME_THICKNESS]} />
-        <meshStandardMaterial color={FRAME_COLOR} roughness={0.7} />
+      <mesh position={[0, FRAME_HEIGHT / 2, TABLE_SIZE / 2 + FRAME_THICKNESS / 2]} geometry={frameGeomH}>
+        <meshStandardMaterial map={woodTexture} roughness={0.7} />
       </mesh>
       {/* 奥 (-Z) */}
-      <mesh position={[0, FRAME_HEIGHT / 2, -(TABLE_SIZE / 2 + FRAME_THICKNESS / 2)]}>
-        <boxGeometry args={[TABLE_SIZE + FRAME_THICKNESS * 2, FRAME_HEIGHT, FRAME_THICKNESS]} />
-        <meshStandardMaterial color={FRAME_COLOR} roughness={0.7} />
+      <mesh position={[0, FRAME_HEIGHT / 2, -(TABLE_SIZE / 2 + FRAME_THICKNESS / 2)]} geometry={frameGeomH}>
+        <meshStandardMaterial map={woodTexture} roughness={0.7} />
       </mesh>
       {/* 左 (-X) */}
-      <mesh position={[-(TABLE_SIZE / 2 + FRAME_THICKNESS / 2), FRAME_HEIGHT / 2, 0]}>
-        <boxGeometry args={[FRAME_THICKNESS, FRAME_HEIGHT, TABLE_SIZE]} />
-        <meshStandardMaterial color={FRAME_COLOR} roughness={0.7} />
+      <mesh position={[-(TABLE_SIZE / 2 + FRAME_THICKNESS / 2), FRAME_HEIGHT / 2, 0]} geometry={frameGeomV}>
+        <meshStandardMaterial map={woodTexture} roughness={0.7} />
       </mesh>
       {/* 右 (+X) */}
-      <mesh position={[TABLE_SIZE / 2 + FRAME_THICKNESS / 2, FRAME_HEIGHT / 2, 0]}>
-        <boxGeometry args={[FRAME_THICKNESS, FRAME_HEIGHT, TABLE_SIZE]} />
-        <meshStandardMaterial color={FRAME_COLOR} roughness={0.7} />
+      <mesh position={[TABLE_SIZE / 2 + FRAME_THICKNESS / 2, FRAME_HEIGHT / 2, 0]} geometry={frameGeomV}>
+        <meshStandardMaterial map={woodTexture} roughness={0.7} />
       </mesh>
 
       {/* 4家の牌配置 — groupでY回転し、牌自体はX回転のみ */}
