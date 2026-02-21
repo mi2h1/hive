@@ -61,6 +61,10 @@ const createFeltTexture = (): CanvasTexture => {
 
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
+  texture.wrapS = RepeatWrapping;
+  texture.wrapT = RepeatWrapping;
+  texture.repeat.set(1 / TABLE_SIZE, 1 / TABLE_SIZE);
+  texture.offset.set(0.5, 0.5);
   return texture;
 };
 
