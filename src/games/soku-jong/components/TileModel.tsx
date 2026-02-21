@@ -140,6 +140,9 @@ interface TileModelProps {
   isRed?: boolean;
   position?: [number, number, number];
   rotation?: [number, number, number];
+  onClick?: () => void;
+  onPointerOver?: () => void;
+  onPointerOut?: () => void;
 }
 
 export const TileModel = ({
@@ -147,6 +150,9 @@ export const TileModel = ({
   isRed = false,
   position = [0, 0, 0],
   rotation = [0, 0, 0],
+  onClick,
+  onPointerOver,
+  onPointerOut,
 }: TileModelProps) => {
   const faceTexture = useTexture(getTexturePath(kind, isRed));
   faceTexture.anisotropy = 16;
@@ -187,7 +193,15 @@ export const TileModel = ({
 
   // material index: 0=+X, 1=-X, 2=+Y, 3=-Y, 4=+Z(表), 5=-Z(裏)
   return (
-    <mesh position={position} rotation={rotation} geometry={sharedGeometry} castShadow>
+    <mesh
+      position={position}
+      rotation={rotation}
+      geometry={sharedGeometry}
+      castShadow
+      onClick={onClick ? (e) => { e.stopPropagation(); onClick(); } : undefined}
+      onPointerOver={onPointerOver ? (e) => { e.stopPropagation(); onPointerOver(); } : undefined}
+      onPointerOut={onPointerOut ? (e) => { e.stopPropagation(); onPointerOut(); } : undefined}
+    >
       <meshPhysicalMaterial attach="material-0" map={sidePX} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
       <meshPhysicalMaterial attach="material-1" map={sideNX} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />
       <meshPhysicalMaterial attach="material-2" map={sidePY} clearcoat={0.8} clearcoatRoughness={0.05} roughness={0.15} ior={1.5} reflectivity={0.5} />

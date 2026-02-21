@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { OrbitControls, Environment, Text } from '@react-three/drei';
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace, Shape, Path, ExtrudeGeometry } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { TileModel } from './TileModel';
-import type { TileKind, GameState } from '../types/game';
+import type { TileKind, GameState, TurnPhase } from '../types/game';
+import type { ScoreResult } from '../lib/scoring';
 
 const FONT_YUJI = '/hive/fonts/YujiSyuku-Regular.ttf';
 const FONT_DIGI = '/hive/fonts/DS-DIGI.TTF';
@@ -385,6 +386,14 @@ lampGeom.translate(0, 0, -0.01);
 interface TableSceneProps {
   gameState?: GameState;
   playerId?: string;
+  onDiscard?: (tileId: string) => void;
+  canTsumo?: boolean;
+  onTsumo?: () => void;
+  ronInfo?: { score: ScoreResult } | null;
+  onRon?: () => void;
+  onSkipRon?: () => void;
+  isMyTurn?: boolean;
+  turnPhase?: TurnPhase;
 }
 
 // 自家を基準にした相対座席順を取得（自家=0, 右=1, 対面=2, 左=3）
@@ -401,10 +410,32 @@ const getRelativeSeatOrder = (
   return ordered;
 };
 
-export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
+export const TableScene = ({
+  gameState,
+  playerId,
+  onDiscard,
+  canTsumo,
+  onTsumo,
+  ronInfo,
+  onRon,
+  onSkipRon,
+  isMyTurn,
+  turnPhase,
+}: TableSceneProps = {}) => {
   const feltTexture = useMemo(() => createFeltTexture(), []);
   const woodTexture = useMemo(() => createWoodTexture(), []);
   const panelBumpTexture = useMemo(() => createPanelBumpTexture(), []);
+  const [hoveredTileId, setHoveredTileId] = useState<string | null>(null);
+
+  const handleTilePointerOver = useCallback((tileId: string) => {
+    setHoveredTileId(tileId);
+    document.body.style.cursor = 'pointer';
+  }, []);
+
+  const handleTilePointerOut = useCallback(() => {
+    setHoveredTileId(null);
+    document.body.style.cursor = 'auto';
+  }, []);
 
   return (
     <>
@@ -472,24 +503,31 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
           return seatedPlayers.map((player, seatIdx) => {
             const isSelf = seatIdx === 0;
             const rotY = PLAYERS[seatIdx]?.rotY ?? 0;
+            // 自分の手牌がクリック可能か（自分の手番 + discardフェーズ + 6枚）
+            const canClick = isSelf && isMyTurn && turnPhase === 'discard' && player.hand.length === 6;
             return (
               <group key={player.id} rotation={[0, rotY, 0]}>
                 {/* 手牌 */}
                 {player.hand.map((tile, i) => {
                   const lx = (i - (player.hand.length - 1) / 2) * TILE_SPACING;
+                  const isHovered = hoveredTileId === tile.id;
+                  const hoverLift = canClick && isHovered ? 0.05 : 0;
                   return (
                     <TileModel
                       key={`hand-${tile.id}`}
                       kind={isSelf ? tile.kind : '1s'}
                       isRed={isSelf ? tile.isRed : false}
                       position={isSelf
-                        ? [lx, TILE_D / 2, HAND_Z]
+                        ? [lx, TILE_D / 2 + hoverLift, HAND_Z]
                         : [lx, TILE_H / 2, HAND_Z]
                       }
                       rotation={isSelf
                         ? [-Math.PI / 2 + 0.3, 0, 0]
                         : [0, 0, 0]
                       }
+                      onClick={canClick ? () => onDiscard?.(tile.id) : undefined}
+                      onPointerOver={canClick ? () => handleTilePointerOver(tile.id) : undefined}
+                      onPointerOut={canClick ? handleTilePointerOut : undefined}
                     />
                   );
                 })}
@@ -680,6 +718,73 @@ export const TableScene = ({ gameState, playerId }: TableSceneProps = {}) => {
               />
             </group>
           )}
+        </>
+      )}
+
+      {/* ツモボタン（自分の手番 + canTsumo） */}
+      {canTsumo && isMyTurn && onTsumo && (
+        <group position={[0.6, 0.6, 2.0]}>
+          <mesh onClick={(e) => { e.stopPropagation(); onTsumo(); }}
+            onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
+            onPointerOut={() => { document.body.style.cursor = 'auto'; }}
+          >
+            <boxGeometry args={[0.6, 0.25, 0.08]} />
+            <meshStandardMaterial color="#cc3333" emissive="#cc3333" emissiveIntensity={0.4} roughness={0.5} />
+          </mesh>
+          <Text
+            position={[0, 0, 0.045]}
+            fontSize={0.12}
+            font={FONT_YUJI}
+            color="#ffffff"
+            anchorX="center"
+            anchorY="middle"
+          >
+            ツモ
+          </Text>
+        </group>
+      )}
+
+      {/* ロンボタン + スキップボタン */}
+      {ronInfo && onRon && onSkipRon && (
+        <>
+          <group position={[0.5, 0.6, 2.0]}>
+            <mesh onClick={(e) => { e.stopPropagation(); onRon(); }}
+              onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
+              onPointerOut={() => { document.body.style.cursor = 'auto'; }}
+            >
+              <boxGeometry args={[0.6, 0.25, 0.08]} />
+              <meshStandardMaterial color="#cc3333" emissive="#cc3333" emissiveIntensity={0.4} roughness={0.5} />
+            </mesh>
+            <Text
+              position={[0, 0, 0.045]}
+              fontSize={0.12}
+              font={FONT_YUJI}
+              color="#ffffff"
+              anchorX="center"
+              anchorY="middle"
+            >
+              ロン
+            </Text>
+          </group>
+          <group position={[-0.5, 0.6, 2.0]}>
+            <mesh onClick={(e) => { e.stopPropagation(); onSkipRon(); }}
+              onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
+              onPointerOut={() => { document.body.style.cursor = 'auto'; }}
+            >
+              <boxGeometry args={[0.6, 0.25, 0.08]} />
+              <meshStandardMaterial color="#555555" roughness={0.5} />
+            </mesh>
+            <Text
+              position={[0, 0, 0.045]}
+              fontSize={0.1}
+              font={FONT_YUJI}
+              color="#cccccc"
+              anchorX="center"
+              anchorY="middle"
+            >
+              見逃し
+            </Text>
+          </group>
         </>
       )}
 

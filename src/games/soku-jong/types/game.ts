@@ -38,6 +38,16 @@ export type TurnPhase = 'draw' | 'discard' | 'ron_check';
 export interface GameSettings {
   initialScore: number;   // 初期持ち点（デフォルト40）
   totalRounds: number;    // 東風戦の局数（デフォルト4）
+  timeLimitSeconds: number; // 持ち時間（0=無制限, 300=5分）
+}
+
+// 和了結果
+export interface RoundResult {
+  type: 'tsumo' | 'ron' | 'draw';     // 和了種別 or 流局
+  winnerId?: string;
+  loserId?: string;                     // ロン時の放銃者
+  winnerHand?: Tile[];                  // 和了者の手牌（表示用）
+  score?: import('../lib/scoring').ScoreResult;
 }
 
 // ゲーム状態（Firebase同期）
@@ -52,6 +62,8 @@ export interface GameState {
   lastDiscardPlayerId: string | null;
   turnPhase?: TurnPhase;
   settings: GameSettings;
+  roundResult?: RoundResult;            // 局結果
+  timeBank?: Record<string, number>;    // プレイヤーごとの持ち時間（秒）
 }
 
 // 部屋データ
@@ -65,6 +77,7 @@ export interface RoomData {
 export const DEFAULT_SETTINGS: GameSettings = {
   initialScore: 40,
   totalRounds: 4,
+  timeLimitSeconds: 300,
 };
 
 // 初期プレイヤーを作成

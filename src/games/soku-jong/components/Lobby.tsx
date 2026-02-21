@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Crown, Link } from 'lucide-react';
-import type { Player } from '../types/game';
+import type { Player, GameSettings } from '../types/game';
 
 interface LobbyProps {
   roomCode: string | null;
@@ -17,6 +17,8 @@ interface LobbyProps {
   onBack?: () => void;
   debugMode?: boolean;
   onAddTestPlayer?: () => void;
+  settings?: GameSettings;
+  onUpdateSettings?: (settings: Partial<GameSettings>) => void;
 }
 
 export const Lobby = ({
@@ -34,6 +36,8 @@ export const Lobby = ({
   onBack,
   debugMode = false,
   onAddTestPlayer,
+  settings,
+  onUpdateSettings,
 }: LobbyProps) => {
   const [showCopiedToast, setShowCopiedToast] = useState(false);
   const [showLinkCopiedToast, setShowLinkCopiedToast] = useState(false);
@@ -107,6 +111,34 @@ export const Lobby = ({
                 </div>
               )}
             </div>
+
+            {/* 持ち時間設定（ホストのみ変更可能） */}
+            {settings && (
+              <div className="bg-slate-700/50 rounded-lg px-4 py-3 mb-4">
+                <div className="text-slate-400 text-sm mb-2">持ち時間</div>
+                <div className="flex gap-2">
+                  {[
+                    { label: '5分', value: 300 },
+                    { label: '無制限', value: 0 },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => isHost && onUpdateSettings?.({ timeLimitSeconds: opt.value })}
+                      disabled={!isHost}
+                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+                        settings.timeLimitSeconds === opt.value
+                          ? 'bg-emerald-600 text-white'
+                          : isHost
+                            ? 'bg-slate-600 text-slate-300 hover:bg-slate-500'
+                            : 'bg-slate-600 text-slate-400 cursor-default'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* デバッグ用: ゲーム開始ボタン */}
             {debugMode && isHost && (
